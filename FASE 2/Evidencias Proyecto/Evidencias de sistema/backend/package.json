@@ -19,6 +19,7 @@
     "test:mysql:plan": "node scripts/probar-plan-alimentacion-mysql.js",
     "test:mysql:comidas": "node scripts/probar-comidas-asistente-mysql.js",
     "test:mysql:especialidades": "node scripts/probar-especialidades-mysql.js",
+    "test:carga": "node scripts/probar-carga.js",
     "lint": "eslint .",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
