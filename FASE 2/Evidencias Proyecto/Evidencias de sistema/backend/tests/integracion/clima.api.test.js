@@ -38,6 +38,19 @@ test('sin ficha muestra el clima de Santiago', async () => {
   expect(respuesta.body.lugar).toBe('Santiago');
 });
 
+test.each([
+  { modalidad: 'online', comuna: null, ubicacionLat: null, ubicacionLng: null },
+  { modalidad: 'online', comuna: 'Comuna anterior', ubicacionLat: -35, ubicacionLng: -71 },
+])('online usa Santiago como referencia de clima sin reutilizar una ubicación física', async (ficha) => {
+  modelo.obtenerPorUsuario.mockResolvedValue(ficha);
+  const respuesta = await consultar();
+  expect(respuesta.status).toBe(200);
+  expect(respuesta.body.lugar).toBe('Santiago');
+  const url = new URL(fetchSimulado.mock.calls[0][0]);
+  expect(url.searchParams.get('latitude')).toBe('-33.45');
+  expect(url.searchParams.get('longitude')).toBe('-70.67');
+});
+
 test('reutiliza la respuesta del mismo lugar durante 30 minutos', async () => {
   modelo.obtenerPorUsuario.mockResolvedValue(null);
   await consultar();

@@ -103,13 +103,13 @@ function Informacion({ profesional }) {
           <div className="perfil-prof__dato">
             <Icono nombre="pin" tamano={25} />
             <span>
-              {direccionDe(profesional) || (establecimiento?.nombre ? `${establecimiento.nombre}, ${comuna}` : comuna || 'Comuna por confirmar')}
+              {modalidad === 'online' ? 'Atención online' : direccionDe(profesional) || (establecimiento?.nombre ? `${establecimiento.nombre}, ${comuna}` : comuna || 'Comuna por confirmar')}
               {!direccion && modalidad !== 'online' && <small>Agrega tu dirección de atención desde "Editar perfil".</small>}
             </span>
           </div>
           <div className="perfil-prof__dato"><Icono nombre="grupo" tamano={25} /> Modalidad: {etiquetaModalidad(modalidad)}</div>
         </div>
-        {ubicacionLat !== null && ubicacionLat !== undefined && ubicacionLng !== null && ubicacionLng !== undefined && (
+        {modalidad !== 'online' && ubicacionLat !== null && ubicacionLat !== undefined && ubicacionLng !== null && ubicacionLng !== undefined && (
           <p className="perfil-prof__mapa">
             <Icono nombre="mira" tamano={18} />
             <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ubicacionLat},${ubicacionLng}`)}`}
@@ -198,7 +198,7 @@ export default function PerfilProfesional() {
             ? <span className="perfil-prof__verificado"><Icono nombre="escudo" tamano={16} /> Verificado</span>
             : <span className="perfil-prof__sin-verificar" title="El equipo de FitSearch verifica las fichas profesionales.">Sin verificar</span>}
           <Calificacion promedio={profesional.calificacion.promedio} total={profesional.calificacion.total} />
-          <p className="perfil-prof__lugar"><Icono nombre="pin" tamano={16} /> {profesional.comuna || 'Comuna por confirmar'}</p>
+          <p className="perfil-prof__lugar"><Icono nombre="pin" tamano={16} /> {profesional.modalidad === 'online' ? 'Atención online' : profesional.comuna || 'Comuna por confirmar'}</p>
           <button type="button" className="boton boton--secundario boton--compacto" onClick={() => { setMensaje(''); setEditando(true); }}>
             <Icono nombre="lapiz" tamano={16} /> Editar perfil
           </button>

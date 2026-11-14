@@ -19,7 +19,7 @@ const {
 function validar({ especialidad, comuna, direccion, modalidad }) {
   const errores = {};
   if (!especialidad) errores.especialidad = 'Selecciona tu especialidad';
-  if (!comuna.trim()) errores.comuna = 'Ingresa la comuna donde atiendes';
+  if (modalidad !== 'online' && !comuna.trim()) errores.comuna = 'Ingresa la comuna donde atiendes';
   if (!modalidad) errores.modalidad = 'Selecciona cómo atiendes';
   if (modalidad !== 'online' && !direccion.trim()) errores.direccion = 'Ingresa la dirección donde atiendes';
   return errores;
@@ -90,12 +90,18 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
 
   const cambiar = (campo) => (evento) => {
     setDatos({ ...datos, [campo]: evento.target.value });
+    if (campo === 'modalidad' && evento.target.value === 'online') {
+      enCurso.current = null;
+      setBuscando(false);
+      setErrorUbicacion('');
+    }
     if (errores[campo]) setErrores({ ...errores, [campo]: undefined });
   };
 
   // SC-28: busca las coordenadas de la comuna y la dirección escritas (DAS, D36) y devuelve la ubicación, o null si no
   // se pudo. Si ya se buscaron, o el profesional ya ajustó el marcador para esa misma dirección, no se busca de nuevo.
   function ubicar() {
+    if (datos.modalidad === 'online') return Promise.resolve(null);
     const comuna = datos.comuna.trim();
     const direccion = datos.direccion.trim();
     if (!comuna) return Promise.resolve(null);
@@ -142,16 +148,18 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
     setErrores(nuevos);
     if (Object.keys(nuevos).length) return;
     setEnviando(true);
-    const lugar = await ubicar();
-    if (!lugar) {
+    const online = datos.modalidad === 'online';
+    const lugar = online ? null : await ubicar();
+    if (!online && !lugar) {
       setMensaje('No pudimos ubicar tu lugar de atención en el mapa. Revisa tu comuna y tu dirección, o intenta de nuevo.');
       setEnviando(false);
       return;
     }
     try {
       const respuesta = await guardarMiFicha({
-        especialidad: datos.especialidad, descripcion: datos.descripcion.trim(), comuna: datos.comuna.trim(),
-        direccion: datos.direccion.trim(), modalidad: datos.modalidad, ubicacionLat: lugar.lat, ubicacionLng: lugar.lng,
+        especialidad: datos.especialidad, descripcion: datos.descripcion.trim(), comuna: online ? null : datos.comuna.trim(),
+        direccion: online ? null : datos.direccion.trim(), modalidad: datos.modalidad,
+        ubicacionLat: lugar?.lat ?? null, ubicacionLng: lugar?.lng ?? null,
       });
       onGuardado(respuesta.ficha);
     } catch (error) {
@@ -199,7 +207,12 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
           </CampoFormulario>
         </fieldset>
 
-        <fieldset className="ficha-prof__seccion">
+        {datos.modalidad === 'online' ? (
+          <section className="ficha-prof__seccion" aria-label="Atención online">
+            <h2><Icono nombre="medico" /> Atención online</h2>
+            <p className="texto-secundario">Atiendes de forma online. Tu perfil no mostrará una dirección ni una ubicación en el mapa.</p>
+          </section>
+        ) : <fieldset className="ficha-prof__seccion">
           <legend><Icono nombre="pin" /> Ubicación de atención</legend>
           <p className="texto-secundario ficha-prof__intro">Indica tu comuna y tu dirección: te ubicamos en el mapa para que los usuarios te encuentren en el buscador.</p>
 
@@ -208,7 +221,7 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
               <CampoFormulario id="comuna" etiqueta="Comuna (obligatorio)" maxLength={MAX_COMUNA} autoComplete="address-level2"
                 placeholder="Ej.: Providencia" value={datos.comuna} onChange={cambiar('comuna')} onBlur={ubicar} error={errores.comuna} />
               <CampoFormulario id="direccion" maxLength={MAX_DIRECCION} autoComplete="street-address"
-                etiqueta={`Dirección de atención (${datos.modalidad === 'online' ? 'opcional si atiendes solo online' : 'obligatorio'})`}
+                etiqueta="Dirección de atención (obligatorio)"
                 placeholder="Ej.: Av. Providencia 1234, oficina 501" value={datos.direccion} onChange={cambiar('direccion')}
                 onBlur={ubicar} error={errores.direccion}
                 ayuda="Calle y número. Se muestra en tu ficha y te ubicamos en el mapa para que sepan dónde atiendes." />
@@ -244,7 +257,7 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
               )}
             </div>
           </div>
-        </fieldset>
+        </fieldset>}
 
         <div className="ficha-prof__acciones">
           {onCancelar && <button type="button" className="boton-texto" onClick={onCancelar}>Cancelar</button>}
