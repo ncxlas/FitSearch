@@ -1,0 +1,141 @@
+{
+  "prueba": "Carga de la API (QS1 y QS5 del DAS)",
+  "fecha": "2026-11-14",
+  "api": "http://localhost:3000/api",
+  "entorno": {
+    "node": "v24.18.0",
+    "cpus": 12,
+    "conexiones": 5,
+    "segundosPorEscenario": 20
+  },
+  "datos": {
+    "profesionalesTemporales": 500,
+    "profesionalesEnLaBase": 515,
+    "establecimientosTemporales": 100,
+    "resenasTemporales": 833
+  },
+  "escenarios": [
+    {
+      "escenario": "Búsqueda sin filtros (QS1)",
+      "meta": "p95 < 2000 ms",
+      "peticiones": 7524,
+      "porSegundo": 376,
+      "estados": {
+        "200": 7524
+      },
+      "errores": 0,
+      "ms": {
+        "p50": 13,
+        "p95": 18,
+        "p99": 21,
+        "max": 48
+      },
+      "cumple": true
+    },
+    {
+      "escenario": "Búsqueda por texto (QS1)",
+      "meta": "p95 < 2000 ms",
+      "peticiones": 13218,
+      "porSegundo": 661,
+      "estados": {
+        "200": 13218
+      },
+      "errores": 0,
+      "ms": {
+        "p50": 7,
+        "p95": 11,
+        "p99": 13,
+        "max": 28
+      },
+      "cumple": true
+    },
+    {
+      "escenario": "Búsqueda por especialidad y comuna (QS1)",
+      "meta": "p95 < 2000 ms",
+      "peticiones": 24018,
+      "porSegundo": 1201,
+      "estados": {
+        "200": 24018
+      },
+      "errores": 0,
+      "ms": {
+        "p50": 4,
+        "p95": 6,
+        "p99": 16,
+        "max": 49
+      },
+      "cumple": true
+    },
+    {
+      "escenario": "Búsqueda por cercanía a 10 km (QS1)",
+      "meta": "p95 < 2000 ms",
+      "peticiones": 10087,
+      "porSegundo": 504,
+      "estados": {
+        "200": 10087
+      },
+      "errores": 0,
+      "ms": {
+        "p50": 9,
+        "p95": 14,
+        "p99": 17,
+        "max": 34
+      },
+      "cumple": true
+    },
+    {
+      "escenario": "Ficha de un profesional",
+      "meta": "p95 < 2000 ms",
+      "peticiones": 17308,
+      "porSegundo": 865,
+      "estados": {
+        "200": 17308
+      },
+      "errores": 0,
+      "ms": {
+        "p50": 5,
+        "p95": 14,
+        "p99": 18,
+        "max": 22
+      },
+      "cumple": true
+    },
+    {
+      "escenario": "Inicio de sesión",
+      "meta": "p95 < 2000 ms",
+      "peticiones": 384,
+      "porSegundo": 19,
+      "estados": {
+        "200": 384
+      },
+      "errores": 0,
+      "ms": {
+        "p50": 261,
+        "p95": 294,
+        "p99": 328,
+        "max": 388
+      },
+      "cumple": true
+    }
+  ],
+  "concurrenciaReservas": {
+    "solicitudesSimultaneas": 50,
+    "esperado": {
+      "201": 1,
+      "409": 49
+    },
+    "estados": {
+      "201": 1,
+      "409": 49
+    },
+    "reservasActivasDelHorario": 1,
+    "cumple": true
+  },
+  "resultado": "CUMPLE",
+  "limpieza": {
+    "cuentasEliminadas": 571,
+    "establecimientosEliminados": 100,
+    "cuentasRestantes": 0,
+    "establecimientosRestantes": 0
+  }
+}

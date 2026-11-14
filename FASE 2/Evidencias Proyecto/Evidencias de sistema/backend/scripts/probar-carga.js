@@ -7,7 +7,10 @@
 //   npm run test:carga                      -> muestra el resultado
 //   npm run test:carga -- --guardar-evidencia -> además lo guarda en Plan de Pruebas
 // Variables opcionales: API_URL (por defecto http://localhost:3000/api), CARGA_CONEXIONES (20), CARGA_SEGUNDOS (20).
-// Crea sus propios datos temporales (correos carga-*@example.test) y los elimina al terminar, aunque falle.
+// Crea sus propios datos temporales y, al terminar, aunque falle, borra solo lo que creó en esa ejecución: las cuentas
+// por la marca de sus correos (carga-<hora>-*@example.test) y los centros por sus IDs.
+// Termina con código de salida 1 si el resultado es «NO CUMPLE» o «ERROR», o si la limpieza deja datos. Aun así limpia
+// y, con --guardar-evidencia, guarda la evidencia (revisión del PR #51, 14-11-2026).
 const path = require('node:path');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
@@ -28,6 +31,8 @@ const EVIDENCIA = path.resolve(__dirname, `../../../Evidencias de documentación
 
 const marca = `carga-${Date.now()}`;
 const correo = (tipo, n) => `${marca}-${tipo}-${n}@example.test`;
+// IDs de los centros creados en esta ejecución: la limpieza borra solo esos, nunca otros con un nombre parecido.
+const creados = { establecimientos: [] };
 const ESPECIALIDADES = ['Nutrición', 'Kinesiología', 'Entrenamiento personal', 'Psicología deportiva', 'Medicina deportiva'];
 const COMUNAS = ['Santiago', 'Providencia', 'Las Condes', 'Ñuñoa', 'Maipú', 'La Florida', 'Puente Alto', 'Melipilla', 'Talagante', 'San Bernardo'];
 const MODALIDADES = ['presencial', 'online', 'ambas'];
@@ -94,10 +99,13 @@ async function crearDatos() {
   const roles = Object.fromEntries((await prisma.rol.findMany()).map((r) => [r.nombre, r.id]));
   const establecimientos = [];
   for (let i = 0; i < 100; i += 1) {
-    establecimientos.push(await prisma.establecimiento.create({ data: {
+    const centro = await prisma.establecimiento.create({ data: {
       nombre: `Centro de carga ${i + 1}`, categoria: i % 3 === 0 ? 'gimnasio' : 'centro_salud', comuna: COMUNAS[i % COMUNAS.length],
       direccion: `Dirección ficticia ${i + 1}`, ubicacionLat: -33.45 + (azar() - 0.5) * 0.3, ubicacionLng: -70.65 + (azar() - 0.5) * 0.3,
-    } }));
+    } });
+    // Se anota apenas se crea, para borrarlo aunque la creación de datos falle más adelante.
+    creados.establecimientos.push(centro.id);
+    establecimientos.push(centro);
   }
   const profesionales = [];
   for (let i = 0; i < PROFESIONALES; i += 1) {
@@ -130,6 +138,13 @@ async function crearDatos() {
   return { profesionales, resenadores, roles, login: { correo: conClave.correo, clave } };
 }
 
+// QS5 cumple solo si exactamente una solicitud obtiene la hora (201), todas las demás reciben «horario ocupado» (409),
+// no hay errores de red ni otros estados, y el horario queda con una sola reserva activa.
+function evaluarReservas(estados, activas, solicitudes) {
+  const otros = Object.keys(estados).filter((estado) => estado !== '201' && estado !== '409');
+  return estados[201] === 1 && estados[409] === solicitudes - 1 && otros.length === 0 && activas === 1;
+}
+
 // QS5: muchas personas intentan reservar el mismo horario al mismo tiempo.
 async function concurrenciaReservas(profesional, roles) {
   const fecha = new Date(`${new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago' }).format(new Date(Date.now() + 3 * 86400000))}T00:00:00Z`);
@@ -146,24 +161,41 @@ async function concurrenciaReservas(profesional, roles) {
   }).then((r) => r.status).catch(() => 'error de red')));
   const estados = respuestas.reduce((t, e) => ({ ...t, [e]: (t[e] || 0) + 1 }), {});
   const activas = await prisma.reserva.count({ where: { disponibilidadId: bloque.id, estado: { in: ['pendiente', 'confirmada'] } } });
-  evidencia.concurrenciaReservas = { solicitudesSimultaneas: personas.length, estados, reservasActivasDelHorario: activas, cumple: activas === 1 && estados[201] === 1 };
+  evidencia.concurrenciaReservas = {
+    solicitudesSimultaneas: personas.length,
+    esperado: { 201: 1, 409: personas.length - 1 },
+    estados,
+    reservasActivasDelHorario: activas,
+    cumple: evaluarReservas(estados, activas, personas.length),
+  };
   console.log(`${evidencia.concurrenciaReservas.cumple ? 'OK ' : 'NO '} Reservas simultáneas: ${JSON.stringify(estados)}, activas en el horario: ${activas}`);
 }
 
+// Borra solo lo creado en esta ejecución y cuenta lo que haya quedado.
 async function limpiar() {
   const de = { correo: { startsWith: `${marca}-` } };
-  // Primero las cuentas de usuario (sus reservas y reseñas se borran con ellas); luego los profesionales y sus horarios.
+  const centros = { id: { in: creados.establecimientos } };
+  const hayCentros = creados.establecimientos.length > 0;
+  // Primero las cuentas de usuario (sus reservas y reseñas se borran con ellas); luego los profesionales y sus horarios,
+  // y al final los centros, que ya no tienen profesionales asociados.
   const usuarios = await prisma.usuario.deleteMany({ where: { ...de, rol: { nombre: 'usuario' } } });
   const profesionales = await prisma.usuario.deleteMany({ where: de });
-  const centros = await prisma.establecimiento.deleteMany({ where: { nombre: { startsWith: 'Centro de carga ' }, direccion: { startsWith: 'Dirección ficticia ' } } });
-  evidencia.limpieza = {
+  const establecimientos = hayCentros ? await prisma.establecimiento.deleteMany({ where: centros }) : { count: 0 };
+  return {
     cuentasEliminadas: usuarios.count + profesionales.count,
-    establecimientosEliminados: centros.count,
+    establecimientosEliminados: establecimientos.count,
     cuentasRestantes: await prisma.usuario.count({ where: de }),
+    establecimientosRestantes: hayCentros ? await prisma.establecimiento.count({ where: centros }) : 0,
   };
 }
 
-(async () => {
+// 0 solo si todo cumple y la limpieza no dejó datos; en cualquier otro caso, 1.
+function codigoDeSalida({ resultado, limpieza }) {
+  const limpio = Boolean(limpieza) && !limpieza.error && limpieza.cuentasRestantes === 0 && limpieza.establecimientosRestantes === 0;
+  return resultado === 'CUMPLE' && limpio ? 0 : 1;
+}
+
+async function main() {
   try {
     const salud = await fetch(`${API}/salud`).then((r) => r.ok).catch(() => false);
     if (!salud) throw new Error(`La API no responde en ${API}/salud. Levántala antes de correr la prueba.`);
@@ -193,12 +225,25 @@ async function limpiar() {
   } catch (error) {
     evidencia.resultado = 'ERROR';
     evidencia.error = error.message;
-    process.exitCode = 1;
   } finally {
-    try { await limpiar(); } catch (error) { evidencia.limpieza = { error: error.message }; process.exitCode = 1; }
-    await prisma.$disconnect();
-    if (guardarEvidencia) fs.writeFileSync(EVIDENCIA, JSON.stringify(evidencia, null, 2));
+    try { evidencia.limpieza = await limpiar(); } catch (error) { evidencia.limpieza = { error: error.message }; }
+    await prisma.$disconnect().catch(() => {});
+    let guardada = false;
+    if (guardarEvidencia) {
+      try {
+        fs.writeFileSync(EVIDENCIA, JSON.stringify(evidencia, null, 2));
+        guardada = true;
+      } catch (error) {
+        console.error(`No se pudo guardar la evidencia: ${error.message}`);
+      }
+    }
     console.log(JSON.stringify(evidencia, null, 2));
-    console.log(guardarEvidencia ? `Evidencia guardada en ${EVIDENCIA}` : 'Evidencia no guardada (usa --guardar-evidencia para guardarla).');
+    console.log(guardada ? `Evidencia guardada en ${EVIDENCIA}` : 'Evidencia no guardada (usa --guardar-evidencia para guardarla).');
+    process.exitCode = guardarEvidencia && !guardada ? 1 : codigoDeSalida(evidencia);
+    if (process.exitCode) console.log(`Resultado: ${evidencia.resultado}. El comando termina con error (código 1).`);
   }
-})();
+}
+
+if (require.main === module) main();
+
+module.exports = { evaluarReservas, codigoDeSalida, limpiar, creados, marca };
