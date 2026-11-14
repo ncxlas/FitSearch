@@ -139,16 +139,20 @@ describe('Nueva ficha', () => {
     await waitFor(() => expect(registro.mapas[0].opciones.zoom).toBe(12));
   });
 
-  test('si atiende solo online basta la comuna', async () => {
+  test('solo online no pide ubicación ni consulta el mapa y guarda sin dirección ni coordenadas', async () => {
     simularMapLibre();
     const fetch = simularServidor({ ubicar: () => respuestaJson(200, { lat: -33.58, lng: -71.61, precision: 'comuna', encontrada: 'San Antonio' }) });
     formulario();
-    await completar({ modalidad: 'online', comuna: 'San Antonio', direccion: '' });
+    await screen.findByRole('option', { name: 'Nutrición' });
+    await userEvent.selectOptions(screen.getByLabelText('Especialidad (obligatorio)'), 'Nutrición');
+    await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), 'online');
+    expect(screen.getByRole('region', { name: 'Atención online' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Comuna (obligatorio)')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Dirección de atención/)).not.toBeInTheDocument();
     await guardar();
 
-    expect(await screen.findByText('Atiendes solo online: el marcador queda en el centro de San Antonio.')).toBeInTheDocument();
-    expect(consultas(fetch)).toEqual(['comuna=San+Antonio']);
-    expect(cuerpoPut(fetch)).toMatchObject({ modalidad: 'online', direccion: '', ubicacionLat: -33.58, ubicacionLng: -71.61 });
+    await waitFor(() => expect(cuerpoPut(fetch)).toMatchObject({ modalidad: 'online', comuna: null, direccion: null, ubicacionLat: null, ubicacionLng: null }));
+    expect(consultas(fetch)).toEqual([]);
   });
 
   test('una comuna que no existe se marca en su campo y no se guarda', async () => {

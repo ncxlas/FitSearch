@@ -7,6 +7,7 @@ import Icono from '../components/Icono.jsx';
 import BotonFavorito from '../components/profesionales/BotonFavorito.jsx';
 import Resenas from '../components/profesionales/Resenas.jsx';
 import ReservarHora from '../components/reservas/ReservarHora.jsx';
+import ExperienciaPublica from '../components/profesionales/ExperienciaPublica.jsx';
 import { direccionDe, etiquetaModalidad, iniciales } from '../services/formato.js';
 import { obtenerProfesional } from '../services/profesional.service.js';
 import './Profesionales.css';
@@ -72,7 +73,7 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
     );
   }
 
-  const { profesional, resumenResenas, miResena, puedeResenar } = datos;
+  const { profesional, resumenResenas, miResena, puedeResenar, motivoSinResena } = datos;
   const { nombre, especialidad, descripcion, comuna, modalidad, verificado, establecimiento, calificacion, ubicacionLat, ubicacionLng } = profesional;
   const actualizarResenas = (resumen, resena) => setDatos({
     ...datos, resumenResenas: resumen, miResena: resena,
@@ -92,9 +93,10 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
           <h1>{nombre}</h1>
           <div className="ficha__datos">
             <Calificacion promedio={calificacion.promedio} total={calificacion.total} />
-            <span><Icono nombre="pin" tamano={16} /> {comuna || 'Comuna por confirmar'}</span>
+            <span><Icono nombre="pin" tamano={16} /> {modalidad === 'online' ? 'Atención online' : comuna || 'Comuna por confirmar'}</span>
             <span className="tarjeta-profesional__modalidad">{etiquetaModalidad(modalidad)}</span>
             {verificado && <span className="ficha__verificado"><Icono nombre="escudo" tamano={16} /> Verificado</span>}
+            {profesional.aniosExperiencia > 0 && <span>{profesional.aniosExperiencia} {profesional.aniosExperiencia === 1 ? 'año' : 'años'} de experiencia</span>}
           </div>
         </div>
         {!vistaPrevia && <BotonFavorito profesional={profesional} className="ficha__favorito" />}
@@ -106,20 +108,23 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
           <p className="ficha__descripcion">{descripcion || 'Este profesional todavía no ha añadido una descripción de sus servicios.'}</p>
         </section>
         <section className="ficha__seccion" aria-labelledby="titulo-lugar">
-          <h2 id="titulo-lugar">Lugar de atención</h2>
+          <h2 id="titulo-lugar">{modalidad === 'online' ? 'Atención online' : 'Lugar de atención'}</h2>
+          {modalidad === 'online' ? <p>Este profesional atiende de forma online.</p> : <>
           <p className="ficha__lugar"><strong>{establecimiento?.nombre || (comuna ? `Atención en ${comuna}` : 'Ubicación de atención')}</strong>
             <span>{direccionDe(profesional)
               || (modalidad === 'online' ? 'Atiende solo online.' : 'Consulta la dirección exacta directamente con el profesional.')}</span></p>
-          <a className="ficha__mapa" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ubicacionLat},${ubicacionLng}`)}`}
+          {ubicacionLat != null && ubicacionLng != null && <a className="ficha__mapa" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ubicacionLat},${ubicacionLng}`)}`}
             target="_blank" rel="noopener noreferrer" aria-label={`Ver ubicación de ${nombre} en Google Maps (nueva pestaña)`}>
             Ver ubicación en Google Maps <Icono nombre="flecha" tamano={16} />
-          </a>
+          </a>}
+          </>}
         </section>
+        <ExperienciaPublica profesional={profesional} />
       </div>
 
       {!vistaPrevia && <ReservarHora profesional={profesional} />}
       <Resenas profesionalId={profesional.id} nombre={nombre} resumen={resumenResenas} miResena={miResena}
-        puedeResenar={puedeResenar} onCambio={actualizarResenas} />
+        puedeResenar={puedeResenar} motivoSinResena={motivoSinResena} onCambio={actualizarResenas} />
     </article>
   );
 }

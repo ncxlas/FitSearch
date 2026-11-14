@@ -29,6 +29,9 @@ function simularServidor({ ficha = null, alGuardar } = {}) {
       return respuestaJson(200, { ficha: estado.ficha });
     }
     if (url === '/api/profesionales/mi-ficha') return respuestaJson(200, { ficha: estado.ficha });
+    if (url === '/api/profesionales/mi-ficha/experiencia') return respuestaJson(200, {
+      experiencia: { aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null },
+    });
     if (url === `/api/profesionales/${estado.ficha?.id}`) {
       const { id, ...datos } = estado.ficha;
       return respuestaJson(200, {
@@ -48,7 +51,7 @@ async function completarFicha({ modalidad = 'ambas', direccion = 'Av. Irarrázav
   await userEvent.selectOptions(screen.getByLabelText('Especialidad (obligatorio)'), 'Nutrición');
   await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), 'Atención nutricional');
   await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), modalidad);
-  await userEvent.type(screen.getByLabelText('Comuna (obligatorio)'), 'Ñuñoa');
+  if (modalidad !== 'online') await userEvent.type(screen.getByLabelText('Comuna (obligatorio)'), 'Ñuñoa');
   if (direccion) await userEvent.type(screen.getByLabelText(/^Dirección de atención/), direccion);
 }
 
@@ -84,18 +87,18 @@ describe('Sin ficha', () => {
     expect(huboPut(fetch)).toBe(false);
   });
 
-  test('si atiende solo online la dirección es opcional y se guarda vacía (SC-24)', async () => {
+  test('si atiende solo online no se pide ni se guarda ubicación', async () => {
     const fetch = simularServidor();
     renderizarApp('/profesional/perfil');
     await screen.findByRole('heading', { name: 'Configura tu perfil profesional' });
     expect(screen.getByLabelText('Dirección de atención (obligatorio)')).toHaveAttribute('autocomplete', 'street-address');
 
     await completarFicha({ modalidad: 'online', direccion: '' });
-    expect(screen.getByLabelText('Dirección de atención (opcional si atiendes solo online)')).toHaveValue('');
+    expect(screen.queryByLabelText(/^Dirección de atención/)).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Guardar perfil/ }));
 
     expect(await screen.findByText('Tu ficha profesional se guardó correctamente.')).toBeInTheDocument();
-    expect(cuerpoPut(fetch)).toMatchObject({ modalidad: 'online', direccion: '' });
+    expect(cuerpoPut(fetch)).toMatchObject({ modalidad: 'online', comuna: null, direccion: null, ubicacionLat: null, ubicacionLng: null });
   });
 
   test('los errores de la API se muestran en su campo', async () => {
@@ -112,6 +115,14 @@ describe('Sin ficha', () => {
 });
 
 describe('Con ficha', () => {
+  test('el perfil propio online muestra atención online sin la ubicación anterior', async () => {
+    simularServidor({ ficha: { ...MI_FICHA, modalidad: 'online', comuna: 'Comuna antigua', direccion: 'Dirección antigua 123' } });
+    renderizarApp('/profesional/perfil');
+    await screen.findByRole('heading', { level: 1, name: 'Matías Rojas' });
+    expect(screen.getAllByText('Atención online').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: /Google Maps/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Dirección antigua|Comuna antigua/)).not.toBeInTheDocument();
+  });
   test('muestra la verificación en el espacio profesional creado por el PR #13', async () => {
     simularServidor({ ficha: { ...MI_FICHA, verificado: true } });
     renderizarApp('/profesional/perfil');
@@ -143,18 +154,22 @@ describe('Con ficha', () => {
     simularServidor({ ficha: MI_FICHA });
     renderizarApp('/profesional/perfil');
     const sinDireccion = within(await screen.findByRole('region', { name: 'Atención' }));
-    expect(sinDireccion.getByText(/Agrega tu dirección de atención desde «Editar perfil»/)).toBeInTheDocument();
+    expect(sinDireccion.getByText(/Agrega tu dirección de atención desde "Editar perfil"/)).toBeInTheDocument();
   });
 
-  test('las pestañas que aún no existen lo dicen sin simular datos', async () => {
-    simularServidor({ ficha: MI_FICHA });
+  test('Información reúne la experiencia y mantiene solo dos pestañas, sin simular datos', async () => {
+    const fetch = simularServidor({ ficha: MI_FICHA });
+    const servidor = fetch.getMockImplementation();
+    const vacia = { aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null };
+    fetch.mockImplementation((url, opciones) => (url === '/api/profesionales/mi-ficha/experiencia'
+      ? respuestaJson(200, { experiencia: vacia }) : servidor(url, opciones)));
     renderizarApp('/profesional/perfil');
 
-    await userEvent.click(await screen.findByRole('tab', { name: 'Experiencia' }));
-    expect(screen.getByRole('tab', { name: 'Experiencia' })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('tab', { name: 'Información' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Información', 'Certificaciones']);
     const panel = screen.getByRole('tabpanel');
-    expect(within(panel).getByText('Próximamente')).toBeInTheDocument();
-    expect(within(panel).getByText(/años de experiencia/)).toBeInTheDocument();
+    expect(await within(panel).findByRole('button', { name: 'Agregar experiencia' })).toBeInTheDocument();
+    expect(within(panel).queryByText('Próximamente')).not.toBeInTheDocument();
   });
 
   test('permite recorrer las pestañas con el teclado y mantiene foco y panel coordinados', async () => {
@@ -164,9 +179,9 @@ describe('Con ficha', () => {
     informacion.focus();
 
     await userEvent.keyboard('{ArrowRight}');
-    expect(screen.getByRole('tab', { name: 'Horarios' })).toHaveFocus();
-    expect(screen.getByRole('tab', { name: 'Horarios' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Horarios');
+    expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveFocus();
+    expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Certificaciones');
 
     await userEvent.keyboard('{End}');
     expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveFocus();
@@ -192,5 +207,26 @@ describe('Con ficha', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Matías Rojas' })).toBeInTheDocument();
     expect(huboPut(fetch)).toBe(false);
+  });
+
+  test('copia el enlace de la ficha compartida, no la ruta privada del profesional', async () => {
+    const usuario = userEvent.setup();
+    const copiar = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+    simularServidor({ ficha: MI_FICHA });
+    renderizarApp('/profesional/perfil');
+    await usuario.click(await screen.findByRole('button', { name: 'Copiar enlace' }));
+    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/profesionales/${MI_FICHA.id}`);
+    expect(await screen.findByText('Enlace de tu perfil copiado.')).toBeInTheDocument();
+  });
+
+  test('si el navegador impide copiar, permite seleccionar el enlace manualmente', async () => {
+    const usuario = userEvent.setup();
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('Sin permiso'));
+    simularServidor({ ficha: MI_FICHA });
+    renderizarApp('/profesional/perfil');
+    await usuario.click(await screen.findByRole('button', { name: 'Copiar enlace' }));
+    expect(await screen.findByRole('textbox', { name: /No pudimos copiarlo automáticamente/ }))
+      .toHaveValue(`${window.location.origin}/profesionales/${MI_FICHA.id}`);
+    expect(screen.queryByText('Enlace de tu perfil copiado.')).not.toBeInTheDocument();
   });
 });

@@ -71,7 +71,8 @@ FitSearch/
 │           │   │   └── config/        # Variables de entorno
 │           │   └── tests/             # Pruebas unitarias y de integración
 │           ├── shared/            # Reglas y catálogos comunes a frontend y backend (reglas.json)
-│           └── docker-compose.yml
+│           ├── .env.example       # Variables de docker-compose.yml (FS-HU-11)
+│           └── docker-compose.yml # mysql + backend + frontend (backend/Dockerfile, frontend/Dockerfile)
 ├── FASE 3/                # Evidencias de la Fase 3
 └── README.md
 ```
@@ -126,13 +127,13 @@ Completar `backend/.env`:
 | `FRONTEND_URL` | Dirección del frontend usada en el enlace de recuperación (por defecto `http://localhost:5173`) |
 | `RECOVERY_TOKEN_MINUTES` | Vigencia del enlace de recuperación de contraseña (por defecto 60) |
 | `SMTP_HOST`, `SMTP_PORT` | Servidor de correo (por defecto Gmail: `smtp.gmail.com`, 465) |
-| `SMTP_USUARIO`, `SMTP_CONTRASENA` | Cuenta que envía los correos y su contraseña de aplicación de Google |
-| `SMTP_REMITENTE` | Remitente visible, por ejemplo `"FitSearch <correo@gmail.com>"` |
+| `SMTP_USUARIO`, `SMTP_CONTRASENA` | Cuenta que envía los correos (la del proyecto: `fitsearchoficial@gmail.com`) y su contraseña de aplicación de Google, con o sin los espacios con que Google la muestra |
+| `SMTP_REMITENTE` | Remitente visible: `"FitSearch <fitsearchoficial@gmail.com>"` (si se deja vacío, se usa `FitSearch <SMTP_USUARIO>`) |
 | `IA_API_KEY` | Clave del proveedor del asistente IA (Groq: crearla gratis en https://console.groq.com/keys) |
 | `IA_URL_BASE`, `IA_MODELO` | Proveedor compatible con OpenAI (por defecto Groq: `https://api.groq.com/openai/v1` y `openai/gpt-oss-120b`) |
 | `IA_MENSAJES_POR_DIA` | Mensajes que cada usuario puede enviar al asistente por día (por defecto 30) |
 
-Mientras `SMTP_CONTRASENA` esté vacía o diga `CAMBIAR`, el enlace de recuperación de contraseña se muestra en la consola del backend en lugar de enviarse por correo (útil en desarrollo). Mientras `IA_API_KEY` esté vacía, el asistente IA responde en modo de prueba, sin consultar al proveedor.
+Mientras falte `SMTP_USUARIO` o `SMTP_CONTRASENA` esté vacía o diga `CAMBIAR`, ningún correo sale: el enlace de recuperación de contraseña y los avisos de la agenda se muestran en la consola del backend (útil en desarrollo), y al arrancar el backend avisa qué falta. Para enviarlos de verdad, la cuenta de Gmail del proyecto necesita la verificación en dos pasos y una contraseña de aplicación (16 letras) en `SMTP_CONTRASENA`; `cd backend && npm run smtp:comprobar` comprueba la conexión sin enviar nada. Todos los correos (recuperación de contraseña y avisos de la agenda) usan la misma plantilla, con el diseño definido por el PO el 11-11-2026: encabezado con el logo y el lema, ícono según el aviso, saludo, panel con el detalle de la cita (fecha, horario, modalidad, tipo de atención y estado), «¿Qué debes hacer?», botón, el enlace escrito por si el botón no se ve, nota, despedida y aviso de mensaje automático, más una versión de solo texto. Está hecha con tablas y estilos en línea para Gmail, Outlook y el celular, y sus imágenes (`backend/src/recursos/correo`) van adjuntas dentro del correo, porque la app no tiene todavía una dirección pública desde donde cargarlas; `npm run smtp:plantillas -- --guardar <carpeta>` los guarda como HTML para revisarlos y `npm run smtp:plantillas -- --destinatario <correo> --enviar` envía una muestra de cada uno (8 correos, con datos de ejemplo y «[Muestra]» en el asunto). Al publicar la app, `FRONTEND_URL` debe ser su dirección pública, porque con ella se arman los enlaces; Gmail permite unos 500 destinatarios por día. Al restablecer la contraseña se cierran todas las sesiones abiertas de la cuenta, y `npm run test:mysql:acceso` comprueba con MySQL real el registro, el inicio de sesión, la recuperación, las cuentas creadas con Google y el acceso con Google (33 comprobaciones, con el correo simulado). Mientras `IA_API_KEY` esté vacía, el asistente IA responde en modo de prueba, sin consultar al proveedor.
 
 Opcional en `frontend/.env`: `VITE_GOOGLE_CLIENT_ID` con el ID de cliente OAuth de Google. Sin esta variable, el botón "Continuar con Google" aparece desactivado.
 
@@ -168,11 +169,11 @@ La aplicación queda en `http://localhost:5173`. Vite reenvía las llamadas a `/
 
 Sin sesión, la raíz (`/`) muestra la portada pública. Después de registrarse (con correo o con Google), la cuenta elige una sola vez cómo usar FitSearch en `/elegir-perfil`: como usuario sigue al asistente de perfil de 4 pasos (`/perfil`) y como profesional entra a su propio espacio (`/profesional/inicio`). Cambiar el tipo de cuenta después lo hace un administrador.
 
-- **Usuario:** el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). Desde ahí accede a Profesionales, Centros de salud (`/centros-salud`) y Gimnasios (`/gimnasios`) con su lista, mapa y ficha (FS-HU-25), Favoritos, Mis citas (`/citas`), Asistente IA (`/asistente`, FS-HU-07), Comidas (`/comidas`, FS-HU-09 y FS-HU-10) y su perfil.
-- **Profesional:** Inicio con clima, tareas y resumen semanal (`/profesional/inicio`), Mi agenda (`/profesional/agenda`), su perfil con la ficha pública (`/profesional/perfil`) y la vista previa de cómo lo ven los usuarios (`/profesional/perfil/publico`). Clientes, Mensajes, Reportes y Configuración aparecen como «Próximamente».
+- **Usuario:** el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). En celular, los accesos rápidos, las especialidades y los profesionales destacados son carruseles: se deslizan con el dedo y tienen flechas a los costados, que aparecen solo cuando hay más tarjetas hacia ese lado; desde 640 px vuelven a su grilla. Las pestañas de Comidas funcionan igual cuando no caben en la pantalla. Desde ahí accede a Profesionales, Centros de salud (`/centros-salud`) y Gimnasios (`/gimnasios`) con su lista, mapa y ficha (FS-HU-25), Favoritos, Mis citas (`/citas`), Asistente IA (`/asistente`, FS-HU-07), Comidas (`/comidas`, FS-HU-09 y FS-HU-10), Mensajes (`/mensajes`, FS-HU-31) y su perfil.
+- **Profesional:** Inicio con clima, tareas y resumen semanal (`/profesional/inicio`), Mi agenda con el calendario de la semana (`/profesional/agenda`), Clientes (`/profesional/clientes`, FS-HU-27), Mensajes (`/profesional/mensajes`, FS-HU-31), Reportes (`/profesional/reportes`, FS-HU-28), Configuración (`/profesional/configuracion`, FS-HU-29), su perfil con la ficha pública (`/profesional/perfil`) y la vista previa de cómo lo ven los usuarios (`/profesional/perfil/publico`).
 - **Administrador:** panel en `/admin` (Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; FS-HU-12).
 
-Las pantallas con sesión comparten encabezado (logo, notificaciones y menú de la cuenta), menú lateral y, en celular, barra inferior. Si se abre una ruta protegida sin sesión, después de iniciar sesión se vuelve a ella con sus filtros.
+Las pantallas con sesión comparten encabezado (logo, notificaciones y menú de la cuenta), menú lateral blanco (el mismo en el usuario, el profesional y el administrador) y, en celular, barra inferior. En escritorio el menú queda pegado al borde izquierdo y el contenido se centra en el espacio libre, sin franjas vacías en pantallas anchas. En pantallas grandes, el menú lateral del usuario, del profesional y del administrador se puede compactar con «Contraer menú» para ver solo los íconos (el nombre de cada opción aparece al pasar el mouse o al enfocarla, y el asistente queda como un acceso con ícono); la elección se recuerda en el navegador y en celular el menú siempre se abre completo. Si se abre una ruta protegida sin sesión, después de iniciar sesión se vuelve a ella con sus filtros.
 
 ### Directorio de profesionales — FS-HU-03, FS-HU-05 y FS-HU-22 a FS-HU-24
 
@@ -197,9 +198,9 @@ Detalle de la entrega original del listado: [FS-HU-03 — Listado de profesional
 | PUT | `/api/perfil/objetivos` | Bearer JWT (rol usuario) | Guarda objetivo principal, comidas al día y horas de sueño (FS-HU-18) |
 | PUT | `/api/perfil/salud` | Bearer JWT (rol usuario) | Guarda condiciones médicas, medicamentos y alergias (FS-HU-19; solo valores de `shared/reglas.json`) |
 | GET | `/api/profesionales/mi-ficha` | Bearer JWT (rol profesional) | Ficha propia del profesional (FS-HU-04) |
-| PUT | `/api/profesionales/mi-ficha` | Bearer JWT (rol profesional) | Crea o actualiza la ficha propia: especialidad, comuna, dirección de atención (obligatoria salvo que atienda solo online), modalidad, ubicación dentro de Chile (el formulario la obtiene con la ruta siguiente y el profesional puede ajustar el marcador; SC-28) y descripción (FS-HU-04, SC-24) |
+| PUT | `/api/profesionales/mi-ficha` | Bearer JWT (rol profesional) | Crea o actualiza la ficha propia: especialidad, modalidad y descripción. Presencial y ambas requieren comuna, dirección y coordenadas dentro de Chile (SC-28). Solo online guarda comuna, dirección, establecimiento y coordenadas en null, aunque el cuerpo incluya una ubicación anterior (FS-HU-04, SC-24) |
 | GET | `/api/profesionales/mi-ficha/ubicacion` | Bearer JWT (rol profesional) | Coordenadas de la `comuna` y la `direccion` de atención, buscadas en Nominatim (OpenStreetMap) con una consulta por segundo y caché de 24 horas; responde `lat`, `lng`, la `precision` (`exacta`, `calle` o `comuna`) y lo que encontró; 404 si la comuna no existe en Chile y 503 si Nominatim no responde (FS-HU-04, SC-28) |
-| GET | `/api/clima` | Bearer JWT (rol profesional) | Clima actual para el Inicio del profesional (Open-Meteo, con las coordenadas de su ficha y caché de 30 minutos) |
+| GET | `/api/clima` | Bearer JWT (rol profesional) | Clima actual para el Inicio del profesional (Open-Meteo, caché de 30 minutos). Usa las coordenadas de la ficha presencial; sin ubicación o si atiende solo online, usa Santiago como referencia |
 | GET | `/api/profesionales` | Bearer JWT (rol usuario) | Listado paginado (12 por página) con `q`, `especialidad`, `comuna`, `modalidad`, `calificacionMin`, `distanciaKm` (2, 5, 10 o 25, requiere `lat` y `lng`), `orden` (`nombre`, `cercania`, `calificacion`, `resenas`), `pagina` y `limite`; devuelve `profesionales`, `total`, `totalPaginas` y `hayMas` |
 | GET | `/api/profesionales/filtros` | Bearer JWT (rol usuario) | Especialidades y comunas disponibles para los filtros |
 | GET | `/api/profesionales/:id` | Bearer JWT | Ficha pública, resumen de calificaciones, reseña propia y si la persona puede calificar |
@@ -224,9 +225,28 @@ Implementada en el Sprint 3 (PR #15, #19 y #20). Estaba prevista para el Sprint 
 
 El panel autorizado incluye Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; Configuración queda fuera y Contenido está planificado para el Sprint 5 (FS-HU-30). Las cuentas administrativas se preparan con `npm run admin:promover -- --correo correo-de-la-cuenta --confirmar`. Una ficha comienza en `sin_solicitud`; solo el envío explícito con documentos vigentes entra a Pendientes. Rechazo, revocación y cambio de especialidad exigen documentos y solicitud nuevos. Los PR #19 y #20 están fusionados. Se admiten diez cargas por tipo y trámite y la vigencia se determina por IDs. Detalle y evidencia: [FS-HU-12 — Verificación](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
 
+### Panel del administrador (11-11-2026)
+
+El administrador usa el mismo encabezado, menú lateral (compactable) y barra inferior que los otros espacios. Su menú de cuenta dice «Administrador» y la campana avisa las verificaciones pendientes. Cada pantalla tiene un propósito y no repite a otra:
+
+- **Dashboard** (operativo): la cola de verificaciones por antigüedad (con días de espera y documentos), cuatro cifras de los últimos 7 días frente a los 7 anteriores (cuentas nuevas, reservas, reseñas y preguntas al asistente), la actividad diaria de 14 días, las últimas cuentas y el estado de la plataforma.
+- **Reportes** (análisis de 30 días, 90 días o 12 meses frente al período anterior): crecimiento por tipo de cuenta, demanda (reservas por estado, cancelación, profesionales con reservas y especialidades más pedidas), oferta (estado de verificación, especialidades, comunas y días para verificar), calidad de las reseñas y uso de las funciones. Se descarga en CSV.
+- **Verificaciones** es la cola de trabajo (de la solicitud más antigua a la más reciente) y **Profesionales** el directorio, con calificación y reservas.
+
+Los gráficos (cifras con comparación, columnas apiladas y barras) están en `frontend/src/components/graficos`, con colores validados para daltonismo, detalle al pasar el mouse o enfocar y una tabla para lectores de pantalla. Los días se cortan en la hora de Chile.
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| GET | `/api/administrador/dashboard` | Bearer JWT (rol administrador) | Cola de verificación, cifras de 7 días, actividad de 14 días, últimas cuentas y estado de la plataforma |
+| GET | `/api/administrador/reportes` | Bearer JWT (rol administrador) | Reportes de `dias` = 30, 90 o 365 (por semana o por mes) frente al período anterior |
+| GET | `/api/administrador/alertas` | Bearer JWT (rol administrador) | Verificaciones pendientes, para la campana |
+| GET | `/api/administrador/profesionales` | Bearer JWT (rol administrador) | Con `vista=cola` (por antigüedad, días de espera y documentos) o `vista=directorio` (por nombre, calificación y reservas) |
+
 ### Contenido del administrador — FS-HU-30
 
 En `/admin/contenido` el administrador agrega, edita, desactiva y elimina las especialidades, los alimentos de Comidas y los establecimientos (centros de salud y gimnasios, con su comuna y su ubicación). Lo que está en uso no se elimina: la API responde 409 con el uso y la pantalla ofrece desactivarlo, para que no aparezca en elementos nuevos sin perder el historial. Las especialidades pasaron de `shared/reglas.json` a la tabla `especialidades`: las usan la ficha del profesional, el buscador de la portada y el asistente IA, siempre solo las activas, y renombrar una actualiza las fichas que la usan. Un alimento desactivado deja de aparecer al registrar comidas y en el asistente.
+
+Los establecimientos tienen además su cuenta de Instagram (opcional): se puede escribir `@usuario`, `usuario` o pegar el enlace del perfil, y se guarda solo el usuario. Las tarjetas y la ficha de Gimnasios y Centros de salud la muestran con un enlace que se abre en otra pestaña. La migración `20261111130000_gimnasios_san_antonio` agrega la columna `instagram` y 11 gimnasios de la comuna de San Antonio (incluye Llolleo y Barrancas), con nombre y dirección del directorio público de gimnasios de San Antonio de AgendaPro (revisado el 11-11-2026), Instagram de sus perfiles públicos (4 de 11 lo tienen) y coordenadas de OpenStreetMap a nivel de calle. Es aditiva y no duplica si se vuelve a aplicar.
 
 Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`: la migración `20261104120000_contenido_administrador` crea `especialidades` con las cinco del catálogo anterior y agrega `activo` a `alimentos` y a `establecimientos`, y `comuna` a `establecimientos`, sin borrar datos.
 
@@ -250,6 +270,21 @@ La lista y el mapa se ven juntos (SC-27): en escritorio la lista va a la izquier
 
 Los PR #21 y #22 están fusionados en `main` (12-10-2026); el PO aceptó FS-HU-13 y FS-HU-14 el 12-10-2026 y FS-HU-06 el 26-10-2026, después de aprobarse CP-078 con el mapa real. El 12-10-2026 se comprobaron el envío real de correos (SMTP) y Google Maps real con una Demo Key, sin facturación; desde el 15-10-2026 el mapa usa MapLibre GL JS con OpenFreeMap, sin clave (SC-18, PR #27). [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS (versión 1.30) y sus diagramas están en el Drive del equipo.
 
+### Agenda semanal, reservas y espacio del profesional (FS-HU-27 a FS-HU-29 y FS-HU-31)
+
+El 09-11-2026 el PO pidió mejorar la agenda, las reservas y el espacio del profesional y tomó FS-HU-27, FS-HU-28, FS-HU-29 y FS-HU-31. La migración `20261109120000_mejoras_agenda_y_profesional` solo agrega columnas opcionales o con valor por defecto y cuatro tablas (`bloqueos_agenda`, `lista_espera`, `chats` y `mensajes_chat`), y `20261110120000_reintento_de_avisos` agrega dos columnas opcionales para reintentar los avisos; ejecutar `npm run db:generate` y `npm run db:migrate` antes de iniciar el backend.
+
+- **Mi agenda** (`/profesional/agenda`): calendario de la semana con una fila por hora y los horarios coloreados por estado (libre, por confirmar, confirmada y día bloqueado), la hora actual y, en pantallas angostas, un día a la vez. Al elegir un horario se ve su detalle (cliente, mensaje, modalidad y primera visita) para confirmar, cancelar o escribirle; un clic en un espacio libre propone publicar a esa hora. Permite publicar varios bloques de una vez (`POST /api/disponibilidades/serie`), bloquear fechas (`/api/agenda/bloqueos`; no se puede bloquear un día con reservas activas) y muestra las solicitudes por confirmar y cuántas personas esperan una hora (`GET /api/agenda/semana?desde=AAAA-MM-DD`). El formulario anterior con el calendario del mes sigue en la pestaña Horarios del perfil.
+- **Reserva**: al reservar se pregunta si es la primera visita y, si el profesional atiende de ambas formas, si será presencial u online. El buscador muestra en cada tarjeta la próxima hora libre y hasta tres horas; cada una abre la ficha con esa hora elegida (`?hora=ID`). Hay un filtro «Con horas libres» (hoy, 3 o 7 días) y el orden «Disponibles antes». El buscador sugiere especialidades según el objetivo del perfil.
+- **Lista de espera** (`/api/profesionales/:id/lista-espera`): si el profesional no tiene horas, el usuario puede pedir «Avísame si se libera una hora»; al publicarse un horario o cancelarse una reserva futura se le escribe una vez y sale de la lista. Si dos publicaciones coinciden, cada persona recibe un solo aviso; si el correo falla, sigue en la lista para el próximo.
+- **Avisos por correo y recordatorios**: reserva nueva (al profesional), confirmación o cancelación (a la otra persona) y recordatorio 24 horas antes de la cita confirmada (el servidor revisa cada 10 minutos y envía uno por cita; si el correo falla, lo reintenta en la revisión siguiente, sin duplicarlo). Sin SMTP configurado se escriben en la consola del backend.
+- **Reseñas verificadas**: una reseña nueva exige una cita confirmada con el profesional que ya ocurrió y queda marcada «Cita verificada»; las anteriores al 09-11-2026 se conservan sin el sello. La ficha filtra por positivas (4 y 5 estrellas) y negativas (1 y 2).
+- **FS-HU-27 Clientes y FS-HU-28 Reportes** (PR #50, Nicolás Silva): Clientes (`/profesional/clientes` y el historial de cada persona en `/profesional/clientes/:id`; `GET /api/profesional/clientes` y `/:id`), con la cantidad de citas, las realizadas, la próxima y la última, sin correo ni información de salud; Reportes (`/profesional/reportes`, `GET /api/profesional/reportes?semanas=4..26`): reservas por semana de la cita y por estado (realizadas, confirmadas, pendientes, sin confirmar y canceladas), calificación promedio y el resumen de la semana en curso que muestra el Inicio del profesional. El 11-11-2026 el equipo eligió esta versión y retiró la que traía este PR, que duplicaba las mismas rutas.
+- **FS-HU-29 Experiencia y configuración**: años de experiencia, formación, a quién atiende, número de registro en la Superintendencia de Salud (con enlace para comprobarlo) y precio referencial, que se muestran en la ficha pública (`/api/profesionales/mi-ficha/experiencia`); y la configuración (`/profesional/configuracion`, `/api/profesionales/mi-ficha/configuracion`): confirmar reservas automáticamente, avisos por correo y recordatorios a los clientes.
+- **FS-HU-31 Mensajes** (`/mensajes` para el usuario y `/profesional/mensajes` para el profesional): un solo chat por usuario y profesional, con el historial de todas sus reservas (el aviso de cada reserva y su mensaje inicial aparecen dentro del chat). Solo lo ven sus dos participantes (para cualquier otra cuenta responde 404) y sigue abierto aunque una reserva se cancele. Tiene un buscador por palabras que no distingue mayúsculas ni tildes, lista los resultados y lleva al mensaje elegido. Cada uno puede eliminar el chat, con confirmación: se borra solo para quien lo elimina y, si vuelven a escribirse, reaparece solo con lo nuevo; cuando los dos lo eliminan, los mensajes que ninguno ve se borran de la base. En la lista de chats del usuario, cada profesional muestra su especialidad en una etiqueta junto al nombre (11-11-2026), que baja a la línea siguiente si el nombre es largo; en la del profesional no se repite «Cliente». La campana del encabezado avisa los mensajes sin leer. Los enlaces desde una reserva abren el chat de esa pareja (`/mensajes?reserva=ID`). Rutas `GET|POST /api/chats`, `GET /api/chats/no-leidos`, `GET|DELETE /api/chats/:id` y `POST /api/chats/:id/mensajes`.
+
+Con esto Clientes, Mensajes, Reportes y Configuración del profesional dejan de ser «Próximamente». Comprobación con MySQL real: `cd backend && npm run test:mysql:mejoras` (85 comprobaciones, con cuentas temporales que se borran al final y con el envío de correos simulado, incluidos sus fallos).
+
 ### Asistente IA — FS-HU-07 y FS-HU-08
 
 La usuaria o el usuario conversa en `/asistente` con un asistente de orientación general en salud, alimentación y actividad física: historial de conversaciones (las fijadas primero), sugerencias, acciones rápidas y un aviso permanente de que no reemplaza a un profesional. Solo ante una situación crítica (por ejemplo, un hueso roto o dificultad para respirar) la respuesta indica llamar al SAMU (131), y ante señales de riesgo suicida, al *4141; la API lo agrega aunque el modelo no lo diga, y las molestias leves no llevan ese aviso (SC-26). Cada cuenta puede enviar 30 mensajes por día (hora de Chile); borrar una conversación no devuelve el cupo.
@@ -272,9 +307,11 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 
 ### Comidas — FS-HU-09 y FS-HU-10
 
-En `/comidas` la persona registra lo que come: busca un alimento del catálogo (58 alimentos con sus valores por 100 g, aproximados de USDA FoodData Central), indica los gramos y el momento del día (desayuno, media mañana, almuerzo, merienda o cena) y el sistema calcula sus calorías y macronutrientes antes de guardarlo. El resumen muestra las calorías de hoy frente al objetivo diario, el progreso de la semana, las comidas de hoy por momento, los macronutrientes y su objetivo. El objetivo es el requerimiento calórico del perfil (Mifflin-St Jeor), repartido en 30 % de proteínas, 45 % de carbohidratos y 25 % de grasas (`shared/reglas.json`). La pestaña Comidas permite cambiar los gramos o el momento y quitar alimentos, también de días anteriores. Se adelantó del Sprint 5 al Sprint 4 por decisión del PO del 26-10-2026 (SC-30) y el PO la aceptó el 02-11-2026.
+En `/comidas` la persona registra lo que come: busca un alimento del catálogo (58 alimentos con sus valores por 100 g, aproximados de USDA FoodData Central), indica los gramos y el momento del día (desayuno, media mañana, almuerzo, merienda o cena) y el sistema calcula sus calorías y macronutrientes antes de guardarlo. El resumen muestra las calorías de hoy frente al objetivo diario, el progreso de la semana, las comidas de hoy por momento, los macronutrientes y su objetivo. El objetivo sale del plan de alimentación que rige ese día (ver «Plan de alimentación», más abajo); hasta el 11-11-2026 era el requerimiento del perfil con un reparto fijo de 30/45/25. La pestaña Comidas permite cambiar los gramos o el momento y quitar alimentos, también de días anteriores. Se adelantó del Sprint 5 al Sprint 4 por decisión del PO del 26-10-2026 (SC-30) y el PO la aceptó el 02-11-2026.
 
 La pestaña Estadísticas (FS-HU-26) muestra la semana o el mes: las calorías y los macronutrientes de cada día frente al objetivo diario, y el promedio de los días con registros. Un día sin registros no baja el promedio.
+
+Paneles de Comidas (pedido del PO del 11-11-2026): cada panel explica en una línea qué muestra. En el Resumen, la tarjeta del día dice cuánto falta para la meta («Te faltan 550 kcal», «Llegaste a tu meta» o «Te pasaste por…») y cuántos gramos faltan de cada macronutriente, y compara el día con el promedio de los otros días de la semana; el progreso semanal muestra cada día frente a la meta, con el porcentaje alcanzado, la franja de ±10 % en que un día cuenta como «cerca de la meta» y cuántos días completos quedaron cerca. Las Estadísticas agregan las cifras del período (promedio, días cerca de la meta, diferencia con la meta y días con registro, comparados con la semana o el mes anterior), la comparación del promedio de calorías y macronutrientes con el período anterior, el reparto de calorías frente al del plan y el promedio de calorías de cada comida del día; al pasar el mouse sobre una barra se ve el detalle de ese día. Hoy aún no termina: aparece en los gráficos, pero no cuenta para el promedio ni para los días cerca de la meta. El margen está en `shared/reglas.json` (`comidas.estadisticas.margenMeta`) y `npm run test:mysql:plan` (75 comprobaciones) lo verifica con MySQL real.
 
 También se puede pedir al asistente, por ejemplo «añade 100 g de pollo a mi almuerzo». El modelo llama a la función `agregar_alimentos` y el backend busca cada alimento en el catálogo, lo registra en las comidas de hoy y arma la respuesta, sin otra consulta al proveedor (DAS 1.29, D37). Los alimentos y los mensajes se guardan en una sola transacción: si algo falla no queda ninguna comida a medias y el reintento no la duplica (DAS 1.30). Lo que no está en el catálogo no se agrega y la respuesta lo dice. El chat muestra la tarjeta «Agregado a tus comidas de hoy» con el acceso a Comidas, y el pedido usa uno de los 30 mensajes del día.
 
@@ -285,10 +322,35 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 | GET | `/api/comidas/alimentos` | Bearer JWT (rol usuario) | Busca en el catálogo por nombre o sinónimo con `q` (2 a 60 caracteres, sin importar tildes); hasta 12 alimentos con su aporte por 100 g |
 | GET | `/api/comidas` | Bearer JWT (rol usuario) | Comidas del día (`fecha` AAAA-MM-DD, por defecto hoy en Chile) agrupadas por momento, con el consumo y el objetivo diario; 400 si la fecha aún no llega |
 | GET | `/api/comidas/semana` | Bearer JWT (rol usuario) | Calorías de cada día, de lunes a domingo, de la semana de `fecha`, con el objetivo calórico |
-| GET | `/api/comidas/estadisticas` | Bearer JWT (rol usuario) | Estadísticas de la semana (`periodo=semana`, por defecto) o del mes (`periodo=mes`) de `fecha`: calorías y macronutrientes de cada día, el objetivo diario y el promedio de los días con registros |
+| GET | `/api/comidas/estadisticas` | Bearer JWT (rol usuario) | Estadísticas de la semana (`periodo=semana`, por defecto) o del mes (`periodo=mes`) de `fecha`: calorías y macronutrientes de cada día, el objetivo diario (con el reparto del plan), el promedio de los días con registros, cuántos quedaron cerca de la meta, el período anterior para comparar y el promedio de calorías de cada comida del día |
 | POST | `/api/comidas` | Bearer JWT (rol usuario) | Registra `alimentoId`, `gramos` (1 a 2000) y `momento`, y opcionalmente `fecha`; guarda las calorías y los macronutrientes calculados (201) |
 | PATCH | `/api/comidas/:id` | Bearer JWT (rol usuario) | Cambia los `gramos` (recalcula el aporte) o el `momento` de un registro propio; 404 si no existe o es de otra cuenta |
 | DELETE | `/api/comidas/:id` | Bearer JWT (rol usuario) | Quita un registro propio (204) |
+
+### Plan de alimentación y meta de peso (11-11-2026)
+
+La pestaña «Plan de alimentación» de Comidas reemplaza el reparto fijo. Hay dos formas de plan:
+
+- **Según tu meta** (por defecto): las calorías son el gasto estimado del perfil (Mifflin-St Jeor por la actividad física) ajustado por la meta: −15 % para bajar de peso, sin bajar de 1.200 kcal en mujeres ni de 1.500 en hombres (salvo que el gasto ya sea menor), y +10 % para ganar masa. La proteína va en gramos por kilo según la meta (bajar 1,8; mantener 1,4; ganar masa 2,0; rendimiento 1,6; hasta un 35 % de las calorías), las grasas entre 20 % y 35 % y los carbohidratos con el resto (en «Mejorar rendimiento», 5 g por kilo). Sin peso ni requerimiento se muestra el reparto de referencia (70 kg, 2.300 kcal) sin gramos.
+- **Personalizados**: una lista de hasta 10 planes propios con nombre y tres porcentajes (de 5 % a 80 %, que suman 100). Se elige cuál usar; las calorías siguen la meta. El límite de 10 se revisa en la misma transacción que crea el plan, con la cuenta bloqueada: dos solicitudes simultáneas no lo pueden superar (revisión del PR #52). La pantalla avisa lo que sale de los rangos generales (proteínas 10–35 %, carbohidratos 45–65 %, grasas 20–35 %) y cuánta proteína por kilo significa.
+
+El plan elegido rige desde ese día y guarda una copia de los porcentajes: los días anteriores conservan el suyo aunque el plan se edite o se borre. Al borrar el plan en uso vuelve el de la meta.
+
+La **meta de peso** (solo para «Bajar de peso» o «Aumentar masa muscular») guarda el peso al que se quiere llegar y el ritmo semanal (0,25, 0,5 o 0,75 kg para bajar; 0,25 o 0,5 para ganar). El ajuste de calorías pasa a ser el del ritmo (cerca de 7.700 kcal por kilo repartidas en la semana) con el mismo piso de seguridad. Se muestra el avance con el peso del perfil, lo que falta y una fecha estimada. No se acepta un peso bajo un IMC de 18,5 al bajar ni sobre 30 al ganar. Si la meta del perfil cambia, la meta de peso queda guardada pero deja de aplicarse. Como el plan, la meta de peso rige desde el día en que se guarda: crearla, ajustarla o quitarla no cambia el objetivo de calorías de los días anteriores (revisión del PR #52).
+
+Fuentes: Institute of Medicine (rangos AMDR), OMS (alimentación sana e IMC), ISSN 2017 (proteína y ejercicio), Morton y otros 2018, revisión 2015 sobre proteína en déficit calórico, Iraki y otros 2019, declaración conjunta 2016 sobre nutrición deportiva, guía AHA/ACC/TOS 2013 y Hall y otros 2011 (balance de energía). Los enlaces están en la misma pantalla («Cómo se calcula» → «Fuentes»). Es una orientación para adultos sanos; la pantalla lo dice y ofrece buscar nutricionistas.
+
+La migración `20261111120000_plan_alimentacion` crea `planes_personalizados`, `planes_alimentacion` y `metas_peso` (con restricciones CHECK de porcentajes, tipos y dirección del peso), y `20261112120000_metas_peso_por_dia` agrega a `metas_peso` la fecha desde la que rige cada meta y si está activa (una fila por usuario y día). `npm run test:mysql:plan` lo comprueba contra MySQL real (75 comprobaciones, incluidas tres solicitudes simultáneas con 9 planes y la vigencia de la meta de peso por día) con una cuenta temporal que se borra al final.
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| GET | `/api/comidas/plan` | Bearer JWT (rol usuario) | Plan vigente, meta, recomendado, lista de personalizados, meta de peso y sus opciones |
+| PUT | `/api/comidas/plan` | Bearer JWT (rol usuario) | Elige el plan desde hoy: `{ tipo: 'meta' }` o `{ tipo: 'personalizado', personalizadoId }` (404 si es ajeno) |
+| POST | `/api/comidas/plan/personalizados` | Bearer JWT (rol usuario) | Crea un personalizado (`nombre`, `proteinas`, `carbohidratos`, `grasas`, `usar` opcional); 409 si el nombre se repite o ya hay 10 |
+| PUT | `/api/comidas/plan/personalizados/:id` | Bearer JWT (rol usuario) | Edita uno propio; si está en uso, rige con los porcentajes nuevos desde hoy |
+| DELETE | `/api/comidas/plan/personalizados/:id` | Bearer JWT (rol usuario) | Borra uno propio; si estaba en uso, desde hoy vuelve el plan de la meta |
+| PUT | `/api/comidas/plan/meta-peso` | Bearer JWT (rol usuario) | Guarda `pesoObjetivoKg` y `ritmoSemanalKg`; 400 con el motivo si no corresponde a la meta o al peso actual |
+| DELETE | `/api/comidas/plan/meta-peso` | Bearer JWT (rol usuario) | Quita la meta de peso |
 
 ### Agua — FS-HU-33
 
@@ -309,7 +371,32 @@ El avance se muestra frente a una meta general de 2.000 ml (`shared/reglas.json`
 
 ## Ejecución con Docker
 
-_Pendiente (FS-HU-11, Sprint 5)._
+Levanta la aplicación completa en tres contenedores (FS-HU-11): **mysql** (MySQL 8.4), **backend** (API Node.js, sin privilegios) y **frontend** (build de Vite servido por Nginx sin privilegios, que reenvía `/api` al backend). Al arrancar, el backend aplica las migraciones pendientes de Prisma y carga los roles; no hace falta ejecutar `crear_base_datos.sql` ni `npm install`.
+
+Requisitos: Docker Engine con Docker Compose v2. En Windows, Docker Desktop exige Windows 10 22H2 (19045) o Windows 11; en versiones anteriores (por ejemplo Windows 10 LTSC 21H2) se usa Docker Engine dentro de una distribución Ubuntu de WSL 2. Detalle en el Manual Técnico de despliegue.
+
+```bash
+cd "FASE 2/Evidencias Proyecto/Evidencias de sistema"
+cp .env.example .env        # completar MYSQL_ROOT_PASSWORD, MYSQL_PASSWORD y JWT_SECRET
+docker compose up --build
+```
+
+| Dirección | Qué es |
+|---|---|
+| http://localhost:8080 | Aplicación web |
+| http://localhost:3000/api/salud | Estado de la API (`{"estado":"ok"}`) |
+
+Las contraseñas de `.env` forman parte de la URL de conexión: usar solo letras y números (por ejemplo `openssl rand -hex 16`). MySQL guarda las contraseñas con que se creó su volumen: si después se cambia `MYSQL_PASSWORD`, el backend se detiene con `P1000` y un mensaje que lo explica; hay que volver a la contraseña original o, si los datos no importan, ejecutar `docker compose down -v`. El resto de las variables es opcional (correo, Google, asistente IA) y está explicado en `.env.example`. Si se cambia `GOOGLE_CLIENT_ID`, reconstruir con `docker compose up --build`, porque el frontend lo recibe al compilarse.
+
+| Comando | Efecto |
+|---|---|
+| `docker compose up -d --build` | Construye y levanta en segundo plano |
+| `docker compose logs -f backend` | Muestra el log de la API (migraciones, enlaces de correo cuando no hay SMTP) |
+| `docker compose down` | Detiene y elimina los contenedores; **conserva** los datos (volúmenes `mysql-datos` y `verificaciones`) |
+| `docker compose down -v` | Además **borra** la base de datos y los documentos de verificación |
+| `docker compose exec -e NODE_ENV=development backend node prisma/seed-profesionales.js` | Carga los profesionales ficticios «Demo» (opcional, solo para revisión) |
+
+Los contenedores se comunican por la red interna de Compose usando el nombre del servicio (`mysql`, `backend`); no se usa `network_mode: host`. Casos de prueba y evidencia: [FS-HU-11 — Docker](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-11_Docker.md).
 
 ## Pruebas
 
@@ -334,7 +421,7 @@ cd backend && npm run test:carga
 
 Crea 500 profesionales temporales, mide la búsqueda, la ficha y el inicio de sesión con varias conexiones simultáneas (`CARGA_CONEXIONES`, por defecto 20) y prueba 50 reservas simultáneas sobre el mismo horario; luego borra sus datos. Con `-- --guardar-evidencia` guarda el resultado en `Plan de Pruebas`.
 
-Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. Las dos muestran el resultado en la consola y solo reescriben su evidencia en `Plan de Pruebas` si se agrega la opción, por ejemplo `npm run test:mysql:comidas -- --guardar-evidencia`. `npm run test:mysql:especialidades` comprueba que guardar una ficha y eliminar su especialidad al mismo tiempo no deje la ficha con una especialidad inexistente: una de las dos operaciones espera a la otra (revisión del PR #42).
+Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. Las dos muestran el resultado en la consola y solo reescriben su evidencia en `Plan de Pruebas` si se agrega la opción, por ejemplo `npm run test:mysql:comidas -- --guardar-evidencia`. `npm run test:mysql:plan` comprueba el plan de alimentación, la lista de personalizados, la meta de peso y las restricciones de sus tablas. `npm run test:mysql:especialidades` comprueba que guardar una ficha y eliminar su especialidad al mismo tiempo no deje la ficha con una especialidad inexistente: una de las dos operaciones espera a la otra (revisión del PR #42).
 
 ## Convenciones de trabajo
 

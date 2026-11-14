@@ -27,12 +27,14 @@ module.exports = [
     .isString().withMessage('La descripción debe ser un texto').bail()
     .trim().isLength({ max: reglas.descripcion.max }).withMessage(`La descripción admite hasta ${reglas.descripcion.max} caracteres`),
   body('comuna')
+    .if((_valor, { req }) => req.body.modalidad !== 'online')
     .isString().withMessage('Ingresa la comuna donde atiendes').bail()
     .trim().notEmpty().withMessage('Ingresa la comuna donde atiendes').bail()
     .isLength({ max: reglas.comuna.max }).withMessage(`La comuna admite hasta ${reglas.comuna.max} caracteres`),
   body('modalidad')
     .isIn(valores(reglas.modalidades)).withMessage('Selecciona cómo atiendes'),
   body('direccion')
+    .if((_valor, { req }) => req.body.modalidad !== 'online')
     .custom((valor, { req }) => {
       const vacia = valor === undefined || valor === null || (typeof valor === 'string' && !valor.trim());
       if (vacia && req.body.modalidad !== 'online') throw new Error('Ingresa la dirección donde atiendes');
@@ -41,9 +43,11 @@ module.exports = [
       return true;
     }),
   body('ubicacionLat')
+    .if((_valor, { req }) => req.body.modalidad !== 'online')
     .notEmpty().withMessage('Ingresa la latitud').bail()
     .isFloat({ min: latMin, max: latMax }).withMessage(`La latitud debe estar en Chile (entre ${texto(latMin)} y ${texto(latMax)})`).toFloat(),
   body('ubicacionLng')
+    .if((_valor, { req }) => req.body.modalidad !== 'online')
     .notEmpty().withMessage('Ingresa la longitud').bail()
     .isFloat({ min: lngMin, max: lngMax }).withMessage(`La longitud debe estar en Chile (entre ${texto(lngMin)} y ${texto(lngMax)})`).toFloat(),
 ];

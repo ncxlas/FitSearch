@@ -11,6 +11,8 @@ const simular = ({ ficha = MI_FICHA, clima = CLIMA } = {}) => simularApi({
   '/api/profesionales/mi-ficha': { ficha },
   '/api/clima': clima,
   '/api/disponibilidades': { horarios: [] },
+  // Resumen semanal real (FS-HU-28, 09-11-2026).
+  '/api/profesional/reportes': { semanaActual: { reservas: 3, confirmadas: 2, canceladas: 1, pendientes: 0, clientesNuevos: 1 } },
 });
 
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)));
@@ -47,6 +49,22 @@ describe('Diseño del profesional', () => {
     expect(screen.getByRole('link', { name: 'FitSearch, ir al inicio' })).toHaveAttribute('href', '/profesional/inicio');
   });
 
+  test('el menú del profesional también se compacta a solo íconos y vuelve a expandirse', async () => {
+    simular();
+    renderizarApp('/profesional/inicio');
+    await screen.findByRole('heading', SALUDO);
+    const menu = screen.getByRole('navigation', { name: 'Menú principal' });
+    await userEvent.click(within(menu).getByRole('button', { name: 'Contraer menú' }));
+    expect(menu).toHaveClass('menu-lateral--compacto');
+    const agenda = within(menu).getByRole('link', { name: 'Agenda' });
+    await userEvent.hover(agenda);
+    expect(document.querySelector('.etiqueta-flotante')).toHaveTextContent('Agenda');
+    // El profesional no tiene la tarjeta del asistente: su menú compacto no agrega el acceso al chat.
+    expect(within(menu).queryByRole('link', { name: 'Abrir chat con el asistente IA' })).not.toBeInTheDocument();
+    await userEvent.click(within(menu).getByRole('button', { name: 'Expandir menú' }));
+    expect(menu).not.toHaveClass('menu-lateral--compacto');
+  });
+
   test('el menú de la cuenta lleva al perfil profesional', async () => {
     simular();
     renderizarApp('/profesional/inicio');
@@ -56,12 +74,12 @@ describe('Diseño del profesional', () => {
     expect(within(panel).queryByRole('link', { name: 'Mi perfil' })).not.toBeInTheDocument();
   });
 
-  test('una sección que aún no existe muestra "Próximamente" y vuelve al Inicio del profesional', async () => {
-    simular();
+  // Clientes (PR #50) ya no es «Próximamente»; su lista e historial se prueban en Clientes.test.jsx.
+  test('Clientes ya existe y no ofrece el buscador del usuario', async () => {
+    simularApi({ '/api/profesional/clientes': { clientes: [], zonaHoraria: 'America/Santiago' } });
     renderizarApp('/profesional/clientes');
-    expect(screen.getByRole('heading', { level: 1, name: 'Clientes' })).toBeInTheDocument();
-    expect(screen.getByText(/personas que reserven/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/profesional/inicio');
+    expect(await screen.findByText('Aún no tienes clientes')).toBeInTheDocument();
+    expect(screen.queryByText('Próximamente')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Buscar profesionales/ })).not.toBeInTheDocument();
   });
 });
@@ -73,7 +91,7 @@ describe('Inicio del profesional', () => {
     await screen.findByRole('group', { name: 'Clima en Providencia: 18 grados, Despejado' });
     expect(screen.queryByText('Define tu disponibilidad')).not.toBeInTheDocument();
   });
-  test('saluda, muestra el clima de su comuna con la fuente y el resumen semanal sin datos simulados', async () => {
+  test('saluda, muestra el clima de su comuna con la fuente y, si el resumen no carga, no inventa datos', async () => {
     simular();
     renderizarApp('/profesional/inicio');
 
@@ -83,7 +101,32 @@ describe('Inicio del profesional', () => {
     expect(within(clima).getByRole('link', { name: 'Datos: Open-Meteo' })).toHaveAttribute('href', 'https://open-meteo.com/');
     const resumen = screen.getByRole('heading', { name: /Resumen semanal/ }).closest('section');
     expect(within(resumen).getAllByText('—')).toHaveLength(4);
-    expect(within(resumen).getByText('Próximamente')).toBeInTheDocument();
+    expect(within(resumen).queryByText('Próximamente')).not.toBeInTheDocument();
+    expect(within(resumen).getByRole('link', { name: 'Ver reportes' })).toHaveAttribute('href', '/profesional/reportes');
+  });
+
+  test('el resumen semanal muestra los datos de la semana en curso (FS-HU-28)', async () => {
+    simularApi({
+      '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA, '/api/disponibilidades': { horarios: [{ id: 1 }] },
+      '/api/profesional/reportes': {
+        resumenSemanal: { inicio: '2026-11-09', fin: '2026-11-15', totalClientes: 12, citasRealizadas: 3, citasPendientes: 2, clientesNuevos: 1 },
+      },
+    });
+    renderizarApp('/profesional/inicio');
+    const resumen = (await screen.findByRole('heading', { name: /Resumen semanal/ })).closest('section');
+    const valor = (nombre) => within(resumen).getByText(nombre).closest('li').querySelector('strong').textContent;
+    expect(await within(resumen).findByText('12')).toBeInTheDocument();
+    expect([valor('Total de clientes'), valor('Citas realizadas'), valor('Citas por confirmar'), valor('Clientes nuevos')]).toEqual(['12', '3', '2', '1']);
+    expect(within(resumen).getByText(/Semana del 9 nov al 15 nov/)).toBeInTheDocument();
+    // Las citas por confirmar también aparecen como tarea, con acceso a la agenda.
+    const tarea = screen.getByText('Tienes 2 citas por confirmar').closest('li');
+    expect(within(tarea).getByRole('link', { name: /Revisar/ })).toHaveAttribute('href', '/profesional/agenda');
+  });
+
+  test('sin tareas pendientes lo dice en vez de dejar el panel vacío', async () => {
+    simularApi({ '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA, '/api/disponibilidades': { horarios: [{ id: 1 }] } });
+    renderizarApp('/profesional/inicio');
+    expect(await screen.findByText('Estás al día: no tienes tareas pendientes.')).toBeInTheDocument();
   });
 
   test('si el clima no está disponible, el Inicio funciona igual sin esa tarjeta', async () => {
@@ -121,6 +164,9 @@ describe('Inicio del profesional', () => {
     const accesos = (await screen.findByRole('heading', { name: 'Accesos rápidos' })).closest('section');
     expect(within(accesos).getByRole('link', { name: /Mi perfil profesional/ })).toHaveAttribute('href', '/profesional/perfil');
     expect(within(accesos).getByRole('link', { name: /Publicar horario/ })).toHaveAttribute('href', '/profesional/agenda');
-    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(2);
+    // Clientes y Mensajes ya existen (FS-HU-27 y FS-HU-31).
+    expect(within(accesos).queryByText('Próximamente')).not.toBeInTheDocument();
+    expect(within(accesos).getByRole('link', { name: /Clientes/ })).toHaveAttribute('href', '/profesional/clientes');
+    expect(within(accesos).getByRole('link', { name: /Mensajes/ })).toHaveAttribute('href', '/profesional/mensajes');
   });
 });
