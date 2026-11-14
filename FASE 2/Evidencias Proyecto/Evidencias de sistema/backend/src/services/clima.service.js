@@ -7,7 +7,7 @@ const URL_API = 'https://api.open-meteo.com/v1/forecast';
 const DURACION_CACHE_MS = 30 * 60 * 1000;
 const TIEMPO_ESPERA_MS = 4000;
 const MAXIMO_EN_CACHE = 500;
-// Sin ficha profesional todavía, se muestra el clima del centro de Santiago.
+// Sin ubicación de atención (incluido solo online), se muestra el clima del centro de Santiago.
 const POR_DEFECTO = { lugar: 'Santiago', lat: -33.45, lng: -70.67 };
 
 // Códigos WMO que entrega Open-Meteo, agrupados en los estados que la interfaz sabe dibujar.
@@ -41,8 +41,11 @@ async function actual(usuarioId) {
   const ficha = await profesionalModel.obtenerPorUsuario(usuarioId);
   // La ubicación se redondea a 2 decimales (cerca de 1 km): basta para el clima y no viaja exacta a un tercero.
   const redondear = (valor) => Math.round(Number(valor) * 100) / 100;
-  const lat = ficha ? redondear(ficha.ubicacionLat) : POR_DEFECTO.lat;
-  const lng = ficha ? redondear(ficha.ubicacionLng) : POR_DEFECTO.lng;
+  const tieneUbicacion = ficha && ficha.modalidad !== 'online'
+    && ficha.ubicacionLat != null && ficha.ubicacionLng != null
+    && Number.isFinite(Number(ficha.ubicacionLat)) && Number.isFinite(Number(ficha.ubicacionLng));
+  const lat = tieneUbicacion ? redondear(ficha.ubicacionLat) : POR_DEFECTO.lat;
+  const lng = tieneUbicacion ? redondear(ficha.ubicacionLng) : POR_DEFECTO.lng;
   const clave = `${lat},${lng}`;
 
   let datos = cache.get(clave);
@@ -58,7 +61,7 @@ async function actual(usuarioId) {
 
   const { estado, descripcion } = describir(datos.actual.weather_code);
   return {
-    lugar: ficha?.comuna || POR_DEFECTO.lugar,
+    lugar: tieneUbicacion ? ficha.comuna || POR_DEFECTO.lugar : POR_DEFECTO.lugar,
     temperatura: Math.round(datos.actual.temperature_2m),
     estado,
     descripcion,

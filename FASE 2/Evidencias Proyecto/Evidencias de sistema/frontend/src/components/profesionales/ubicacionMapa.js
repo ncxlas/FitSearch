@@ -7,7 +7,7 @@ import reglas from '@shared/reglas.json';
 const { latMin, latMax, lngMin, lngMax } = reglas.profesionales.ubicacionChile;
 export const CHILE = [[lngMin, latMin], [lngMax, latMax]];
 
-export const coordenadas = (p) => (p.ubicacionLat != null && p.ubicacionLng != null
+export const coordenadas = (p) => (p.modalidad !== 'online' && p.ubicacionLat != null && p.ubicacionLng != null
   && Number.isFinite(Number(p.ubicacionLat)) && Number.isFinite(Number(p.ubicacionLng))
   ? [Number(p.ubicacionLng), Number(p.ubicacionLat)] : null);
 

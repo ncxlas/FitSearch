@@ -12,7 +12,7 @@ const escaparLike = (texto) => texto.replace(/[\\%_]/g, (caracter) => `\\${carac
 
 const ORDENES = {
   nombre: Prisma.sql`u.nombre ASC, p.id ASC`,
-  cercania: Prisma.sql`distanciaKm ASC, p.id ASC`,
+  cercania: Prisma.sql`distanciaKm IS NULL ASC, distanciaKm ASC, p.id ASC`,
   calificacion: Prisma.sql`promedio DESC, totalResenas DESC, u.nombre ASC`,
   resenas: Prisma.sql`totalResenas DESC, promedio DESC, u.nombre ASC`,
   // Inicio: primero los verificados por la plataforma y luego los mejor calificados.
@@ -32,7 +32,8 @@ function horariosLibres({ hoy, segundos }) {
 
 function construirConsulta({ q, especialidad, comuna, modalidad, calificacionMin, ubicacion, distanciaKm, soloFavoritosDe, ahora, conHorasHasta }) {
   const distancia = ubicacion
-    ? Prisma.sql`ST_Distance_Sphere(POINT(p.ubicacion_lng, p.ubicacion_lat), POINT(${ubicacion.lng}, ${ubicacion.lat})) / 1000`
+    ? Prisma.sql`CASE WHEN p.modalidad <> 'online' AND p.ubicacion_lng IS NOT NULL AND p.ubicacion_lat IS NOT NULL
+      THEN ST_Distance_Sphere(POINT(p.ubicacion_lng, p.ubicacion_lat), POINT(${ubicacion.lng}, ${ubicacion.lat})) / 1000 END`
     : Prisma.sql`NULL`;
   const condiciones = [Prisma.sql`r.nombre = 'profesional'`, Prisma.sql`u.activo = true`];
   if (q) {

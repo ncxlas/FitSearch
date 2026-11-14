@@ -28,6 +28,13 @@ function simular({ ficha = fichaApi(), resenas = [resenaDe(), resenaDe({ id: 10,
 const cuerpo = (llamada) => JSON.parse(llamada[1].body);
 
 describe('Ficha', () => {
+  test('solo online muestra atención online sin dirección, comuna ni enlace a Maps aunque haya datos antiguos', async () => {
+    simular({ ficha: fichaApi({ profesional: fichaProfesional({ modalidad: 'online', comuna: 'Comuna antigua', direccion: 'Dirección antigua 123' }) }) });
+    renderizarApp('/profesionales/1');
+    expect(await screen.findByRole('heading', { name: 'Atención online' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Google Maps/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Dirección antigua|Comuna antigua/)).not.toBeInTheDocument();
+  });
   test('muestra los datos públicos, el resumen de calificaciones y las reseñas', async () => {
     simular(); renderizarApp('/profesionales/1');
 
@@ -83,8 +90,8 @@ describe('Ficha', () => {
   test('si atiende solo online y no indicó dirección, la ficha lo dice en vez de pedir consultarla (SC-24)', async () => {
     simular({ ficha: fichaApi({ profesional: fichaProfesional({ modalidad: 'online', direccion: null, establecimiento: null }) }) });
     renderizarApp('/profesionales/1');
-    const lugar = within(await screen.findByRole('region', { name: 'Lugar de atención' }));
-    expect(lugar.getByText('Atiende solo online.')).toBeInTheDocument();
+    const lugar = within(await screen.findByRole('region', { name: 'Atención online' }));
+    expect(lugar.getByText('Este profesional atiende de forma online.')).toBeInTheDocument();
     expect(lugar.queryByText(/Consulta la dirección exacta/)).not.toBeInTheDocument();
   });
 });

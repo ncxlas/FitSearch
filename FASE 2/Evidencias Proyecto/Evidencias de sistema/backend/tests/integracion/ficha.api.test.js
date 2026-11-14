@@ -76,12 +76,19 @@ test.each([['presencial', undefined], ['ambas', '   ']])('la dirección es oblig
   expect(modelo.guardarFicha).not.toHaveBeenCalled();
 });
 
-test('quien atiende solo online puede no indicar dirección: se guarda null', async () => {
+test('solo online ignora la ubicación enviada y guarda sin dirección ni coordenadas', async () => {
   modelo.guardarFicha.mockResolvedValue({ ...fila, modalidad: 'online', direccion: null });
   const res = await enviar('profesional', { ...valido, modalidad: 'online', direccion: '' });
   expect(res.status).toBe(200);
   expect(res.body.ficha.direccion).toBe('');
-  expect(modelo.guardarFicha).toHaveBeenCalledWith(7, { ...valido, modalidad: 'online', direccion: null });
+  expect(modelo.guardarFicha).toHaveBeenCalledWith(7, { ...valido, modalidad: 'online', comuna: null, direccion: null, ubicacionLat: null, ubicacionLng: null, establecimientoId: null });
+});
+
+test('solo online permite completar la ficha sin comuna ni coordenadas', async () => {
+  modelo.guardarFicha.mockResolvedValue({ ...fila, modalidad: 'online', comuna: null, direccion: null, ubicacionLat: null, ubicacionLng: null });
+  const res = await enviar('profesional', { especialidad: valido.especialidad, descripcion: valido.descripcion, modalidad: 'online' });
+  expect(res.status).toBe(200);
+  expect(res.body.ficha).toMatchObject({ comuna: '', direccion: '', ubicacionLat: null, ubicacionLng: null });
 });
 
 test('guarda la dirección sin espacios sobrantes y rechaza una de más de 150 caracteres', async () => {

@@ -51,7 +51,7 @@ async function completarFicha({ modalidad = 'ambas', direccion = 'Av. Irarrázav
   await userEvent.selectOptions(screen.getByLabelText('Especialidad (obligatorio)'), 'Nutrición');
   await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), 'Atención nutricional');
   await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), modalidad);
-  await userEvent.type(screen.getByLabelText('Comuna (obligatorio)'), 'Ñuñoa');
+  if (modalidad !== 'online') await userEvent.type(screen.getByLabelText('Comuna (obligatorio)'), 'Ñuñoa');
   if (direccion) await userEvent.type(screen.getByLabelText(/^Dirección de atención/), direccion);
 }
 
@@ -87,18 +87,18 @@ describe('Sin ficha', () => {
     expect(huboPut(fetch)).toBe(false);
   });
 
-  test('si atiende solo online la dirección es opcional y se guarda vacía (SC-24)', async () => {
+  test('si atiende solo online no se pide ni se guarda ubicación', async () => {
     const fetch = simularServidor();
     renderizarApp('/profesional/perfil');
     await screen.findByRole('heading', { name: 'Configura tu perfil profesional' });
     expect(screen.getByLabelText('Dirección de atención (obligatorio)')).toHaveAttribute('autocomplete', 'street-address');
 
     await completarFicha({ modalidad: 'online', direccion: '' });
-    expect(screen.getByLabelText('Dirección de atención (opcional si atiendes solo online)')).toHaveValue('');
+    expect(screen.queryByLabelText(/^Dirección de atención/)).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Guardar perfil/ }));
 
     expect(await screen.findByText('Tu ficha profesional se guardó correctamente.')).toBeInTheDocument();
-    expect(cuerpoPut(fetch)).toMatchObject({ modalidad: 'online', direccion: '' });
+    expect(cuerpoPut(fetch)).toMatchObject({ modalidad: 'online', comuna: null, direccion: null, ubicacionLat: null, ubicacionLng: null });
   });
 
   test('los errores de la API se muestran en su campo', async () => {
@@ -115,6 +115,14 @@ describe('Sin ficha', () => {
 });
 
 describe('Con ficha', () => {
+  test('el perfil propio online muestra atención online sin la ubicación anterior', async () => {
+    simularServidor({ ficha: { ...MI_FICHA, modalidad: 'online', comuna: 'Comuna antigua', direccion: 'Dirección antigua 123' } });
+    renderizarApp('/profesional/perfil');
+    await screen.findByRole('heading', { level: 1, name: 'Matías Rojas' });
+    expect(screen.getAllByText('Atención online').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: /Google Maps/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Dirección antigua|Comuna antigua/)).not.toBeInTheDocument();
+  });
   test('muestra la verificación en el espacio profesional creado por el PR #13', async () => {
     simularServidor({ ficha: { ...MI_FICHA, verificado: true } });
     renderizarApp('/profesional/perfil');

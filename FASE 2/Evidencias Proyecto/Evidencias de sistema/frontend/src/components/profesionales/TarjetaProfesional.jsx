@@ -39,7 +39,7 @@ export default function TarjetaProfesional({
 }) {
   const { id, nombre, especialidad, descripcion, comuna, modalidad, establecimiento, calificacion, distanciaKm, verificado } = profesional;
   const Titulo = `h${nivelTitulo}`;
-  const lugar = [comuna || establecimiento?.direccion || 'Ubicación por confirmar', distanciaKm != null && formatearKm(distanciaKm)]
+  const lugar = modalidad === 'online' ? 'Atención online' : [comuna || establecimiento?.direccion || 'Ubicación por confirmar', distanciaKm != null && formatearKm(distanciaKm)]
     .filter(Boolean).join(' · ');
   const enlace = <Link to={`/profesionales/${id}`} state={desde ? { desde } : undefined}>{nombre}</Link>;
   const insignia = verificado && (

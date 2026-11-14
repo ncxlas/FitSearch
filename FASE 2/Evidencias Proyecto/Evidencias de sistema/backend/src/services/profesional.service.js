@@ -27,15 +27,15 @@ function formatearFicha(fila) {
     nombre: fila.nombre,
     especialidad: fila.especialidad,
     descripcion: fila.descripcion ?? null,
-    comuna: fila.comuna ?? null,
-    direccion: fila.direccion ?? null,
+    comuna: fila.modalidad === 'online' ? null : fila.comuna ?? null,
+    direccion: fila.modalidad === 'online' ? null : fila.direccion ?? null,
     modalidad: fila.modalidad,
     verificado: Boolean(Number(fila.verificado)),
-    ubicacionLat: Number(fila.ubicacionLat),
-    ubicacionLng: Number(fila.ubicacionLng),
-    establecimiento: fila.establecimientoNombre ? { nombre: fila.establecimientoNombre, direccion: fila.establecimientoDireccion } : null,
+    ubicacionLat: fila.modalidad === 'online' || fila.ubicacionLat == null ? null : Number(fila.ubicacionLat),
+    ubicacionLng: fila.modalidad === 'online' || fila.ubicacionLng == null ? null : Number(fila.ubicacionLng),
+    establecimiento: fila.modalidad !== 'online' && fila.establecimientoNombre ? { nombre: fila.establecimientoNombre, direccion: fila.establecimientoDireccion } : null,
     calificacion: { promedio: totalResenas ? redondear(fila.promedio) : null, total: totalResenas },
-    distanciaKm: fila.distanciaKm === null || fila.distanciaKm === undefined ? null : redondear(fila.distanciaKm),
+    distanciaKm: fila.modalidad === 'online' || fila.distanciaKm == null ? null : redondear(fila.distanciaKm),
     esFavorito: Boolean(Number(fila.esFavorito)),
     // FS-HU-29 y precio referencial (09-11-2026). MySQL entrega JSON ya leído; por las dudas también se acepta texto.
     aniosExperiencia: fila.aniosExperiencia === null || fila.aniosExperiencia === undefined ? null : Number(fila.aniosExperiencia),
@@ -132,12 +132,12 @@ const formatearMiFicha = (fila) => fila && {
   id: fila.id,
   especialidad: fila.especialidad,
   descripcion: fila.descripcion ?? '',
-  comuna: fila.comuna ?? '',
-  direccion: fila.direccion ?? '',
+  comuna: fila.modalidad === 'online' ? '' : fila.comuna ?? '',
+  direccion: fila.modalidad === 'online' ? '' : fila.direccion ?? '',
   modalidad: fila.modalidad,
   verificado: Boolean(Number(fila.verificado)),
-  ubicacionLat: Number(fila.ubicacionLat),
-  ubicacionLng: Number(fila.ubicacionLng),
+  ubicacionLat: fila.modalidad === 'online' || fila.ubicacionLat == null ? null : Number(fila.ubicacionLat),
+  ubicacionLng: fila.modalidad === 'online' || fila.ubicacionLng == null ? null : Number(fila.ubicacionLng),
 };
 
 async function obtenerMiFicha(usuarioId) { return { ficha: formatearMiFicha(await modelo.obtenerPorUsuario(usuarioId)) }; }
@@ -145,7 +145,10 @@ async function obtenerMiFicha(usuarioId) { return { ficha: formatearMiFicha(awai
 // («nutricion» queda «Nutrición»). Si es la que ya tenía la ficha y ahora está desactivada, se guarda tal cual.
 async function guardarMiFicha(usuarioId, datos) {
   const delCatalogo = await especialidadModel.activaPorNombre(datos.especialidad);
-  return { ficha: formatearMiFicha(await modelo.guardarFicha(usuarioId, { ...datos, especialidad: delCatalogo ?? datos.especialidad })) };
+  const ubicacion = datos.modalidad === 'online'
+    ? { comuna: null, direccion: null, ubicacionLat: null, ubicacionLng: null, establecimientoId: null }
+    : {};
+  return { ficha: formatearMiFicha(await modelo.guardarFicha(usuarioId, { ...datos, ...ubicacion, especialidad: delCatalogo ?? datos.especialidad })) };
 }
 
 // FS-HU-12: Administrador verifica un perfil profesional

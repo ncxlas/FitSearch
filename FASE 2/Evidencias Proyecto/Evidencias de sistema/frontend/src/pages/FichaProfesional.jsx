@@ -93,7 +93,7 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
           <h1>{nombre}</h1>
           <div className="ficha__datos">
             <Calificacion promedio={calificacion.promedio} total={calificacion.total} />
-            <span><Icono nombre="pin" tamano={16} /> {comuna || 'Comuna por confirmar'}</span>
+            <span><Icono nombre="pin" tamano={16} /> {modalidad === 'online' ? 'Atención online' : comuna || 'Comuna por confirmar'}</span>
             <span className="tarjeta-profesional__modalidad">{etiquetaModalidad(modalidad)}</span>
             {verificado && <span className="ficha__verificado"><Icono nombre="escudo" tamano={16} /> Verificado</span>}
             {profesional.aniosExperiencia > 0 && <span>{profesional.aniosExperiencia} {profesional.aniosExperiencia === 1 ? 'año' : 'años'} de experiencia</span>}
@@ -108,14 +108,16 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
           <p className="ficha__descripcion">{descripcion || 'Este profesional todavía no ha añadido una descripción de sus servicios.'}</p>
         </section>
         <section className="ficha__seccion" aria-labelledby="titulo-lugar">
-          <h2 id="titulo-lugar">Lugar de atención</h2>
+          <h2 id="titulo-lugar">{modalidad === 'online' ? 'Atención online' : 'Lugar de atención'}</h2>
+          {modalidad === 'online' ? <p>Este profesional atiende de forma online.</p> : <>
           <p className="ficha__lugar"><strong>{establecimiento?.nombre || (comuna ? `Atención en ${comuna}` : 'Ubicación de atención')}</strong>
             <span>{direccionDe(profesional)
               || (modalidad === 'online' ? 'Atiende solo online.' : 'Consulta la dirección exacta directamente con el profesional.')}</span></p>
-          <a className="ficha__mapa" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ubicacionLat},${ubicacionLng}`)}`}
+          {ubicacionLat != null && ubicacionLng != null && <a className="ficha__mapa" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ubicacionLat},${ubicacionLng}`)}`}
             target="_blank" rel="noopener noreferrer" aria-label={`Ver ubicación de ${nombre} en Google Maps (nueva pestaña)`}>
             Ver ubicación en Google Maps <Icono nombre="flecha" tamano={16} />
-          </a>
+          </a>}
+          </>}
         </section>
         <ExperienciaPublica profesional={profesional} />
       </div>
