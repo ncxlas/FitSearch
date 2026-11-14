@@ -28,7 +28,7 @@ const fichaEsperada = {
 // En el buscador cada tarjeta trae además su próxima hora libre y hasta tres horas para elegir.
 const tarjetaEsperada = { ...fichaEsperada, proximaHora: null, proximasHoras: [] };
 const filtrosPorDefecto = {
-  usuarioId: 1, q: '', especialidad: '', comuna: '', modalidad: '', calificacionMin: null, ubicacion: null,
+  usuarioId: 1, q: '', especialidad: '', comuna: '', region: '', modalidad: '', calificacionMin: null, ubicacion: null,
   distanciaKm: null, orden: 'nombre', pagina: 1, limite: 12,
   // Momento actual en Chile para las horas libres y, sin filtro de disponibilidad, sin fecha límite.
   ahora: expect.objectContaining({ hoy: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) }), conHorasHasta: null,
@@ -118,11 +118,29 @@ describe('GET /api/profesionales', () => {
   });
 });
 
-test('GET /api/profesionales/filtros devuelve especialidades y comunas disponibles', async () => {
-  modelo.filtros.mockResolvedValue({ especialidades: ['Kinesiología', 'Nutrición'], comunas: ['Ñuñoa', 'Providencia'] });
+test('GET /api/profesionales/filtros devuelve especialidades y comunas disponibles, agrupadas por región', async () => {
+  // «san antonio» se guardó sin mayúsculas: se muestra con su nombre oficial y en su región (14-11-2026).
+  modelo.filtros.mockResolvedValue({ especialidades: ['Kinesiología', 'Nutrición'], comunas: ['Ñuñoa', 'Providencia', 'san antonio'] });
   const res = await consulta('/api/profesionales/filtros');
   expect(res.status).toBe(200);
-  expect(res.body).toEqual({ especialidades: ['Kinesiología', 'Nutrición'], comunas: ['Ñuñoa', 'Providencia'] });
+  expect(res.body).toEqual({
+    especialidades: ['Kinesiología', 'Nutrición'],
+    regiones: [
+      { nombre: 'Valparaíso', comunas: ['San Antonio'] },
+      { nombre: 'Metropolitana', comunas: ['Ñuñoa', 'Providencia'] },
+    ],
+    comunas: ['Ñuñoa', 'Providencia', 'San Antonio'],
+  });
+});
+
+test('GET /api/profesionales filtra por región y rechaza una que no existe', async () => {
+  modelo.listar.mockResolvedValue({ filas: [], total: 0 });
+  modelo.proximasHoras.mockResolvedValue([]);
+  expect((await consulta('/api/profesionales?region=Metropolitana')).status).toBe(200);
+  expect(modelo.listar).toHaveBeenLastCalledWith(expect.objectContaining({ region: 'Metropolitana', comuna: '' }));
+  const mala = await consulta('/api/profesionales?region=Narnia');
+  expect(mala.status).toBe(400);
+  expect(mala.body.detalles.region).toBe('Selecciona una región de Chile');
 });
 
 describe('GET /api/profesionales/:id (ficha)', () => {

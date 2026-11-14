@@ -28,11 +28,11 @@ export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo,
     return () => document.removeEventListener('keydown', alTeclear);
   }, [abierto, onCerrar]);
 
-  const lista = (nombre, etiqueta, opciones, extra = {}) => (
+  const lista = (nombre, etiqueta, opciones, extra = {}, alCambiar = (valor) => onCambiar({ [nombre]: valor })) => (
     <div className="campo">
       <label className="campo__etiqueta" htmlFor={`filtro-${nombre}`}>{etiqueta}</label>
       <select className="campo__control" id={`filtro-${nombre}`} value={filtros[nombre]} {...extra}
-        onChange={(evento) => onCambiar({ [nombre]: evento.target.value })}>
+        onChange={(evento) => alCambiar(evento.target.value)}>
         {opciones.map(([valor, texto]) => <option key={valor || 'todas'} value={valor}>{texto}</option>)}
       </select>
       {/* El aviso previo («te pediremos permiso…») en la barra de escritorio solo lo lee el lector de pantalla
@@ -45,6 +45,11 @@ export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo,
     </div>
   );
   const valores = (catalogoActual, actual) => conValorActual(catalogoActual, actual).map((valor) => [valor, valor]);
+  // Región (14-11-2026): al elegirla, la lista de comunas muestra solo las de esa región; si la comuna elegida no es de
+  // la región nueva, se quita.
+  const regiones = catalogo.regiones ?? [];
+  const comunasDe = (region) => (region ? regiones.find(({ nombre }) => nombre === region)?.comunas ?? [] : catalogo.comunas);
+  const cambiarRegion = (region) => onCambiar({ region, ...(filtros.comuna && !comunasDe(region).includes(filtros.comuna) && { comuna: '' }) });
 
   return (
     <>
@@ -55,7 +60,8 @@ export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo,
           <h2>Filtros</h2>
           <button type="button" className="boton-icono panel-filtros__cerrar" aria-label="Cerrar filtros" onClick={onCerrar}><Icono nombre="cerrar" tamano={22} /></button>
         </div>
-        {lista('comuna', 'Comuna', [['', 'Todas'], ...valores(catalogo.comunas, filtros.comuna)])}
+        {lista('region', 'Región', [['', 'Todas'], ...valores(regiones.map(({ nombre }) => nombre), filtros.region)], {}, cambiarRegion)}
+        {lista('comuna', 'Comuna', [['', 'Todas'], ...valores(comunasDe(filtros.region), filtros.comuna)])}
         {lista('distancia', 'Distancia máxima', [['', 'Sin límite'], ...distanciasKm.map((km) => [String(km), `Hasta ${km} km`])],
           { 'aria-describedby': 'estado-ubicacion' })}
         {lista('especialidad', 'Especialidad', [['', 'Todas'], ...valores(catalogo.especialidades, filtros.especialidad)])}

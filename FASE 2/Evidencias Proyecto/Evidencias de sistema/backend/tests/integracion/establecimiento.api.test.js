@@ -17,7 +17,7 @@ const esperado = {
   id: 3, nombre: 'Centro Médico Demo', categoria: 'centro_salud', comuna: 'Ñuñoa', direccion: 'Av. Irarrázaval 1000', instagram: null,
   ubicacionLat: -33.454, ubicacionLng: -70.598, distanciaKm: null, totalProfesionales: 2,
 };
-const porDefecto = { categoria: 'centro_salud', comuna: '', ubicacion: null, distanciaKm: null, orden: 'nombre', pagina: 1, limite: 12 };
+const porDefecto = { categoria: 'centro_salud', comuna: '', region: '', ubicacion: null, distanciaKm: null, orden: 'nombre', pagina: 1, limite: 12 };
 beforeEach(() => jest.resetAllMocks());
 
 describe('GET /api/establecimientos', () => {
@@ -104,12 +104,24 @@ describe('GET /api/establecimientos/:id', () => {
   });
 });
 
+test('filtra por región con cualquiera de sus comunas y rechaza una región que no existe', async () => {
+  modelo.listar.mockResolvedValue({ filas: [], total: 0 });
+  expect((await consulta('/api/establecimientos?categoria=gimnasio&region=Valpara%C3%ADso')).status).toBe(200);
+  expect(modelo.listar).toHaveBeenLastCalledWith({ ...porDefecto, categoria: 'gimnasio', region: 'Valparaíso' });
+  const mala = await consulta('/api/establecimientos?categoria=gimnasio&region=Narnia');
+  expect(mala.status).toBe(400);
+  expect(mala.body.detalles.region).toBe('Selecciona una región de Chile');
+});
+
 describe('GET /api/establecimientos/filtros', () => {
   test('entrega las comunas con establecimientos activos de la categoría', async () => {
     modelo.comunas.mockResolvedValue(['Ñuñoa', 'Providencia']);
     const res = await consulta('/api/establecimientos/filtros?categoria=gimnasio');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ comunas: ['Ñuñoa', 'Providencia'] });
+    // Las comunas se agrupan por región con su nombre oficial (14-11-2026).
+    expect(res.body).toEqual({
+      regiones: [{ nombre: 'Metropolitana', comunas: ['Ñuñoa', 'Providencia'] }], comunas: ['Ñuñoa', 'Providencia'],
+    });
     expect(modelo.comunas).toHaveBeenCalledWith('gimnasio');
   });
 

@@ -2,7 +2,7 @@ import { solicitar } from './api.js';
 
 // Filtros de la URL de /profesionales y el nombre del parámetro que espera la API.
 const PARAMETROS_API = {
-  q: 'q', especialidad: 'especialidad', comuna: 'comuna', modalidad: 'modalidad', calificacion: 'calificacionMin',
+  q: 'q', especialidad: 'especialidad', comuna: 'comuna', region: 'region', modalidad: 'modalidad', calificacion: 'calificacionMin',
   distancia: 'distanciaKm', orden: 'orden', pagina: 'pagina', limite: 'limite',
   // Con horas libres hoy, en 3 días o en la semana (09-11-2026).
   disponible: 'disponible',

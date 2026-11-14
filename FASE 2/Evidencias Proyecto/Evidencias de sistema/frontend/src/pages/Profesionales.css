@@ -185,7 +185,8 @@
 
 @media (min-width: 64rem) {
   .buscador .buscador__boton-filtros { display: none; }
-  /* Barra de filtros: una franja con las cinco listas (se reparte en dos filas si no caben). */
+  /* Barra de filtros: siete listas (14-11-2026, con la región) en filas de tres; desde 80rem, dos filas de cuatro, con
+     «Limpiar filtros» en el último lugar (con cuatro columnas a 1024 px se cortaban «Cualquier día» y las regiones). */
   .panel-filtros {
     position: relative; z-index: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start;
     gap: 0.75rem 1rem; max-height: none; overflow: visible; padding: 0.9rem 1.1rem;
@@ -198,15 +199,15 @@
   .panel-filtros__fondo, .panel-filtros .panel-filtros__cerrar, .panel-filtros .panel-filtros__ver { display: none; }
   .panel-filtros__pie { display: contents; }
   .panel-filtros__pie .boton--secundario { align-self: end; width: auto; min-height: 2.75rem; }
-  /* Seis filtros (09-11-2026): dos filas de tres; en pantallas anchas, una sola fila. Limpiar queda al final de la fila. */
+  /* Limpiar queda al final de la fila. */
   .panel-filtros__pie .boton--secundario { grid-column: -2 / -1; justify-self: end; }
   .ficha__grilla { grid-template-columns: 1.4fr 1fr; }
 }
 
 /* Lista y mapa lado a lado. El mapa queda fijo mientras se recorre la lista y el detalle del elegido va debajo, con su
    propio desplazamiento si no cabe. */
-@media (min-width: 90rem) {
-  .panel-filtros { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (min-width: 80rem) {
+  .panel-filtros { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (min-width: 75rem) {
   .buscador__vista--con-mapa { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }

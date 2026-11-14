@@ -19,6 +19,7 @@ const coordenada = (valor) => Math.round(Number(valor) * 1000) / 1000;
 const filtrosDesdeConsulta = (query) => ({
   categoria: query.categoria,
   comuna: texto(query.comuna),
+  region: texto(query.region),
   ubicacion: query.lat === undefined ? null : { lat: coordenada(query.lat), lng: coordenada(query.lng) },
   distanciaKm: entero(query.distanciaKm, null),
   orden: query.orden || 'nombre',

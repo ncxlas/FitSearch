@@ -1,5 +1,6 @@
 // Directorio de centros de salud y gimnasios (FS-HU-25): listado con filtros por comuna y distancia, y ficha.
 const modelo = require('../models/establecimiento.model');
+const { agruparPorRegion, nombreOficial } = require('../utils/regiones');
 const ErrorHttp = require('../utils/ErrorHttp');
 const { profesionales: reglas } = require('../../../shared/reglas.json');
 
@@ -11,7 +12,7 @@ function formatear(fila) {
     id: Number(fila.id),
     nombre: fila.nombre,
     categoria: fila.categoria,
-    comuna: fila.comuna ?? null,
+    comuna: nombreOficial(fila.comuna),
     direccion: fila.direccion,
     instagram: fila.instagram ?? null,
     ubicacionLat: Number(fila.ubicacionLat),
@@ -47,6 +48,7 @@ async function ficha(id) {
   };
 }
 
-const filtros = async (categoria) => ({ comunas: await modelo.comunas(categoria) });
+// Regiones con sus comunas y todas las comunas de la categoría, con su nombre oficial (14-11-2026).
+const filtros = async (categoria) => agruparPorRegion(await modelo.comunas(categoria));
 
 module.exports = { listar, ficha, filtros };

@@ -1,5 +1,6 @@
 // Directorio de profesionales: listado con búsqueda y filtros (FS-HU-03, FS-HU-05, FS-HU-22) y ficha individual.
 const modelo = require('../models/profesional.model');
+const { agruparPorRegion, nombreOficial } = require('../utils/regiones');
 const resenaModel = require('../models/resena.model');
 const especialidadModel = require('../models/especialidad.model');
 const ErrorHttp = require('../utils/ErrorHttp');
@@ -27,7 +28,8 @@ function formatearFicha(fila) {
     nombre: fila.nombre,
     especialidad: fila.especialidad,
     descripcion: fila.descripcion ?? null,
-    comuna: fila.modalidad === 'online' ? null : fila.comuna ?? null,
+    // Con su nombre oficial («san antonio» se muestra San Antonio; 14-11-2026).
+    comuna: fila.modalidad === 'online' ? null : nombreOficial(fila.comuna),
     direccion: fila.modalidad === 'online' ? null : fila.direccion ?? null,
     modalidad: fila.modalidad,
     verificado: Boolean(Number(fila.verificado)),
@@ -125,7 +127,12 @@ async function ficha(id, usuario) {
   };
 }
 
-const filtros = () => modelo.filtros();
+// Valores de los filtros del buscador: especialidades, regiones con sus comunas y todas las comunas, con su nombre
+// oficial (14-11-2026).
+async function filtros() {
+  const { especialidades, comunas } = await modelo.filtros();
+  return { especialidades, ...agruparPorRegion(comunas) };
+}
 
 // Ficha propia del profesional (FS-HU-04): null mientras no la complete.
 const formatearMiFicha = (fila) => fila && {

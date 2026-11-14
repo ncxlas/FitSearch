@@ -19,7 +19,10 @@ const GIMNASIOS = [establecimiento(), establecimiento({ id: 4, nombre: 'Box Func
 
 function simular({ listado = () => pagina(GIMNASIOS), ficha } = {}) {
   return simularApi({
-    '/api/establecimientos/filtros': { comunas: ['Ñuñoa', 'Providencia'] },
+    '/api/establecimientos/filtros': {
+      regiones: [{ nombre: 'Valparaíso', comunas: ['San Antonio'] }, { nombre: 'Metropolitana', comunas: ['Ñuñoa', 'Providencia'] }],
+      comunas: ['Ñuñoa', 'Providencia', 'San Antonio'],
+    },
     '/api/establecimientos': (url) => (/^\/api\/establecimientos\/\d+/.test(url) && ficha ? ficha(url) : [200, listado(url)]),
   });
 }
@@ -65,6 +68,23 @@ describe('Lista', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }));
     await esperarConsulta(fetch, { categoria: 'gimnasio' });
     expect(screen.getByLabelText('Comuna')).toHaveValue('');
+  });
+
+  test('la región limita las comunas, se envía a la API y «Quitar filtros» la quita (14-11-2026)', async () => {
+    const fetch = simular();
+    renderizarApp('/gimnasios');
+    await screen.findByRole('heading', { name: 'Gimnasio Demo' });
+    const opciones = (etiqueta) => within(screen.getByLabelText(etiqueta)).getAllByRole('option').map((opcion) => opcion.textContent);
+    await waitFor(() => expect(opciones('Región')).toEqual(['Todas', 'Valparaíso', 'Metropolitana']));
+
+    await userEvent.selectOptions(screen.getByLabelText('Comuna'), 'Providencia');
+    await userEvent.selectOptions(screen.getByLabelText('Región'), 'Valparaíso');
+    expect(opciones('Comuna')).toEqual(['Todas', 'San Antonio']);
+    expect(screen.getByLabelText('Comuna')).toHaveValue('');
+    await esperarConsulta(fetch, { categoria: 'gimnasio', region: 'Valparaíso' });
+    await userEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }));
+    await esperarConsulta(fetch, { categoria: 'gimnasio' });
+    expect(screen.getByLabelText('Región')).toHaveValue('');
   });
 
   test('una distancia pide la ubicación y ordena del más cercano al más lejano', async () => {

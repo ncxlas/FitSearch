@@ -13,6 +13,7 @@ function filtrosDesdeConsulta(query) {
     q: texto(query.q),
     especialidad: texto(query.especialidad),
     comuna: texto(query.comuna),
+    region: texto(query.region),
     modalidad: query.modalidad || '',
     calificacionMin: entero(query.calificacionMin, null),
     ubicacion: query.lat === undefined ? null : { lat: coordenada(query.lat), lng: coordenada(query.lng) },
