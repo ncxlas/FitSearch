@@ -71,7 +71,8 @@ FitSearch/
 │           │   │   └── config/        # Variables de entorno
 │           │   └── tests/             # Pruebas unitarias y de integración
 │           ├── shared/            # Reglas y catálogos comunes a frontend y backend (reglas.json)
-│           └── docker-compose.yml
+│           ├── .env.example       # Variables de docker-compose.yml (FS-HU-11)
+│           └── docker-compose.yml # mysql + backend + frontend (backend/Dockerfile, frontend/Dockerfile)
 ├── FASE 3/                # Evidencias de la Fase 3
 └── README.md
 ```
@@ -372,7 +373,32 @@ El avance se muestra frente a una meta general de 2.000 ml (`shared/reglas.json`
 
 ## Ejecución con Docker
 
-_Pendiente (FS-HU-11, Sprint 5)._
+Levanta la aplicación completa en tres contenedores (FS-HU-11): **mysql** (MySQL 8.4), **backend** (API Node.js, sin privilegios) y **frontend** (build de Vite servido por Nginx sin privilegios, que reenvía `/api` al backend). Al arrancar, el backend aplica las migraciones pendientes de Prisma y carga los roles; no hace falta ejecutar `crear_base_datos.sql` ni `npm install`.
+
+Requisitos: Docker Engine con Docker Compose v2. En Windows, Docker Desktop exige Windows 10 22H2 (19045) o Windows 11; en versiones anteriores (por ejemplo Windows 10 LTSC 21H2) se usa Docker Engine dentro de una distribución Ubuntu de WSL 2. Detalle en el Manual Técnico de despliegue.
+
+```bash
+cd "FASE 2/Evidencias Proyecto/Evidencias de sistema"
+cp .env.example .env        # completar MYSQL_ROOT_PASSWORD, MYSQL_PASSWORD y JWT_SECRET
+docker compose up --build
+```
+
+| Dirección | Qué es |
+|---|---|
+| http://localhost:8080 | Aplicación web |
+| http://localhost:3000/api/salud | Estado de la API (`{"estado":"ok"}`) |
+
+Las contraseñas de `.env` forman parte de la URL de conexión: usar solo letras y números (por ejemplo `openssl rand -hex 16`). MySQL guarda las contraseñas con que se creó su volumen: si después se cambia `MYSQL_PASSWORD`, el backend se detiene con `P1000` y un mensaje que lo explica; hay que volver a la contraseña original o, si los datos no importan, ejecutar `docker compose down -v`. El resto de las variables es opcional (correo, Google, asistente IA) y está explicado en `.env.example`. Si se cambia `GOOGLE_CLIENT_ID`, reconstruir con `docker compose up --build`, porque el frontend lo recibe al compilarse.
+
+| Comando | Efecto |
+|---|---|
+| `docker compose up -d --build` | Construye y levanta en segundo plano |
+| `docker compose logs -f backend` | Muestra el log de la API (migraciones, enlaces de correo cuando no hay SMTP) |
+| `docker compose down` | Detiene y elimina los contenedores; **conserva** los datos (volúmenes `mysql-datos` y `verificaciones`) |
+| `docker compose down -v` | Además **borra** la base de datos y los documentos de verificación |
+| `docker compose exec -e NODE_ENV=development backend node prisma/seed-profesionales.js` | Carga los profesionales ficticios «Demo» (opcional, solo para revisión) |
+
+Los contenedores se comunican por la red interna de Compose usando el nombre del servicio (`mysql`, `backend`); no se usa `network_mode: host`. Casos de prueba y evidencia: [FS-HU-11 — Docker](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-11_Docker.md).
 
 ## Pruebas
 
@@ -389,7 +415,30 @@ Las pruebas de integración del backend simulan el acceso a datos, por lo que no
 cd backend && npm run test:mysql:agenda
 ```
 
+Para medir el rendimiento (QS1) y la concurrencia de reservas (QS5), con la API levantada:
+
+```bash
+cd backend && npm run test:carga
+```
+
+Crea 500 profesionales temporales, mide la búsqueda, la ficha y el inicio de sesión con varias conexiones simultáneas (`CARGA_CONEXIONES`, por defecto 20) y prueba 50 reservas simultáneas sobre el mismo horario; luego borra sus datos. Con `-- --guardar-evidencia` guarda el resultado en `Plan de Pruebas`.
+
 Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. Las dos muestran el resultado en la consola y solo reescriben su evidencia en `Plan de Pruebas` si se agrega la opción, por ejemplo `npm run test:mysql:comidas -- --guardar-evidencia`. `npm run test:mysql:plan` comprueba el plan de alimentación, la lista de personalizados, la meta de peso y las restricciones de sus tablas. `npm run test:mysql:especialidades` comprueba que guardar una ficha y eliminar su especialidad al mismo tiempo no deje la ficha con una especialidad inexistente: una de las dos operaciones espera a la otra (revisión del PR #42).
+
+## Edición de los perfiles (14-11-2026)
+
+`/perfil` conserva el asistente al crear un perfil y ofrece edición por secciones una vez completado: información personal, datos físicos, objetivos y salud. `/profesional/perfil` reúne información y experiencia, conserva las certificaciones y permite abrir la agenda y compartir la ficha pública. Ambos diseños se adaptan a computador y celular.
+
+Guardar la ficha profesional sin modificaciones muestra "No hay cambios pendientes" y no envía otra actualización. Después de guardar una modificación, el botón vuelve a estar disponible para seguir editando sin salir de la página.
+
+Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`. La migración aditiva `20261114190000_datos_cuenta_perfil` crea `datos_cuenta`, sin modificar los registros actuales de salud ni de profesionales.
+
+- `GET /api/perfil/cuenta` devuelve los datos de la cuenta autenticada; `PUT /api/perfil/cuenta` actualiza únicamente los campos enviados.
+- Nombre, teléfono opcional, presentación y enlaces de redes se guardan en el propio perfil. Los enlaces aceptan HTTP/HTTPS; Instagram y LinkedIn deben pertenecer a sus dominios.
+- La foto se selecciona como JPG, PNG o WebP de hasta 5 MB. El navegador recorta una copia cuadrada y la comprime antes de enviarla; el servidor limita la copia a 48 KB y comprueba su formato. Se puede reemplazar o quitar y se conserva al recargar. Se muestra en la propia cuenta; no publica fotos de usuarios en el directorio.
+- Cambiar el correo exige confirmar la contraseña actual o una credencial de la misma cuenta de Google vinculada. Al guardar, se invalidan las otras sesiones y los enlaces anteriores de recuperación; la sesión actual recibe un token con el mismo vencimiento. Google necesita tener autorizado el origen local en su configuración.
+
+Las pruebas de la API de cuenta incluyen permisos, datos no válidos, correo ocupado, confirmación de identidad, archivos no admitidos, eliminación de foto y cambios concurrentes de sesión.
 
 ## Convenciones de trabajo
 

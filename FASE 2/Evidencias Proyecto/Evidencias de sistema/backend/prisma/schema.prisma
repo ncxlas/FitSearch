@@ -40,6 +40,7 @@ model Usuario {
   perfil               PerfilUsuario?
   tokensRecuperacion   TokenRecuperacion[]
   informacionSalud     InformacionSalud?
+  datosCuenta          DatosCuenta?
   profesional          Profesional?
   favoritos            Favorito[]
   resenas              Resena[]
@@ -61,6 +62,20 @@ model Usuario {
 
 // FS-HU-03: directorio según el diccionario de datos del DAS.
 // FS-HU-22: comuna y modalidad de atención (presencial, online o ambas; catálogo en shared/reglas.json).
+// Datos de contacto y presentación de la cuenta, separados de salud y de la ficha pública.
+model DatosCuenta {
+  usuarioId Int     @id @map("usuario_id")
+  telefono  String? @db.VarChar(20)
+  biografia String? @db.VarChar(500)
+  instagram String? @db.VarChar(200)
+  linkedin  String? @db.VarChar(200)
+  sitioWeb  String? @map("sitio_web") @db.VarChar(250)
+  foto      String? @db.MediumText
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("datos_cuenta")
+}
+
 model Profesional {
   id                    Int                    @id @default(autoincrement())
   usuarioId             Int                    @unique @map("usuario_id")

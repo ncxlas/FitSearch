@@ -71,6 +71,7 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
   const [datos, setDatos] = useState(() => desdeFicha(ficha));
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState('');
+  const [tipoMensaje, setTipoMensaje] = useState('error');
   const [enviando, setEnviando] = useState(false);
   const [ubicacion, setUbicacion] = useState(() => ubicacionGuardada(ficha));
   const [buscando, setBuscando] = useState(false);
@@ -82,6 +83,7 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
   const especialidades = ficha?.especialidad && !catalogo.includes(ficha.especialidad) ? [...catalogo, ficha.especialidad] : catalogo;
   const ubicacionActual = useRef(ubicacion);
   const enCurso = useRef(null);
+  const ultimaFicha = useRef(ficha);
 
   const fijarUbicacion = (nueva) => {
     ubicacionActual.current = nueva;
@@ -144,27 +146,39 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
   const guardar = async (evento) => {
     evento.preventDefault();
     setMensaje('');
+    setTipoMensaje('error');
     const nuevos = validar(datos);
     setErrores(nuevos);
     if (Object.keys(nuevos).length) return;
-    setEnviando(true);
     const online = datos.modalidad === 'online';
-    const lugar = online ? null : await ubicar();
-    if (!online && !lugar) {
-      setMensaje('No pudimos ubicar tu lugar de atención en el mapa. Revisa tu comuna y tu dirección, o intenta de nuevo.');
-      setEnviando(false);
+    const anterior = desdeFicha(ultimaFicha.current);
+    const mismoLugar = online || (ubicacionActual.current
+      && ubicacionActual.current.lat === Number(ultimaFicha.current?.ubicacionLat)
+      && ubicacionActual.current.lng === Number(ultimaFicha.current?.ubicacionLng));
+    if (ultimaFicha.current && mismoLugar
+      && Object.keys(anterior).every((campo) => datos[campo].trim() === anterior[campo].trim())) {
+      setTipoMensaje('info');
+      setMensaje('No hay cambios pendientes.');
       return;
     }
+    setEnviando(true);
     try {
+      const lugar = online ? null : await ubicar();
+      if (!online && !lugar) {
+        setMensaje('No pudimos ubicar tu lugar de atención en el mapa. Revisa tu comuna y tu dirección, o intenta de nuevo.');
+        return;
+      }
       const respuesta = await guardarMiFicha({
         especialidad: datos.especialidad, descripcion: datos.descripcion.trim(), comuna: online ? null : datos.comuna.trim(),
         direccion: online ? null : datos.direccion.trim(), modalidad: datos.modalidad,
         ubicacionLat: lugar?.lat ?? null, ubicacionLng: lugar?.lng ?? null,
       });
+      ultimaFicha.current = respuesta.ficha;
       onGuardado(respuesta.ficha);
     } catch (error) {
       setErrores(error.detalles || {});
       setMensaje(error.message);
+    } finally {
       setEnviando(false);
     }
   };
@@ -179,7 +193,7 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
       </header>
 
       <form className="ficha-prof__tarjeta" onSubmit={guardar} noValidate>
-        <Alerta>{mensaje}</Alerta>
+        <Alerta tipo={tipoMensaje}>{mensaje}</Alerta>
 
         <fieldset className="ficha-prof__seccion">
           <legend><Icono nombre="medico" /> Información básica</legend>

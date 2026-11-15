@@ -1,0 +1,46 @@
+sequenceDiagram
+  autonumber
+  actor P as Persona autenticada
+  participant F as Perfil editable
+  participant B as API Express
+  participant D as MySQL
+  Note over F,D: PR 59 en revisión. datos_cuenta requiere migración aditiva
+  P->>F: Abre su perfil de usuario o profesional
+  F->>B: GET /api/perfil/cuenta con JWT
+  B->>D: Consulta la cuenta propia y datos_cuenta
+  D-->>B: Contacto, enlaces y foto propios
+  B-->>F: Datos de cuenta y opciones de confirmación
+  alt Edita datos de cuenta o foto
+    P->>F: Modifica datos o selecciona/quita foto
+    Note over P,F: JPG, PNG o WebP hasta 5 MB. Copia cuadrada comprimida hasta 48 KB
+    F->>B: PUT /api/perfil/cuenta con campos modificados
+    B->>B: Valida campos, formato y cuenta autenticada
+    opt Cambia el correo
+      B->>B: Confirma contraseña o misma identidad Google vinculada
+    end
+    B->>D: Transacción y bloqueo de versión de sesión
+    alt Datos inválidos, correo ocupado o cuenta cambió
+      D-->>B: Conflicto o sin cambios aplicados
+      B-->>F: Error de validación o 409
+      F-->>P: Muestra el error y permite corregir
+    else Datos válidos
+      B->>D: Actualiza usuarios y datos_cuenta
+      opt Cambio de correo confirmado
+        B->>D: Incrementa versión y elimina tokens de recuperación
+      end
+      B-->>F: Cuenta actualizada y token si cambió correo
+      F-->>P: Confirma y libera el botón
+    end
+  else Edita ficha profesional
+    P->>F: Cambia especialidad, atención o ubicación
+    Note over P,F: Online sin ubicación. Presencial o ambas conservan mapa y dirección
+    alt Sin modificaciones
+      F-->>P: No hay cambios pendientes. No envía PUT
+    else Con modificaciones
+      F->>B: PUT /api/profesionales/mi-ficha
+      B->>D: Guarda la ficha según reglas existentes
+      B-->>F: Ficha actualizada o error
+      F-->>P: Libera Guardando también si hay error
+    end
+  end
+  Note over P,F: Usuario conserva datos físicos, objetivos y salud. Profesional conserva experiencia, certificaciones y acceso a agenda

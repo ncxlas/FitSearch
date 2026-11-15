@@ -1,0 +1,9 @@
+flowchart TB
+  A["Abrir el perfil autenticado"] --> B["Consultar los datos propios<br/>GET /api/perfil/cuenta"]
+  B --> C["Editar por secciones<br/>Contacto, foto y enlaces<br/>Ficha profesional o datos del usuario"]
+  C --> D{"¿Hay cambios?"}
+  D -->|"No"| E["No hay cambios pendientes<br/>No se envía otra actualización"]
+  D -->|"Sí"| F["Validar y guardar<br/>Identidad adicional al cambiar correo"]
+  F --> G["Mostrar confirmación o error<br/>Liberar siempre el botón"]
+  G --> C
+  E --> C

@@ -71,6 +71,7 @@ export function simularApi(respuestas) {
   // Agenda vacía por defecto; las pruebas de horarios/reservas pueden sobrescribir sus rutas.
   // FS-HU-30: el catálogo de especialidades viene de la API; por defecto, el inicial de la migración.
   respuestas = {
+    '/api/perfil/cuenta': { cuenta: cuentaDePrueba() },
     '/api/reservas': { reservas: [] }, '/api/disponibilidades': { horarios: [] },
     '/api/especialidades': { especialidades: ESPECIALIDADES_DE_PRUEBA }, ...respuestas,
   };
@@ -83,6 +84,12 @@ export function simularApi(respuestas) {
     const [estado, cuerpo] = typeof respuesta === 'function' ? respuesta(url, opciones) : [200, respuesta];
     return estado === 204 ? Promise.resolve(new Response(null, { status: 204 })) : respuestaJson(estado, cuerpo);
   });
+}
+
+export function cuentaDePrueba(usuario) {
+  usuario ||= JSON.parse(localStorage.getItem('fitsearch_sesion') || sessionStorage.getItem('fitsearch_sesion') || 'null')?.usuario || SESION.usuario;
+  return { nombre: usuario.nombre, correo: usuario.correo, telefono: '', biografia: '', instagram: '', linkedin: '', sitioWeb: '', foto: null,
+    fechaRegistro: '2026-09-01T00:00:00.000Z', tienePassword: true, tieneGoogle: false };
 }
 
 // Llamadas hechas a una ruta de la API (URL completa) y cuerpo JSON de la última.

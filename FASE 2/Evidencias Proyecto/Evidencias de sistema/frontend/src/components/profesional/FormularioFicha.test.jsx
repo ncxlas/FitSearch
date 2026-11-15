@@ -256,6 +256,41 @@ describe('Ajustar el marcador', () => {
 });
 
 describe('Editar ficha', () => {
+  test.each(['ambas', 'online'])('sin cambios en modalidad %s avisa y no envía ni bloquea el formulario', async (modalidad) => {
+    simularMapLibre();
+    const fetch = simularServidor();
+    const onGuardado = vi.fn();
+    formulario({ ficha: { ...MI_FICHA, modalidad, direccion: 'Av. Italia 850' }, onGuardado });
+
+    await guardar();
+
+    expect(await screen.findByText('No hay cambios pendientes.')).toHaveAttribute('role', 'status');
+    expect(screen.getByRole('button', { name: /Guardar perfil/ })).toBeEnabled();
+    expect(huboPut(fetch)).toBe(false);
+    expect(busquedas(fetch)).toHaveLength(0);
+    expect(onGuardado).not.toHaveBeenCalled();
+  });
+
+  test('al guardar vuelve a habilitar el botón y permite editar nuevamente sin salir de la página', async () => {
+    simularMapLibre();
+    const fetch = simularServidor();
+    const onGuardado = vi.fn();
+    formulario({ ficha: { ...MI_FICHA, direccion: 'Av. Italia 850' }, onGuardado });
+    await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), ' Atención personalizada.');
+    await guardar();
+
+    await waitFor(() => expect(onGuardado).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('button', { name: /Guardar perfil/ })).toBeEnabled();
+    await guardar();
+    expect(await screen.findByText('No hay cambios pendientes.')).toBeInTheDocument();
+    expect(onGuardado).toHaveBeenCalledTimes(1);
+    await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), ' Nuevas sesiones.');
+    await guardar();
+    await waitFor(() => expect(onGuardado).toHaveBeenCalledTimes(2));
+    expect(fetch.mock.calls.filter(([, o = {}]) => o.method === 'PUT')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: /Guardar perfil/ })).toBeEnabled();
+  });
+
   test('muestra la ubicación guardada sin buscarla y, si no cambia la dirección, guarda las mismas coordenadas', async () => {
     const registro = simularMapLibre();
     const fetch = simularServidor();
@@ -264,6 +299,7 @@ describe('Editar ficha', () => {
     expect(await screen.findByText(/^Esta es la ubicación guardada en tu ficha/)).toBeInTheDocument();
     await waitFor(() => expect(registro.marcadores).toHaveLength(1));
     expect(registro.marcadores[0].getLngLat()).toEqual({ lng: -70.6116, lat: -33.4263 });
+    await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), ' Atención personalizada.');
     await guardar();
 
     await waitFor(() => expect(huboPut(fetch)).toBe(true));
@@ -293,6 +329,7 @@ describe('Editar ficha', () => {
     const registro = simularMapLibre();
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar mapa' }));
     await waitFor(() => expect(registro.marcadores).toHaveLength(1));
+    await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), ' Atención personalizada.');
     await guardar();
     await waitFor(() => expect(huboPut(fetch)).toBe(true));
   });

@@ -37,6 +37,7 @@ export default function BotonGoogle({
   // Texto del botón oficial: "continue_with" en el inicio de sesión, "signup_with" en el registro.
   textoGoogle = 'continue_with',
   recordar = false,
+  onCredencial,
 }) {
   const clienteId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const { iniciarSesionConGoogle } = useSesion();
@@ -54,6 +55,11 @@ export default function BotonGoogle({
       setError('');
       setEntrando(true);
       try {
+        if (onCredencial) {
+          await onCredencial(credential);
+          setEntrando(false);
+          return;
+        }
         const { usuario } = await iniciarSesionConGoogle({ credencial: credential, recordar });
         // Una cuenta que aún no elige su perfil va a "Elegir perfil"; si ya existía, vuelve a lo que pidió o a su Inicio.
         navegar(destinoTrasIngreso(state, usuario), { replace: true });
