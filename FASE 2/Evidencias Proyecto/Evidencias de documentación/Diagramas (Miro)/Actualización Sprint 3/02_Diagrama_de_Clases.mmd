@@ -1,174 +1,302 @@
 classDiagram
   direction LR
   class Rol {
-    +int id
-    +string nombre
+    +Int id
+    +String nombre
   }
   class Usuario {
-    +int id
-    +string nombre
-    +string correo
-    +string passwordHash [opcional]
-    +string googleId [opcional]
-    +bool activo
-    +int versionSesion
-    +bool rolConfirmado
-    +datetime fechaRegistro
+    +Int id
+    +String nombre
+    +String correo
+    +String passwordHash [opcional]
+    +String googleId [opcional]
+    +Int rolId
+    +Boolean rolConfirmado
+    +DateTime fechaRegistro
+    +Boolean activo
+    +Int versionSesion
   }
-  class PerfilUsuario {
-    +int id
-    +decimal pesoKg
-    +decimal alturaCm
-    +int edad
-    +string sexo
-    +string actividadFisica
-    +string objetivoPrincipal
-    +int comidasDia
-    +string horasSueno
-    +requerimientoCalorico() int
-  }
-  class InformacionSalud {
-    +int id
-    +string[] condicionesMedicas
-    +bool tomaMedicamentos
-    +string[] medicamentos
-    +string[] alergias
-    +datetime fechaActualizacion
-  }
-  class TokenRecuperacion {
-    +int id
-    +string tokenHash
-    +datetime fechaExpiracion
-    +datetime fechaUso
-    +estaVigente() bool
+  class DatosCuenta {
+    +Int usuarioId
+    +String telefono [opcional]
+    +String biografia [opcional]
+    +String instagram [opcional]
+    +String linkedin [opcional]
+    +String sitioWeb [opcional]
+    +String foto [opcional]
   }
   class Profesional {
-    +int id
-    +string especialidad
-    +string descripcion
-    +bool verificado
-    +string estadoVerificacion
-    +string motivoRechazo [opcional]
-    +json historialVerificacion [opcional]
-    +int revisionVerificacion
-    +string rut [opcional]
-    +string telefono [opcional]
-    +decimal ubicacionLat
-    +decimal ubicacionLng
-    +string comuna [opcional]
-    +string direccion [opcional]
-    +Modalidad modalidad
-    +calificacionPromedio() decimal
+    +Int id
+    +Int usuarioId
+    +Int establecimientoId [opcional]
+    +String especialidad
+    +String descripcion [opcional]
+    +Boolean verificado
+    +String estadoVerificacion
+    +String motivoRechazo [opcional]
+    +Json historialVerificacion [opcional]
+    +Int revisionVerificacion
+    +String rut [opcional]
+    +String telefono [opcional]
+    +Decimal ubicacionLat [opcional]
+    +Decimal ubicacionLng [opcional]
+    +String comuna [opcional]
+    +String direccion [opcional]
+    +String modalidad
+    +Int aniosExperiencia [opcional]
+    +Json formacion [opcional]
+    +Json atiendeA [opcional]
+    +String registroSis [opcional]
+    +Int precioDesde [opcional]
+    +Boolean autoconfirmar
+    +Boolean avisosCorreo
+    +Boolean recordatorios
   }
   class DocumentoProfesional {
-    +int id
-    +string tipo
-    +string nombre
-    +string clave
-    +string mime
-    +int tamano
-    +datetime fechaCreacion
-  }
-  class Favorito {
-    +int id
-    +datetime fechaCreacion
-  }
-  class Resena {
-    +int id
-    +int puntaje
-    +string comentario [opcional]
-    +datetime fechaCreacion
-    +datetime fechaActualizacion
-  }
-  class Establecimiento {
-    +int id
-    +string nombre
-    +Categoria categoria
-    +string comuna
-    +string direccion
-    +decimal ubicacionLat
-    +decimal ubicacionLng
-    +bool activo
-  }
-  class Especialidad {
-    +int id
-    +string nombre
-    +bool activa
-    +datetime fechaCreacion
+    +Int id
+    +Int profesionalId
+    +String tipo
+    +String nombre
+    +String clave
+    +String mime
+    +Int tamano
+    +DateTime fechaCreacion
   }
   class Disponibilidad {
-    +int id
-    +date fecha
-    +time horaInicio
-    +time horaFin
-    +bool retirado
+    +Int id
+    +Int profesionalId
+    +DateTime fecha
+    +DateTime horaInicio
+    +DateTime horaFin
+    +Boolean retirado
   }
   class Reserva {
-    +int id
-    +string mensaje
-    +EstadoReserva estado
-    +datetime fechaCreacion
+    +Int id
+    +Int usuarioId
+    +Int disponibilidadId
+    +String mensaje
+    +String estado
+    +DateTime fechaCreacion
+    +String modalidad [opcional]
+    +Boolean primeraVisita [opcional]
+    +String canceladaPor [opcional]
+    +DateTime fechaCambio [opcional]
+    +DateTime recordatorioEn [opcional]
+    +DateTime recordatorioIntento [opcional]
   }
   class Conversacion {
-    +int id
-    +string titulo
-    +bool fijada
-    +datetime fechaInicio
-    +datetime fechaActualizacion
-  }
-  class UsoAsistente {
-    +date fecha
-    +int mensajes
+    +Int id
+    +Int usuarioId
+    +String titulo
+    +Boolean fijada
+    +DateTime fechaInicio
+    +DateTime fechaActualizacion
   }
   class Mensaje {
-    +int id
-    +Remitente remitente
-    +string contenido
-    +string especialidad [opcional]
-    +json comidasAgregadas [opcional]
-    +datetime fecha
+    +Int id
+    +Int conversacionId
+    +String remitente
+    +String contenido
+    +String especialidad [opcional]
+    +Json comidasAgregadas [opcional]
+    +DateTime fecha
   }
-  class RegistroComida {
-    +int id
-    +date fecha
-    +Momento momento
-    +string descripcionAlimento
-    +decimal gramos
-    +int calorias
-    +decimal proteinasG
-    +decimal carbohidratosG
-    +decimal grasasG
-    +Origen origen
-    +datetime fechaCreacion
+  class UsoAsistente {
+    +Int usuarioId
+    +DateTime fecha
+    +Int mensajes
   }
   class Alimento {
-    +int id
-    +string nombre
-    +string sinonimos
-    +decimal calorias100g
-    +decimal proteinas100g
-    +decimal carbohidratos100g
-    +decimal grasas100g
-    +bool activo
-    +aporte(gramos) Aporte
+    +Int id
+    +String nombre
+    +String sinonimos
+    +Decimal calorias
+    +Decimal proteinasG
+    +Decimal carbohidratosG
+    +Decimal grasasG
+    +Boolean activo
   }
-  Rol "1" <-- "0..*" Usuario : tiene
-  Usuario "1" *-- "0..1" PerfilUsuario : perfil
-  Usuario "1" *-- "0..1" InformacionSalud : salud
-  Usuario "1" *-- "0..*" TokenRecuperacion : recuperación
-  Usuario "1" -- "0..1" Profesional : ficha profesional
-  Establecimiento "0..1" o-- "0..*" Profesional : agrupa
-  Especialidad "1" <.. "0..*" Profesional : elige por nombre
-  Profesional "1" *-- "0..*" Disponibilidad : publica
-  Disponibilidad "1" -- "0..*" Reserva : se reserva en
-  Usuario "1" -- "0..*" Reserva : realiza
-  Usuario "1" *-- "0..*" Conversacion : inicia
-  Conversacion "1" *-- "1..*" Mensaje : contiene
-  Usuario "1" *-- "0..1" UsoAsistente : uso diario
-  Usuario "1" *-- "0..*" RegistroComida : registra
-  RegistroComida "0..*" --> "0..1" Alimento : se calcula con
-  Usuario "1" *-- "0..*" Favorito : guarda
-  Favorito "0..*" --> "1" Profesional : marca
-  Usuario "1" *-- "0..*" Resena : escribe
-  Profesional "1" -- "0..*" Resena : recibe
-  Profesional "1" *-- "0..*" DocumentoProfesional : adjunta
+  class RegistroComida {
+    +Int id
+    +Int usuarioId
+    +DateTime fecha
+    +String momento
+    +Int alimentoId [opcional]
+    +String descripcionAlimento
+    +Decimal gramos
+    +Int calorias [opcional]
+    +Decimal proteinasG [opcional]
+    +Decimal carbohidratosG [opcional]
+    +Decimal grasasG [opcional]
+    +String origen
+    +DateTime fechaCreacion
+  }
+  class PlanAlimentacion {
+    +Int id
+    +Int usuarioId
+    +DateTime desde
+    +String tipo
+    +Int planPersonalizadoId [opcional]
+    +Int proteinasPct [opcional]
+    +Int carbohidratosPct [opcional]
+    +Int grasasPct [opcional]
+    +DateTime fechaActualizacion
+  }
+  class PlanPersonalizado {
+    +Int id
+    +Int usuarioId
+    +String nombre
+    +Int proteinasPct
+    +Int carbohidratosPct
+    +Int grasasPct
+    +DateTime fechaCreacion
+    +DateTime fechaActualizacion
+  }
+  class MetaPeso {
+    +Int id
+    +Int usuarioId
+    +DateTime desde
+    +Boolean activa
+    +String objetivo
+    +Decimal pesoInicialKg
+    +Decimal pesoObjetivoKg
+    +Decimal ritmoSemanalKg
+    +DateTime fechaInicio
+    +DateTime fechaActualizacion
+  }
+  class RegistroAgua {
+    +Int id
+    +Int usuarioId
+    +DateTime fecha
+    +Int ml
+    +DateTime fechaCreacion
+  }
+  class Favorito {
+    +Int id
+    +Int usuarioId
+    +Int profesionalId
+    +DateTime fechaCreacion
+  }
+  class Resena {
+    +Int id
+    +Int usuarioId
+    +Int profesionalId
+    +Int puntaje
+    +String comentario [opcional]
+    +Int reservaId [opcional]
+    +DateTime fechaCreacion
+    +DateTime fechaActualizacion
+  }
+  class Establecimiento {
+    +Int id
+    +String nombre
+    +String categoria
+    +String comuna [opcional]
+    +String direccion
+    +Decimal ubicacionLat
+    +Decimal ubicacionLng
+    +Boolean activo
+    +String instagram [opcional]
+  }
+  class Especialidad {
+    +Int id
+    +String nombre
+    +Boolean activa
+    +DateTime fechaCreacion
+  }
+  class PerfilUsuario {
+    +Int id
+    +Int usuarioId
+    +Decimal pesoKg [opcional]
+    +Decimal alturaCm [opcional]
+    +Int edad [opcional]
+    +String sexo [opcional]
+    +String actividadFisica [opcional]
+    +String objetivoPrincipal [opcional]
+    +Int comidasDia [opcional]
+    +String horasSueno [opcional]
+  }
+  class TokenRecuperacion {
+    +Int id
+    +Int usuarioId
+    +String tokenHash
+    +DateTime fechaExpiracion
+    +DateTime fechaUso [opcional]
+    +DateTime fechaCreacion
+  }
+  class InformacionSalud {
+    +Int id
+    +Int usuarioId
+    +Json condicionesMedicas
+    +Boolean tomaMedicamentos
+    +Json medicamentos
+    +Json alergias
+    +DateTime fechaActualizacion
+  }
+  class BloqueoAgenda {
+    +Int id
+    +Int profesionalId
+    +DateTime fechaInicio
+    +DateTime fechaFin
+    +String motivo [opcional]
+    +DateTime fechaCreacion
+  }
+  class ListaEspera {
+    +Int id
+    +Int usuarioId
+    +Int profesionalId
+    +DateTime fechaCreacion
+    +DateTime avisoIntento [opcional]
+  }
+  class ChatCita {
+    +Int id
+    +Int usuarioId
+    +Int profesionalId
+    +Int borradoUsuarioHasta
+    +DateTime borradoUsuarioEn [opcional]
+    +Int borradoProfesionalHasta
+    +DateTime borradoProfesionalEn [opcional]
+    +DateTime fechaCreacion
+  }
+  class MensajeCita {
+    +Int id
+    +Int chatId
+    +Int autorId
+    +String texto
+    +Boolean leido
+    +DateTime fechaCreacion
+  }
+  Rol "1" -- "0..*" Usuario : rol
+  Usuario "1" -- "0..1" DatosCuenta : usuario
+  Usuario "1" -- "0..1" Profesional : usuario
+  Establecimiento "0..1" -- "0..*" Profesional : establecimiento
+  Profesional "1" -- "0..*" DocumentoProfesional : profesional
+  Profesional "1" -- "0..*" Disponibilidad : profesional
+  Usuario "1" -- "0..*" Reserva : usuario
+  Disponibilidad "1" -- "0..*" Reserva : disponibilidad
+  Usuario "1" -- "0..*" Conversacion : usuario
+  Conversacion "1" -- "0..*" Mensaje : conversacion
+  Usuario "1" -- "0..1" UsoAsistente : usuario
+  Usuario "1" -- "0..*" RegistroComida : usuario
+  Alimento "0..1" -- "0..*" RegistroComida : alimento
+  Usuario "1" -- "0..*" PlanAlimentacion : usuario
+  PlanPersonalizado "0..1" -- "0..*" PlanAlimentacion : planPersonalizado
+  Usuario "1" -- "0..*" PlanPersonalizado : usuario
+  Usuario "1" -- "0..*" MetaPeso : usuario
+  Usuario "1" -- "0..*" RegistroAgua : usuario
+  Usuario "1" -- "0..*" Favorito : usuario
+  Profesional "1" -- "0..*" Favorito : profesional
+  Usuario "1" -- "0..*" Resena : usuario
+  Profesional "1" -- "0..*" Resena : profesional
+  Reserva "0..1" -- "0..*" Resena : reserva
+  Usuario "1" -- "0..1" PerfilUsuario : usuario
+  Usuario "1" -- "0..*" TokenRecuperacion : usuario
+  Usuario "1" -- "0..1" InformacionSalud : usuario
+  Profesional "1" -- "0..*" BloqueoAgenda : profesional
+  Usuario "1" -- "0..*" ListaEspera : usuario
+  Profesional "1" -- "0..*" ListaEspera : profesional
+  Usuario "1" -- "0..*" ChatCita : usuario
+  Profesional "1" -- "0..*" ChatCita : profesional
+  ChatCita "1" -- "0..*" MensajeCita : chat
+  Usuario "1" -- "0..*" MensajeCita : autor
+  note for DatosCuenta "PR 59 en revisión\nCuenta propia y foto privada\nNo sustituye InformaciónSalud"
