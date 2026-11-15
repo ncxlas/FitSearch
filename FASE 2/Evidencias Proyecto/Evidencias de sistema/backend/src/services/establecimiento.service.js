@@ -2,6 +2,7 @@
 const modelo = require('../models/establecimiento.model');
 const { agruparPorRegion, nombreOficial } = require('../utils/regiones');
 const ErrorHttp = require('../utils/ErrorHttp');
+const { fotoUrlDe } = require('../utils/fotos');
 const { profesionales: reglas } = require('../../../shared/reglas.json');
 
 const redondear = (valor) => Math.round(Number(valor) * 10) / 10;
@@ -42,7 +43,7 @@ async function ficha(id) {
     establecimiento: {
       ...formatear({ ...datos, distanciaKm: null, totalProfesionales: profesionales.length }),
       profesionales: profesionales.map((p) => ({
-        id: p.id, nombre: p.usuario.nombre, especialidad: p.especialidad, modalidad: p.modalidad, verificado: p.verificado,
+        id: p.id, nombre: p.usuario.nombre, fotoUrl: fotoUrlDe(p.usuario), especialidad: p.especialidad, modalidad: p.modalidad, verificado: p.verificado,
       })),
     },
   };

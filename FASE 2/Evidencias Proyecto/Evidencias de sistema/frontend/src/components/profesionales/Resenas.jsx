@@ -8,6 +8,7 @@ import Alerta from '../Alerta.jsx';
 import { Estrellas } from '../Calificacion.jsx';
 import EstadoVacio from '../EstadoVacio.jsx';
 import Icono from '../Icono.jsx';
+import Avatar from '../Avatar.jsx';
 
 const { comentario: limites } = reglas.resena;
 
@@ -222,7 +223,7 @@ export default function Resenas({ profesionalId, nombre, resumen, miResena, pued
             {lista.resenas.map((resena) => (
               <li key={resena.id} className="resena">
                 <div className="resena__cabecera">
-                  <span className="avatar avatar--pequeno" aria-hidden="true">{resena.autor[0].toUpperCase()}</span>
+                  <Avatar className="avatar avatar--pequeno" nombre={resena.autor} fotoUrl={resena.fotoUrl} texto={resena.autor[0].toUpperCase()} />
                   <p>
                     <strong>{resena.autor}</strong>
                     {resena.propia && <span className="etiqueta-rol">Tu reseña</span>}

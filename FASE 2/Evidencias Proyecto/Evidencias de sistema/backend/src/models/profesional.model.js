@@ -1,7 +1,11 @@
 const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
 const { formasDeComuna, formasDeRegion } = require('../utils/regiones');
+const { claveFotoSql } = require('../utils/fotos');
 const ErrorHttp = require('../utils/ErrorHttp');
+
+// Clave de la foto de perfil del profesional, para armar su dirección (15-11-2026).
+const CLAVE_FOTO = claveFotoSql(Prisma.raw('p.usuario_id'));
 const verificacion = require('./verificacion.model');
 
 // Solo datos de la ficha pública. Nunca incluir correo de acceso, contraseña ni salud.
@@ -96,12 +100,13 @@ async function listar({ usuarioId, orden = 'nombre', pagina = 1, limite = 12, ..
   const { desde, distancia, proxima } = construirConsulta(filtros);
   const [filas, [{ total }]] = await Promise.all([
     prisma.$queryRaw`
-      SELECT p.id, u.nombre, p.especialidad, p.descripcion, p.comuna, p.direccion, p.modalidad, p.verificado,
+      SELECT p.id, p.usuario_id AS usuarioId, u.nombre, p.especialidad, p.descripcion, p.comuna, p.direccion, p.modalidad, p.verificado,
         p.ubicacion_lat AS ubicacionLat, p.ubicacion_lng AS ubicacionLng,
         e.nombre AS establecimientoNombre, e.direccion AS establecimientoDireccion,
         COALESCE(c.promedio, 0) AS promedio, COALESCE(c.total, 0) AS totalResenas,
         ${distancia} AS distanciaKm, ${proxima} AS proximaHora, ${COLUMNAS_EXPERIENCIA},
-        EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito
+        EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito,
+        ${CLAVE_FOTO} AS fotoClave
       ${desde}
       ORDER BY ${ORDENES[orden] || ORDENES.nombre}
       LIMIT ${limite} OFFSET ${(pagina - 1) * limite}`,
@@ -120,7 +125,8 @@ async function buscarPorId(id, usuarioId) {
       COALESCE(c.promedio, 0) AS promedio, COALESCE(c.total, 0) AS totalResenas,
       ${distancia} AS distanciaKm, ${COLUMNAS_EXPERIENCIA},
       EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito,
-      (SELECT dc.biografia FROM datos_cuenta dc WHERE dc.usuario_id = p.usuario_id) AS presentacion
+      (SELECT dc.biografia FROM datos_cuenta dc WHERE dc.usuario_id = p.usuario_id) AS presentacion,
+      ${CLAVE_FOTO} AS fotoClave
     ${desde} AND p.id = ${id}`;
   return filas[0] || null;
 }

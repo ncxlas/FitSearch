@@ -6,6 +6,7 @@
 //   cancelación, especialidades más pedidas, profesionales con reservas), calidad (reseñas) y uso de las funciones.
 // Los días son de Chile; las fechas de la base están en UTC.
 const modelo = require('../models/estadisticasAdmin.model');
+const { fotoUrl, fotoUrlDe } = require('../utils/fotos');
 const { fechaEnChile, sumarDias, lunesDeLaSemana } = require('../utils/fechaChile');
 
 const DIA_MS = 86400000;
@@ -95,12 +96,21 @@ async function dashboard(ahora = new Date()) {
     }
   }
   const cola = colaDeVerificacion(fichas, ahora);
+  // Fotos de perfil (15-11-2026): solo las de las cinco fichas que se muestran, no las de todos los profesionales.
+  const primeras = cola.slice(0, 5);
+  const usuarioDe = new Map(fichas.map((ficha) => [ficha.id, ficha.usuario.id]));
+  const fotos = new Map(((await modelo.fotosDe(primeras.map(({ id }) => usuarioDe.get(id)))) ?? []).map((d) => [d.usuarioId, d.foto]));
   return {
     hoy,
-    cola: { total: cola.length, masAntiguaDias: cola[0]?.diasEsperando ?? null, primeras: cola.slice(0, 5) },
+    cola: {
+      total: cola.length, masAntiguaDias: cola[0]?.diasEsperando ?? null,
+      primeras: primeras.map((ficha) => ({ ...ficha, fotoUrl: fotoUrl(usuarioDe.get(ficha.id), fotos.get(usuarioDe.get(ficha.id))) })),
+    },
     cifras,
     actividad,
-    ultimasCuentas: ultimas.map((fila) => ({ id: fila.id, nombre: fila.nombre, rol: fila.rol.nombre, activo: fila.activo, fechaRegistro: fila.fechaRegistro.toISOString() })),
+    ultimasCuentas: ultimas.map((fila) => ({
+      id: fila.id, nombre: fila.nombre, fotoUrl: fotoUrlDe(fila), rol: fila.rol.nombre, activo: fila.activo, fechaRegistro: fila.fechaRegistro.toISOString(),
+    })),
     plataforma: { ...plataforma, profesionales: fichas.length, verificados: fichas.filter((ficha) => ficha.verificado).length },
   };
 }

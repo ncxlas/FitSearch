@@ -46,7 +46,9 @@ test('agrupa las reservas por persona, sin correo ni datos de salud, con su pró
   // Primero quienes tienen una cita próxima (la más cercana arriba); Pedro no tiene y queda al final.
   expect(clientes.map((c) => c.nombre)).toEqual(['Camila Rojas', 'Lucía Díaz', 'Pedro Soto']);
   const [camilaResumen, , pedroResumen] = clientes;
-  expect(Object.keys(camilaResumen).sort()).toEqual(['estados', 'id', 'nombre', 'primeraReserva', 'proximaCita', 'totalCitas', 'ultimaCita']);
+  // Con la dirección de su foto de perfil, o null si no tiene (15-11-2026).
+  expect(Object.keys(camilaResumen).sort()).toEqual(['estados', 'fotoUrl', 'id', 'nombre', 'primeraReserva', 'proximaCita', 'totalCitas', 'ultimaCita']);
+  expect(camilaResumen.fotoUrl).toBeNull();
   expect(camilaResumen).toMatchObject({
     totalCitas: 3,
     proximaCita: { fecha: '2026-11-12', horaInicio: '09:00' },

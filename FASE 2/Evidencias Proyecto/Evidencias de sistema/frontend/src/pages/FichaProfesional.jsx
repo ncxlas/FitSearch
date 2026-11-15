@@ -10,10 +10,11 @@ import ReservarHora from '../components/reservas/ReservarHora.jsx';
 import MapaLugar from '../components/profesionales/MapaLugar.jsx';
 import PestanasFicha from '../components/profesionales/PestanasFicha.jsx';
 import { etiquetaAtiende, precioCLP, URL_SUPERSALUD } from '../components/profesional/experiencia.js';
-import { etiquetaModalidad, iniciales } from '../services/formato.js';
+import { etiquetaModalidad } from '../services/formato.js';
 import { obtenerProfesional } from '../services/profesional.service.js';
 import './Profesionales.css';
 import { CATEGORIAS } from '../components/establecimientos/categorias.js';
+import Avatar from '../components/Avatar.jsx';
 
 // Ficha de un profesional con sus datos públicos, favorito y reseñas (FS-HU-23, FS-HU-24).
 // Con "vistaPrevia" la ve el propio profesional desde su perfil: sin favorito y volviendo a su perfil (DAS, D25).
@@ -106,7 +107,7 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
         <p className="ficha__vista-previa"><Icono nombre="ojo" tamano={18} /> Así ven tu ficha las personas que buscan profesionales en FitSearch.</p>
       )}
       <header className="ficha__cabecera">
-        <span className="ficha__avatar" aria-hidden="true">{iniciales(nombre)}</span>
+        <Avatar className="ficha__avatar" nombre={nombre} fotoUrl={profesional.fotoUrl} />
         <div className="ficha__identidad">
           <span className="tarjeta-profesional__especialidad">{especialidad}</span>
           <h1>{nombre}</h1>

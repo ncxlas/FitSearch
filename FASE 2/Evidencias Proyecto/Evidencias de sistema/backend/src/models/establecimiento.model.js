@@ -1,6 +1,7 @@
 const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
 const { formasDeComuna, formasDeRegion } = require('../utils/regiones');
+const { CON_FOTO } = require('../utils/fotos');
 
 // Directorio de centros de salud y gimnasios (FS-HU-25). Solo muestra establecimientos activos de una categoría, tal
 // como los registró el administrador (FS-HU-30). Igual que el buscador de profesionales, usa SQL parametrizado para
@@ -59,7 +60,8 @@ function buscarPorId(id) {
       id: true, nombre: true, categoria: true, comuna: true, direccion: true, instagram: true, ubicacionLat: true, ubicacionLng: true,
       profesionales: {
         where: DONDE_PROFESIONAL_VISIBLE,
-        select: { id: true, especialidad: true, modalidad: true, verificado: true, usuario: { select: { nombre: true } } },
+        // Con la foto de cada profesional (15-11-2026).
+        select: { id: true, especialidad: true, modalidad: true, verificado: true, usuario: { select: { id: true, nombre: true, ...CON_FOTO } } },
         orderBy: [{ verificado: 'desc' }, { id: 'asc' }],
       },
     },

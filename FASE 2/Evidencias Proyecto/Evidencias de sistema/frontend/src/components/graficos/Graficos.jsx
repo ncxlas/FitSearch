@@ -38,12 +38,13 @@ export function Cifra({ etiqueta, valor, detalle, delta, subirEsBueno = true, co
 
 // Columnas apiladas: una por grupo (día, semana o mes), con sus series de abajo hacia arriba.
 // series: [{ clave, nombre, color }]; grupos: [{ clave, actual?, [serie]: número }].
-export function ColumnasApiladas({ grupos, series, etiqueta, titulo, tituloTabla, filaTabla, unidad = ['registro', 'registros'] }) {
+// mostrarTotal: el detalle suma una línea con el total del grupo (reportes del profesional, 15-11-2026).
+export function ColumnasApiladas({ grupos, series, etiqueta, titulo, tituloTabla, filaTabla, unidad = ['registro', 'registros'], mostrarTotal = false }) {
   const totales = grupos.map((grupo) => series.reduce((suma, { clave }) => suma + grupo[clave], 0));
   const tope = topeLimpio(Math.max(...totales, 1));
   const marcas = [0, tope / 2, tope];
   return (
-    <figure className={`columnas${grupos.length > 8 ? ' columnas--densas' : ''}`} style={{ '--columnas': grupos.length }}>
+    <figure className={`columnas${grupos.length >= 8 ? ' columnas--densas' : ''}`} style={{ '--columnas': grupos.length }}>
       <div className="columnas__plano">
         <div className="columnas__eje" aria-hidden="true">
           {marcas.map((m) => <span key={m} style={{ bottom: `${(m / tope) * 100}%` }}>{formatearNumero(m)}</span>)}
@@ -67,6 +68,7 @@ export function ColumnasApiladas({ grupos, series, etiqueta, titulo, tituloTabla
                   {series.map(({ clave, nombre, color }) => (
                     <span key={clave}><i className={`muestra-serie muestra-serie--${clave}`} style={{ '--color-serie': color }} />{nombre}<b className="cifra">{grupo[clave]}</b></span>
                   ))}
+                  {mostrarTotal && <span className="columna__total"><i />Total<b className="cifra">{total}</b></span>}
                 </span>
               </div>
             );
@@ -82,10 +84,18 @@ export function ColumnasApiladas({ grupos, series, etiqueta, titulo, tituloTabla
       <div className="solo-lector">
       <table>
         <caption>{tituloTabla}</caption>
-        <thead><tr><th scope="col">{filaTabla.encabezado}</th>{series.map((s) => <th key={s.clave} scope="col">{s.nombre}</th>)}</tr></thead>
+        <thead>
+          <tr>
+            <th scope="col">{filaTabla.encabezado}</th>{series.map((s) => <th key={s.clave} scope="col">{s.nombre}</th>)}
+            {mostrarTotal && <th scope="col">Total</th>}
+          </tr>
+        </thead>
         <tbody>
-          {grupos.map((grupo) => (
-            <tr key={grupo.clave}><th scope="row">{filaTabla.texto(grupo)}</th>{series.map(({ clave }) => <td key={clave}>{grupo[clave]}</td>)}</tr>
+          {grupos.map((grupo, indice) => (
+            <tr key={grupo.clave}>
+              <th scope="row">{filaTabla.texto(grupo)}</th>{series.map(({ clave }) => <td key={clave}>{grupo[clave]}</td>)}
+              {mostrarTotal && <td>{totales[indice]}</td>}
+            </tr>
           ))}
         </tbody>
       </table>

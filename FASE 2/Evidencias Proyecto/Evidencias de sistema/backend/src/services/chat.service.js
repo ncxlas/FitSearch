@@ -3,6 +3,7 @@
 // otra cuenta «no existe» (404). Cada uno puede eliminarlo para sí; si el otro vuelve a escribir, reaparece con lo nuevo.
 const modelo = require('../models/chat.model');
 const ErrorHttp = require('../utils/ErrorHttp');
+const { fotoUrlDe } = require('../utils/fotos');
 const { mensajesReserva: reglas } = require('../../../shared/reglas.json');
 
 const noExiste = () => new ErrorHttp(404, 'No encontramos esta conversación');
@@ -20,10 +21,13 @@ const corte = (chat, lado) => (lado === 'usuario'
   ? { hasta: chat.borradoUsuarioHasta, en: chat.borradoUsuarioEn }
   : { hasta: chat.borradoProfesionalHasta, en: chat.borradoProfesionalEn });
 
-// Con quién se conversa, visto desde quien consulta.
+// Con quién se conversa, visto desde quien consulta, con su foto de perfil (15-11-2026).
 const con = (chat, lado) => (lado === 'profesional'
-  ? { nombre: chat.usuario.nombre, detalle: 'Cliente', clienteId: chat.usuario.id }
-  : { nombre: chat.profesional.usuario.nombre, detalle: chat.profesional.especialidad, profesionalId: chat.profesional.id });
+  ? { nombre: chat.usuario.nombre, fotoUrl: fotoUrlDe(chat.usuario), detalle: 'Cliente', clienteId: chat.usuario.id }
+  : {
+    nombre: chat.profesional.usuario.nombre, fotoUrl: fotoUrlDe(chat.profesional.usuario),
+    detalle: chat.profesional.especialidad, profesionalId: chat.profesional.id,
+  });
 
 const formatear = (m, lectorId) => ({ id: m.id, texto: m.texto, fecha: m.fechaCreacion.toISOString(), propio: m.autorId === lectorId, leido: m.leido });
 const reserva = (r) => ({
