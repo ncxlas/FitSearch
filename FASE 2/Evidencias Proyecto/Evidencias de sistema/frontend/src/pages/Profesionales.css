@@ -114,23 +114,71 @@
   display: flex; align-items: center; gap: 0.5rem; margin: 0 0 1rem; padding: 0.75rem 1rem; border-radius: var(--radio-control);
   background: var(--color-info-fondo); color: var(--color-primario); font-size: 0.9rem;
 }
-.ficha__grilla { display: grid; gap: 1.25rem; }
-/* Experiencia y formación (FS-HU-29): ocupa todo el ancho bajo «Sobre su atención» y «Lugar de atención». */
-.experiencia-publica { grid-column: 1 / -1; display: grid; gap: 1rem; }
-.experiencia-publica h2 { margin: 0; }
-.experiencia-publica__datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 0.75rem; margin: 0; }
-.experiencia-publica__datos div { display: grid; align-content: start; gap: 0.2rem; padding: 0.8rem 0.9rem; border-radius: 12px; background: var(--color-superficie-suave); }
-.experiencia-publica__datos dt { font-size: 0.78rem; color: var(--color-texto-secundario); }
-.experiencia-publica__datos dd { display: grid; gap: 0.25rem; margin: 0; font-weight: 600; color: var(--color-texto); }
-.experiencia-publica__datos small { font-size: 0.75rem; font-weight: 400; color: var(--color-texto-secundario); }
+.ficha__ir-horas { margin-top: 0.6rem; }
+/* Presentación del profesional (15-11-2026): lo primero que se lee después de la cabecera, en su propio recuadro. */
+.ficha__presentacion {
+  padding: 1.35rem 1.5rem; border-radius: var(--radio); border-left: 4px solid var(--color-acento);
+  background: var(--color-superficie); box-shadow: var(--sombra-tarjeta);
+}
+.ficha__presentacion h2 { margin: 0 0 0.6rem; font-size: 1.15rem; }
+.ficha__presentacion p { margin: 0; max-width: 65ch; white-space: pre-wrap; line-height: 1.65; color: var(--color-texto); }
+/* Menú de pestañas con la información del profesional (15-11-2026): una a la vez, para no saturar la ficha. En el
+   celular van en dos columnas (ver más abajo), así todas se ven y se nota cuál está elegida. */
+.ficha-pestanas { display: grid; gap: 1.1rem; }
+.ficha-pestanas__lista { display: flex; gap: 0.25rem; overflow-x: auto; border-bottom: 1px solid var(--color-borde); scrollbar-width: thin; }
+.ficha-pestanas__lista [role='tab'] {
+  display: inline-flex; align-items: center; gap: 0.4rem; flex-shrink: 0; margin-bottom: -1px; padding: 0.65rem 0.85rem;
+  border: 0; border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0; background: none;
+  font: inherit; font-size: 0.9rem; font-weight: 600; color: var(--color-texto-secundario); cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+}
+.ficha-pestanas__lista [role='tab'][aria-selected='true'] { color: var(--color-primario); border-bottom-color: var(--color-acento); }
+.ficha-pestanas__panel { border-radius: 8px; }
+.ficha-pestanas__panel:focus-visible { outline: 2px solid var(--color-primario-claro); outline-offset: 4px; }
+.ficha-pestanas__contenido { display: grid; gap: 1rem; }
+.ficha-pestanas__contenido h3 { margin: 0; font-size: 1rem; color: var(--color-primario-oscuro); }
+.ficha__datos-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 0.75rem; margin: 0; }
+.ficha__datos-lista div { display: grid; align-content: start; gap: 0.2rem; padding: 0.8rem 0.9rem; border-radius: 12px; background: var(--color-superficie-suave); }
+.ficha__datos-lista dt { font-size: 0.78rem; color: var(--color-texto-secundario); }
+.ficha__datos-lista dd { display: grid; gap: 0.25rem; margin: 0; font-weight: 600; color: var(--color-texto); }
+.ficha__datos-lista small { font-size: 0.75rem; font-weight: 400; color: var(--color-texto-secundario); }
 .experiencia-publica__verificar { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.82rem; font-weight: 600; }
+.ficha__certificado {
+  display: flex; align-items: flex-start; gap: 0.75rem; margin: 0; padding: 0.9rem 1rem; border-radius: 12px;
+  background: var(--color-superficie-suave); color: var(--color-texto-secundario); font-size: 0.9rem;
+}
+.ficha__certificado .icono { flex-shrink: 0; }
+.ficha__certificado strong { display: block; margin-bottom: 0.15rem; color: var(--color-texto); }
+.ficha__certificado--si { background: #e8f6ee; }
+.ficha__certificado--si .icono { color: var(--color-exito); }
+.ficha__lugar-pestana .ficha__lugar { margin: 0; }
+/* Mapa del lugar de atención (15-11-2026) y, debajo, el enlace discreto a Google Maps: no es la opción principal. */
+.mapa-lugar { display: grid; height: 17rem; overflow: hidden; border: 1px solid #c9dde9; border-radius: var(--radio-control); background: #e8f2f8; }
+.mapa-lugar__mapa, .mapa-lugar__aviso { grid-area: 1 / 1; }
+.mapa-lugar__mapa { width: 100%; height: 100%; }
+.mapa-lugar__mapa[hidden] { display: none; }
+.mapa-lugar__aviso { z-index: 1; align-self: center; justify-self: center; margin: 0; padding: 1rem; font-size: 0.85rem; text-align: center; }
+.mapa-lugar__marcador { display: block; width: 32px; height: 42px; color: var(--color-acento); filter: drop-shadow(0 2px 3px rgb(6 38 63 / 35%)); }
+.ficha__google-maps { justify-self: start; display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8rem; font-weight: 500; color: var(--color-texto-secundario); }
+/* Horas disponibles destacadas (15-11-2026): «Reservar una hora», en la cabecera, lleva hasta aquí. */
+.ficha__horas { border-radius: var(--radio); scroll-margin-top: 5rem; }
+.ficha__horas:focus { outline: none; }
+.ficha__horas > .reservar { border: 2px solid #f6c79c; background: linear-gradient(180deg, #fff7ef, var(--color-superficie) 10rem); }
+.ficha__horas:focus-visible > .reservar { outline: 3px solid rgb(244 123 32 / 55%); outline-offset: 2px; }
+@media (hover: hover) {
+  .ficha-pestanas__lista [role='tab']:hover { color: var(--color-primario); background: var(--color-superficie-suave); }
+  .ficha__google-maps:hover { color: var(--color-primario); }
+}
+@media (max-width: 34rem) {
+  .ficha-pestanas__lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
+  .ficha-pestanas__lista [role='tab'] { justify-content: center; padding: 0.6rem 0.4rem; font-size: 0.85rem; text-align: center; }
+}
 .ficha__seccion { padding: 1.25rem 1.4rem; background: var(--color-superficie); border-radius: var(--radio); box-shadow: var(--sombra-tarjeta); }
 .ficha__seccion > h2 { margin: 0 0 0.75rem; }
 .ficha__seccion h3 { margin: 1.5rem 0 0.75rem; font-size: 1rem; color: var(--color-primario-oscuro); }
 .ficha__descripcion { margin: 0; white-space: pre-wrap; color: var(--color-texto-secundario); }
 .ficha__lugar { display: grid; gap: 0.2rem; margin: 0 0 1rem; }
 .ficha__lugar span { font-size: 0.9rem; color: var(--color-texto-secundario); }
-.ficha__mapa { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; text-decoration: none; }
 
 /* ---------- Reseñas ---------- */
 .resumen-resenas { display: grid; gap: 1.25rem; align-items: center; padding-bottom: 1.25rem; border-bottom: 1px solid var(--color-borde); }
@@ -201,7 +249,6 @@
   .panel-filtros__pie .boton--secundario { align-self: end; width: auto; min-height: 2.75rem; }
   /* Limpiar queda al final de la fila. */
   .panel-filtros__pie .boton--secundario { grid-column: -2 / -1; justify-self: end; }
-  .ficha__grilla { grid-template-columns: 1.4fr 1fr; }
 }
 
 /* Lista y mapa lado a lado. El mapa queda fijo mientras se recorre la lista y el detalle del elegido va debajo, con su

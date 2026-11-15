@@ -1,13 +1,18 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import reglas from '@shared/reglas.json';
 import Alerta from '../Alerta.jsx';
 import CampoFormulario from '../CampoFormulario.jsx';
 import Icono from '../Icono.jsx';
 import MapaUbicacion from './MapaUbicacion.jsx';
 import { enMapa } from '../profesionales/ubicacionMapa.js';
-import { guardarMiFicha, ubicarDireccion } from '../../services/profesional.service.js';
+import { direccionDelPunto, guardarMiFicha, ubicarDireccion } from '../../services/profesional.service.js';
 import { useEspecialidades } from '../../services/especialidades.js';
+import { regionDeComuna } from '../../services/regiones.js';
 import './FormularioFicha.css';
+
+// Pausa antes de buscar la dirección del punto donde quedó el marcador: con las flechas del teclado se mueve paso a paso
+// y solo interesa el punto final (además, la API consulta Nominatim una vez por segundo como máximo).
+const ESPERA_PUNTO_MS = 600;
 
 const {
   modalidades, descripcion: { max: MAX_DESCRIPCION }, comuna: { max: MAX_COMUNA }, direccion: { max: MAX_DIRECCION },
@@ -49,6 +54,14 @@ const redondear = (valor) => Math.round(valor * 1e7) / 1e7;
 
 // Qué encontró el buscador de direcciones, dicho para el profesional (sin coordenadas).
 function explicarUbicacion(ubicacion, modalidad) {
+  // Al mover el marcador, la comuna y la dirección se actualizan con las de ese punto (15-11-2026).
+  if (ubicacion.origen === 'manual' && ubicacion.punto) {
+    const { comuna, direccion, precision } = ubicacion.punto;
+    if (!direccion) return `Ajustaste el marcador en ${comuna}, pero no encontramos una calle en ese punto: revisa tu dirección.`;
+    return `Actualizamos tu comuna y tu dirección según el marcador: ${direccion}, ${comuna}.`
+      + (precision === 'calle' ? ' No encontramos el número: agrégalo a la dirección.' : '')
+      + ' Si atiendes en una oficina o departamento, agrégalo a la dirección.';
+  }
   switch (ubicacion.origen === 'manual' ? 'manual' : ubicacion.precision) {
     case 'guardada': return 'Esta es la ubicación guardada en tu ficha. Si cambias tu comuna o tu dirección, la buscamos de nuevo.';
     case 'manual': return 'Ajustaste el marcador: guardaremos ese punto como tu lugar de atención.';
@@ -84,14 +97,33 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
   const ubicacionActual = useRef(ubicacion);
   const enCurso = useRef(null);
   const ultimaFicha = useRef(ficha);
+  // Los datos vigentes, para leerlos después de esperar la dirección del marcador (15-11-2026).
+  const datosActuales = useRef(datos);
+  const [buscandoPunto, setBuscandoPunto] = useState(false);
+  const [errorPunto, setErrorPunto] = useState('');
+  const esperaPunto = useRef(null);
+  const puntoEnCurso = useRef(null);
+  useEffect(() => () => clearTimeout(esperaPunto.current), []);
+  useEffect(() => { datosActuales.current = datos; }, [datos]);
 
   const fijarUbicacion = (nueva) => {
     ubicacionActual.current = nueva;
     setUbicacion(nueva);
   };
+  const fijarDatos = (nuevos) => {
+    datosActuales.current = nuevos;
+    setDatos(nuevos);
+  };
 
   const cambiar = (campo) => (evento) => {
     setDatos({ ...datos, [campo]: evento.target.value });
+    // Lo que escribe el profesional gana: una búsqueda pendiente de la dirección del marcador ya no la reemplaza.
+    if ((campo === 'comuna' || campo === 'direccion') && puntoEnCurso.current) {
+      clearTimeout(esperaPunto.current);
+      puntoEnCurso.current.resolver();
+      puntoEnCurso.current = null;
+      setBuscandoPunto(false);
+    }
     if (campo === 'modalidad' && evento.target.value === 'online') {
       enCurso.current = null;
       setBuscando(false);
@@ -103,11 +135,12 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
   // SC-28: busca las coordenadas de la comuna y la dirección escritas (DAS, D36) y devuelve la ubicación, o null si no
   // se pudo. Si ya se buscaron, o el profesional ya ajustó el marcador para esa misma dirección, no se busca de nuevo.
   function ubicar() {
-    if (datos.modalidad === 'online') return Promise.resolve(null);
-    const comuna = datos.comuna.trim();
-    const direccion = datos.direccion.trim();
+    const actuales = datosActuales.current;
+    if (actuales.modalidad === 'online') return Promise.resolve(null);
+    const comuna = actuales.comuna.trim();
+    const direccion = actuales.direccion.trim();
     if (!comuna) return Promise.resolve(null);
-    const consulta = consultaDe(datos);
+    const consulta = consultaDe(actuales);
     if (ubicacionActual.current?.consulta === consulta) return Promise.resolve(ubicacionActual.current);
     if (enCurso.current?.consulta === consulta) return enCurso.current.promesa;
 
@@ -138,15 +171,55 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
     return promesa;
   }
 
+  // Busca la comuna, la región y la dirección del punto donde quedó el marcador y las pone en el formulario
+  // (15-11-2026). La ubicación queda asociada a esos textos, así al salir del campo o al guardar no se vuelve a buscar
+  // la dirección escrita (lo que movería el marcador de vuelta). Solo cuenta la respuesta del último movimiento.
+  function buscarPunto({ lat, lng }) {
+    clearTimeout(esperaPunto.current);
+    puntoEnCurso.current?.resolver();
+    setErrorPunto('');
+    setBuscandoPunto(true);
+    let resolver;
+    const pedido = { promesa: new Promise((listo) => { resolver = listo; }), resolver: () => resolver() };
+    puntoEnCurso.current = pedido;
+    esperaPunto.current = setTimeout(() => {
+      direccionDelPunto({ lat, lng })
+        .then((punto) => {
+          if (puntoEnCurso.current !== pedido || !punto?.comuna) return;
+          const nuevos = { ...datosActuales.current, comuna: punto.comuna, ...(punto.direccion && { direccion: punto.direccion }) };
+          fijarDatos(nuevos);
+          fijarUbicacion({ ...ubicacionActual.current, consulta: consultaDe(nuevos), punto });
+          setErrores((previos) => ({ ...previos, comuna: undefined, direccion: undefined }));
+        })
+        .catch((error) => { if (puntoEnCurso.current === pedido) setErrorPunto(error.message); })
+        .finally(() => {
+          if (puntoEnCurso.current === pedido) {
+            puntoEnCurso.current = null;
+            setBuscandoPunto(false);
+          }
+          resolver();
+        });
+    }, ESPERA_PUNTO_MS);
+  }
+
   const mover = ({ lat, lng }) => {
-    fijarUbicacion({ ...ubicacionActual.current, lat: redondear(lat), lng: redondear(lng), origen: 'manual' });
+    const nueva = { ...ubicacionActual.current, lat: redondear(lat), lng: redondear(lng), origen: 'manual', punto: null };
+    fijarUbicacion(nueva);
     setErrores((previos) => ({ ...previos, ubicacionLat: undefined, ubicacionLng: undefined }));
+    buscarPunto(nueva);
   };
 
   const guardar = async (evento) => {
     evento.preventDefault();
     setMensaje('');
     setTipoMensaje('error');
+    // Si el marcador se acaba de mover, primero se espera su dirección, para guardar la comuna y la dirección de ese punto.
+    if (puntoEnCurso.current) {
+      setEnviando(true);
+      await puntoEnCurso.current.promesa;
+      setEnviando(false);
+    }
+    const datos = datosActuales.current;
     const nuevos = validar(datos);
     setErrores(nuevos);
     if (Object.keys(nuevos).length) return;
@@ -183,7 +256,8 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
     }
   };
 
-  const errorDelMapa = errorUbicacion || errores.ubicacionLat || errores.ubicacionLng;
+  const errorDelMapa = errorUbicacion || errorPunto || errores.ubicacionLat || errores.ubicacionLng;
+  const region = regionDeComuna(datos.comuna);
 
   return (
     <section className="ficha-prof">
@@ -233,7 +307,8 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
           <div className="ficha-prof__ubicacion">
             <div>
               <CampoFormulario id="comuna" etiqueta="Comuna (obligatorio)" maxLength={MAX_COMUNA} autoComplete="address-level2"
-                placeholder="Ej.: Providencia" value={datos.comuna} onChange={cambiar('comuna')} onBlur={ubicar} error={errores.comuna} />
+                placeholder="Ej.: Providencia" value={datos.comuna} onChange={cambiar('comuna')} onBlur={ubicar} error={errores.comuna}
+                ayuda={region ?? undefined} />
               <CampoFormulario id="direccion" maxLength={MAX_DIRECCION} autoComplete="street-address"
                 etiqueta="Dirección de atención (obligatorio)"
                 placeholder="Ej.: Av. Providencia 1234, oficina 501" value={datos.direccion} onChange={cambiar('direccion')}
@@ -260,8 +335,9 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
                 </p>
               ) : (
                 <p className="ficha-prof__estado-mapa" role="status">
-                  {buscando && ubicacion && 'Buscando tu dirección…'}
-                  {!buscando && ubicacion && explicarUbicacion(ubicacion, datos.modalidad)}
+                  {buscandoPunto && 'Buscando la dirección de ese punto…'}
+                  {!buscandoPunto && buscando && ubicacion && 'Buscando tu dirección…'}
+                  {!buscandoPunto && !buscando && ubicacion && explicarUbicacion(ubicacion, datos.modalidad)}
                 </p>
               )}
               {ubicacion && (

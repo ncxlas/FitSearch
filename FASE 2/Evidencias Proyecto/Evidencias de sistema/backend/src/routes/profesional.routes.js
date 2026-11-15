@@ -18,6 +18,8 @@ router.get('/mi-ficha', autorizarRoles('profesional'), controlador.obtenerMiFich
 router.put('/mi-ficha', autorizarRoles('profesional'), validadoresFicha, validar, controlador.guardarMiFicha);
 // SC-28: coordenadas de la comuna y la dirección que escribe en su ficha (el profesional ya no las ingresa a mano).
 router.get('/mi-ficha/ubicacion', autorizarRoles('profesional'), validadores.ubicar, validar, controlador.ubicarDireccion);
+// Al mover el marcador: la comuna, la región y la dirección de ese punto (15-11-2026).
+router.get('/mi-ficha/ubicacion/punto', autorizarRoles('profesional'), validadores.punto, validar, controlador.direccionDelPunto);
 // FS-HU-29: experiencia (se muestra en la ficha pública) y configuración de la cuenta profesional.
 router.get('/mi-ficha/experiencia', autorizarRoles('profesional'), async (req, res) => res.json(await cuenta.obtenerExperiencia(req.usuario.id)));
 router.put('/mi-ficha/experiencia', autorizarRoles('profesional'), async (req, res) => res.json(await cuenta.guardarExperiencia(req.usuario.id, req.body)));

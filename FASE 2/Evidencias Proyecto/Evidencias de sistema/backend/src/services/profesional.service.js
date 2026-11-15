@@ -1,6 +1,6 @@
 // Directorio de profesionales: listado con búsqueda y filtros (FS-HU-03, FS-HU-05, FS-HU-22) y ficha individual.
 const modelo = require('../models/profesional.model');
-const { agruparPorRegion, nombreOficial } = require('../utils/regiones');
+const { agruparPorRegion, nombreOficial, nombreCompletoRegion, ubicarComuna } = require('../utils/regiones');
 const resenaModel = require('../models/resena.model');
 const especialidadModel = require('../models/especialidad.model');
 const ErrorHttp = require('../utils/ErrorHttp');
@@ -118,8 +118,14 @@ async function ficha(id, usuario) {
   ]);
   // Reseñas verificadas (09-11-2026): una reseña nueva exige una cita confirmada que ya ocurrió; la propia se puede editar.
   const conCita = Boolean(propia || cita);
+  const presencial = fila.modalidad !== 'online';
   return {
-    profesional: formatearFicha(fila),
+    // La ficha pública suma la presentación del profesional (su «Sobre mí») y la región de su comuna (15-11-2026).
+    profesional: {
+      ...formatearFicha(fila),
+      presentacion: fila.presentacion?.trim() || null,
+      region: presencial ? nombreCompletoRegion(ubicarComuna(fila.comuna)?.region) : null,
+    },
     resumenResenas: resumirResenas(grupos),
     miResena: propia ? formatearResena(propia, usuario.id) : null,
     puedeResenar: habilitado && conCita,

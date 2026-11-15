@@ -158,7 +158,8 @@ describe('Asistente de perfil: paso 3, información de salud (FS-HU-19), y resum
     expect(screen.getByLabelText('Diabetes')).toBeChecked();
     expect(screen.getByLabelText('Hipertensión arterial')).toBeChecked();
     expect(screen.getByLabelText('Para la presión arterial')).toBeChecked();
-    expect(screen.getByText(/2\.556 kcal/)).toBeInTheDocument();
+    // Desde el 15-11-2026 la estimación se ve al terminar el asistente y en Comidas, no en «Mi perfil».
+    expect(screen.queryByText(/2\.556 kcal/)).not.toBeInTheDocument();
   });
 
   test('escenario 2: sin responder no guarda y señala cada pregunta', async () => {

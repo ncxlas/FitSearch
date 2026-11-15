@@ -3,9 +3,11 @@
 // los mismos datos del mapa, D31). Su política de uso pide identificar la aplicación, no pasar de una consulta por
 // segundo y guardar las respuestas: por eso las consultas pasan por el backend, esperan su turno y se recuerdan un día.
 const ErrorHttp = require('../utils/ErrorHttp');
+const { ubicarComuna, ubicarRegion, nombreCompletoRegion } = require('../utils/regiones');
 const { profesionales: { ubicacionChile: CHILE } } = require('../../../shared/reglas.json');
 
 const URL_API = 'https://nominatim.openstreetmap.org/search';
+const URL_INVERSA = 'https://nominatim.openstreetmap.org/reverse';
 const AGENTE = 'FitSearch/1.0 (+https://github.com/rodriacr/FitSearch)';
 const TIEMPO_ESPERA_MS = 5000;
 const DURACION_CACHE_MS = 24 * 60 * 60 * 1000;
@@ -104,7 +106,59 @@ async function ubicar({ comuna, direccion = '' }) {
   return ubicacion;
 }
 
+// Dirección de un punto del mapa (15-11-2026): cuando el profesional mueve el marcador, su comuna, su región y su
+// dirección se actualizan solas. Usa la búsqueda inversa de Nominatim, con el mismo turno de una consulta por segundo y
+// la misma caché. En Chile la comuna viene como barrio en Santiago («suburb»: Providencia, Puente Alto) y como ciudad en
+// regiones («city»: San Antonio, cuyo «suburb» es el barrio Barrancas): se toma el primer campo que sea una comuna de la
+// lista oficial y de la región que indica el lugar («state»: «Región de Valparaíso»).
+const CAMPOS_COMUNA = ['suburb', 'city_district', 'city', 'town', 'village', 'municipality', 'hamlet'];
+function comunaDelPunto(direccion) {
+  const region = ubicarRegion(direccion.state);
+  for (const campo of CAMPOS_COMUNA) {
+    const ubicada = ubicarComuna(direccion[campo]);
+    if (ubicada && (!region || ubicada.region === region)) return ubicada;
+  }
+  return null;
+}
+
+async function consultarPunto({ lat, lng }) {
+  const consulta = new URLSearchParams({ lat, lon: lng, format: 'jsonv2', addressdetails: '1', zoom: '18', 'accept-language': 'es' });
+  const respuesta = await enTurno(() => fetch(`${URL_INVERSA}?${consulta}`, {
+    headers: { 'User-Agent': AGENTE }, signal: AbortSignal.timeout(TIEMPO_ESPERA_MS),
+  }));
+  if (!respuesta.ok) throw new Error(`Nominatim respondió ${respuesta.status}`);
+  return respuesta.json();
+}
+
+async function direccionDelPunto({ lat, lng }) {
+  // 5 decimales son alrededor de un metro: dos puntos tan cercanos tienen la misma dirección.
+  const clave = `punto|${lat.toFixed(5)}|${lng.toFixed(5)}`;
+  const guardada = cache.get(clave);
+  if (guardada && Date.now() - guardada.momento < DURACION_CACHE_MS) return guardada.ubicacion;
+
+  let lugar;
+  try {
+    lugar = await consultarPunto({ lat, lng });
+  } catch {
+    throw new ErrorHttp(503, 'No pudimos buscar la dirección de ese punto en este momento. Intenta de nuevo en unos segundos.');
+  }
+  const ubicada = lugar?.address && comunaDelPunto(lugar.address);
+  if (!ubicada) throw new ErrorHttp(404, 'No encontramos una comuna de Chile en ese punto. Mueve el marcador hasta tu lugar de atención.');
+  const { road, pedestrian, footway, house_number: numero } = lugar.address;
+  const via = road || pedestrian || footway;
+  const resultado = {
+    comuna: ubicada.comuna,
+    region: ubicada.region,
+    regionCompleta: nombreCompletoRegion(ubicada.region),
+    direccion: via ? [via, numero].filter(Boolean).join(' ') : null,
+    precision: numero ? 'exacta' : via ? 'calle' : 'comuna',
+  };
+  if (cache.size >= MAXIMO_EN_CACHE) cache.clear();
+  cache.set(clave, { momento: Date.now(), ubicacion: resultado });
+  return resultado;
+}
+
 // Para las pruebas: vacía la caché y permite acortar la espera entre consultas.
 const reiniciar = ({ intervaloMs = INTERVALO_MS } = {}) => { cache.clear(); ultimaConsulta = 0; intervalo = intervaloMs; };
 
-module.exports = { ubicar, calleYNumero, reiniciar };
+module.exports = { ubicar, direccionDelPunto, calleYNumero, reiniciar };

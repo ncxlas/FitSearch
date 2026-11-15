@@ -68,7 +68,10 @@ export default function PerfilProfesional() {
     let vigente = true;
     obtenerMiFicha().then(async ({ ficha }) => {
       const publica = ficha ? await obtenerProfesional(ficha.id) : null;
-      if (vigente) setEstado({ ficha, profesional: publica?.profesional });
+      if (!vigente) return;
+      setEstado({ ficha, profesional: publica?.profesional });
+      // Sin ficha, el perfil abre directamente en la sección para completarla (15-11-2026).
+      if (!ficha) setActiva((actual) => (actual === 'informacion' ? 'ficha' : actual));
     }).catch((e) => { if (vigente) setEstado({ error: e.message }); });
     return () => { vigente = false; };
   }, [intento]);
@@ -77,25 +80,28 @@ export default function PerfilProfesional() {
     setMensaje('Tu ficha profesional se guardó correctamente.');
     setIntento((v) => v + 1);
   }
-  const informacion = <>
-    {!estado.ficha && <p className="perfil-prof__aviso"><Icono nombre="info" tamano={20} /> Completa tu ficha para aparecer en el buscador de FitSearch.</p>}
-    <InformacionCuenta estado={cuentaEstado} profesional />
-    <details className="perfil-editor__subseccion" open>
-      <summary><Icono nombre="medico" tamano={20} /> Especialidad y lugar de atención</summary>
-      <div><FormularioFicha key={editor} ficha={estado.ficha} onGuardado={alGuardarFicha}
-        onCancelar={estado.ficha ? () => { setEditor((v) => v + 1); setMensaje(''); } : undefined} /></div>
-    </details>
-    {estado.ficha && <details className="perfil-editor__subseccion">
-      <summary><Icono nombre="birrete" tamano={20} /> Experiencia y formación</summary>
-      <div><p className="texto-secundario">Comparte tu trayectoria y a quiénes atiendes.</p><Experiencia /></div>
-    </details>}
-  </>;
-  const contenido = estado.cargando ? <p role="status">Cargando tu ficha profesional…</p> : estado.error ? <>
+  // Mientras carga la ficha (o si falló), las secciones que dependen de ella lo indican.
+  const sinFicha = estado.cargando ? <p role="status">Cargando tu ficha profesional…</p> : estado.error ? <>
     <Alerta>{estado.error}</Alerta><button type="button" className="boton-texto" onClick={() => setIntento((v) => v + 1)}>Reintentar</button>
-  </> : informacion;
+  </> : null;
+  const completaFicha = (texto) => <p className="perfil-prof__aviso"><Icono nombre="info" tamano={20} /> {texto}</p>;
+  // Desde el 15-11-2026, el mismo flujo que el perfil del usuario: cada sección por separado y solo una abierta a la
+  // vez (antes, información, especialidad y experiencia estaban juntas en una sola sección).
   const secciones = [
-    { id: 'informacion', titulo: 'Información y experiencia', icono: 'usuario', ayuda: 'Edita tus datos desde aquí.', contenido },
-    { id: 'certificaciones', titulo: 'Certificaciones', icono: 'escudo', ayuda: 'Tus documentos y el estado de tu verificación.', contenido: estado.ficha ? <Certificaciones /> : <p>Completa tu ficha profesional antes de solicitar la verificación.</p> },
+    { id: 'informacion', titulo: 'Información personal', icono: 'usuario', ayuda: 'Tus datos de contacto y tu presentación.', contenido: <>
+      {!estado.cargando && !estado.error && !estado.ficha && completaFicha('Completa tu ficha en «Especialidad y lugar de atención» para aparecer en el buscador de FitSearch.')}
+      <InformacionCuenta estado={cuentaEstado} profesional />
+    </> },
+    { id: 'ficha', titulo: 'Especialidad y lugar de atención', icono: 'medico', ayuda: 'Lo que ven los usuarios en el buscador y en tu perfil público.',
+      contenido: sinFicha ?? <>
+        {!estado.ficha && completaFicha('Completa tu ficha para aparecer en el buscador de FitSearch.')}
+        <FormularioFicha key={editor} ficha={estado.ficha} onGuardado={alGuardarFicha}
+          onCancelar={estado.ficha ? () => { setEditor((v) => v + 1); setMensaje(''); } : undefined} />
+      </> },
+    { id: 'experiencia', titulo: 'Experiencia y formación', icono: 'birrete', ayuda: 'Comparte tu trayectoria y a quiénes atiendes.',
+      contenido: sinFicha ?? (estado.ficha ? <Experiencia /> : completaFicha('Completa tu ficha profesional para agregar tu experiencia y formación.')) },
+    { id: 'certificaciones', titulo: 'Certificaciones', icono: 'escudo', ayuda: 'Tus documentos y el estado de tu verificación.',
+      contenido: sinFicha ?? (estado.ficha ? <Certificaciones /> : completaFicha('Completa tu ficha profesional antes de solicitar la verificación.')) },
   ];
   return <PerfilEditable titulo="Mi perfil profesional" subtitulo="Tu información, lista para conectar con más personas."
     nombre={cuentaEstado.cuenta?.nombre || p?.nombre || sesion.usuario.nombre} rol={p?.especialidad || 'Profesional'} cuentaEstado={cuentaEstado}

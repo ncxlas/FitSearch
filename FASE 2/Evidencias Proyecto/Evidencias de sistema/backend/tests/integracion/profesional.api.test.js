@@ -161,12 +161,22 @@ describe('GET /api/profesionales/:id (ficha)', () => {
     const res = await consulta('/api/profesionales/1');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
-      profesional: fichaEsperada,
+      // Sin presentación escrita; la región sale de la comuna (15-11-2026).
+      profesional: { ...fichaEsperada, presentacion: null, region: 'Región Metropolitana de Santiago' },
       resumenResenas: { promedio: 4.5, total: 2, distribucion: { 5: 1, 4: 1, 3: 0, 2: 0, 1: 0 } },
       miResena: null,
       puedeResenar: true,
     });
     expect(modelo.buscarPorId).toHaveBeenCalledWith(1, 1);
+  });
+
+  // Pedido del PO del 15-11-2026: la ficha pública abre con la presentación del profesional y muestra su región.
+  test('incluye la presentación del profesional y la región de su comuna, que no aplica si atiende solo online', async () => {
+    modelo.buscarPorId.mockResolvedValue({ ...fila, comuna: 'san antonio', presentacion: '  Soy Ana, nutricionista deportiva.  ' });
+    const { profesional } = (await consulta('/api/profesionales/1')).body;
+    expect(profesional).toMatchObject({ presentacion: 'Soy Ana, nutricionista deportiva.', comuna: 'San Antonio', region: 'Región de Valparaíso' });
+    modelo.buscarPorId.mockResolvedValue({ ...fila, modalidad: 'online', presentacion: '' });
+    expect((await consulta('/api/profesionales/1')).body.profesional).toMatchObject({ presentacion: null, comuna: null, region: null });
   });
 
   test('incluye la reseña propia con el nombre abreviado del autor', async () => {

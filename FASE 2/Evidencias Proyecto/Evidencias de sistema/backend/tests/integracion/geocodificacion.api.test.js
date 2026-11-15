@@ -123,6 +123,78 @@ test('valida la comuna y la dirección, y solo el profesional puede usarla', asy
   expect(fetchSimulado).not.toHaveBeenCalled();
 });
 
+// Dirección de un punto del mapa (15-11-2026): GET /api/profesionales/mi-ficha/ubicacion/punto. Las direcciones son
+// respuestas reales de la búsqueda inversa de Nominatim para puntos de esas comunas.
+describe('dirección de un punto del mapa', () => {
+  const punto = (consulta, rol = 'profesional') => request(app).get('/api/profesionales/mi-ficha/ubicacion/punto')
+    .query(consulta).set('Authorization', `Bearer ${tokenDe(rol)}`);
+  const inversa = (address) => Promise.resolve({ ok: true, status: 200, json: async () => ({ lat: '-33.4', lon: '-70.6', address }) });
+  const PEDRO_DE_VALDIVIA = {
+    house_number: '295', road: 'Avenida Pedro de Valdivia', neighbourhood: 'Barrio Lyon', suburb: 'Providencia', city: 'Providencia',
+    county: 'Provincia de Santiago', state: 'Región Metropolitana de Santiago', country_code: 'cl',
+  };
+  const BARROS_LUCO_1575 = {
+    house_number: '1575', road: 'Avenida Barros Luco', suburb: 'Barrancas', city: 'San Antonio', county: 'Provincia de San Antonio',
+    state: 'Región de Valparaíso', country_code: 'cl',
+  };
+  const CONCHA_Y_TORO = {
+    road: 'Avenida Concha y Toro', neighbourhood: 'Población Maipo', suburb: 'Puente Alto', county: 'Provincia de Cordillera',
+    state: 'Región Metropolitana de Santiago', country_code: 'cl',
+  };
+
+  test('entrega la comuna, la región y la dirección del punto', async () => {
+    fetchSimulado.mockImplementation(() => inversa(PEDRO_DE_VALDIVIA));
+    const res = await punto({ lat: '-33.4263', lng: '-70.6116' });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      comuna: 'Providencia', region: 'Metropolitana', regionCompleta: 'Región Metropolitana de Santiago',
+      direccion: 'Avenida Pedro de Valdivia 295', precision: 'exacta',
+    });
+    const url = new URL(fetchSimulado.mock.calls[0][0]);
+    expect(url.pathname).toBe('/reverse');
+    expect(Object.fromEntries(url.searchParams)).toMatchObject({ lat: '-33.4263', lon: '-70.6116', format: 'jsonv2', 'accept-language': 'es' });
+    expect(fetchSimulado.mock.calls[0][1].headers['User-Agent']).toMatch(/^FitSearch/);
+  });
+
+  test('en regiones la comuna viene como ciudad y el barrio no se confunde con una comuna', async () => {
+    fetchSimulado.mockImplementation(() => inversa(BARROS_LUCO_1575));
+    expect((await punto({ lat: '-33.5933', lng: '-71.6136' })).body)
+      .toMatchObject({ comuna: 'San Antonio', regionCompleta: 'Región de Valparaíso', direccion: 'Avenida Barros Luco 1575' });
+  });
+
+  test('sin número indica la calle y en Santiago reconoce la comuna aunque no venga como ciudad', async () => {
+    fetchSimulado.mockImplementation(() => inversa(CONCHA_Y_TORO));
+    expect((await punto({ lat: '-33.6117', lng: '-70.5758' })).body)
+      .toMatchObject({ comuna: 'Puente Alto', region: 'Metropolitana', direccion: 'Avenida Concha y Toro', precision: 'calle' });
+  });
+
+  test('no acepta una comuna de otra región que la del punto', async () => {
+    // «Los Lagos» es una comuna de Los Ríos y también el nombre de una región: aquí el punto es de la Región de Los Lagos.
+    fetchSimulado.mockImplementation(() => inversa({ city: 'Los Lagos', state: 'Región de Los Lagos' }));
+    const res = await punto({ lat: '-41.47', lng: '-72.94' });
+    expect(res.status).toBe(404);
+    expect(res.body.error).toMatch(/No encontramos una comuna de Chile en ese punto/);
+  });
+
+  test('recuerda el mismo punto y responde 503 si Nominatim falla', async () => {
+    fetchSimulado.mockImplementation(() => inversa(PEDRO_DE_VALDIVIA));
+    await punto({ lat: '-33.4263', lng: '-70.6116' });
+    await punto({ lat: '-33.426301', lng: '-70.611601' });
+    expect(fetchSimulado).toHaveBeenCalledTimes(1);
+    fetchSimulado.mockImplementation(() => Promise.resolve({ ok: false, status: 429, json: async () => ({}) }));
+    expect((await punto({ lat: '-33.5', lng: '-70.7' })).status).toBe(503);
+  });
+
+  test('exige un punto dentro de Chile y solo el profesional puede usarla', async () => {
+    const fuera = await punto({ lat: '40.4', lng: '-3.7' });
+    expect(fuera.status).toBe(400);
+    expect(fuera.body.detalles).toMatchObject({ lat: 'El punto debe estar dentro de Chile', lng: 'El punto debe estar dentro de Chile' });
+    expect((await punto({ lat: '-33.4' })).body.detalles.lng).toBe('Indica la longitud');
+    expect((await punto({ lat: '-33.4', lng: '-70.6' }, 'usuario')).status).toBe(403);
+    expect(fetchSimulado).not.toHaveBeenCalled();
+  });
+});
+
 test('la búsqueda usa solo la calle y el número', () => {
   expect(calleYNumero('Av. Providencia 1234, oficina 501')).toBe('Av. Providencia 1234');
   expect(calleYNumero('Av. Providencia 1234 of. 501')).toBe('Av. Providencia 1234');
