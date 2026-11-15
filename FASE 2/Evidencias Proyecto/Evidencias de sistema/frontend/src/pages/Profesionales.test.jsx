@@ -219,15 +219,27 @@ describe('Filtros y orden', () => {
     expect(screen.getByRole('searchbox', { name: 'Buscar profesionales' })).toHaveValue('');
   });
 
-  test('en celular el botón "Filtros" abre el panel y "Ver resultados" lo cierra', async () => {
+  test('el botón "Filtros" abre el panel con el foco adentro y "Ver resultados" lo cierra y devuelve el foco', async () => {
     simular(); renderizarApp('/profesionales');
     await screen.findByRole('heading', { name: 'Ana Demo' });
     const boton = screen.getByRole('button', { name: /^Filtros/ });
     expect(boton).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(boton);
     expect(boton).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Cerrar filtros' })).toHaveFocus();
     await userEvent.click(screen.getByRole('button', { name: 'Ver 2 resultados' }));
     expect(boton).toHaveAttribute('aria-expanded', 'false');
+    expect(boton).toHaveFocus();
+  });
+
+  test('Escape cierra el panel de filtros', async () => {
+    simular(); renderizarApp('/profesionales');
+    await screen.findByRole('heading', { name: 'Ana Demo' });
+    const boton = screen.getByRole('button', { name: /^Filtros/ });
+    await userEvent.click(boton);
+    await userEvent.keyboard('{Escape}');
+    expect(boton).toHaveAttribute('aria-expanded', 'false');
+    expect(boton).toHaveFocus();
   });
 });
 
