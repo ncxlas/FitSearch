@@ -113,6 +113,12 @@ test('filtra por región con cualquiera de sus comunas y rechaza una región que
   expect(mala.body.detalles.region).toBe('Selecciona una región de Chile');
 });
 
+test('busca la comuna con los espacios unidos, igual que se guarda (15-11-2026)', async () => {
+  modelo.listar.mockResolvedValue({ filas: [], total: 0 });
+  expect((await consulta('/api/establecimientos?categoria=gimnasio&comuna=San%20%20%20Antonio')).status).toBe(200);
+  expect(modelo.listar).toHaveBeenLastCalledWith({ ...porDefecto, categoria: 'gimnasio', comuna: 'San Antonio' });
+});
+
 describe('GET /api/establecimientos/filtros', () => {
   test('entrega las comunas con establecimientos activos de la categoría', async () => {
     modelo.comunas.mockResolvedValue(['Ñuñoa', 'Providencia']);

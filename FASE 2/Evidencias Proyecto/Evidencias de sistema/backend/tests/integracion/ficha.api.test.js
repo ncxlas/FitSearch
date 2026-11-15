@@ -50,6 +50,12 @@ test('rechaza especialidad fuera del catálogo, comuna vacía, modalidad inváli
   expect(modelo.guardarFicha).not.toHaveBeenCalled();
 });
 
+test('la comuna se guarda con los espacios unidos, para que el filtro por comuna y región la encuentre (15-11-2026)', async () => {
+  modelo.guardarFicha.mockResolvedValue({ ...fila, comuna: 'San Antonio' });
+  expect((await enviar('profesional', { ...valido, comuna: ' San \t  Antonio ' })).status).toBe(200);
+  expect(modelo.guardarFicha).toHaveBeenCalledWith(7, { ...valido, comuna: 'San Antonio' });
+});
+
 // FS-HU-30: el catálogo de especialidades está en la base de datos (en las pruebas, el inicial de la migración).
 test('guarda la especialidad con el nombre del catálogo, aunque se escriba sin tilde ni mayúscula', async () => {
   modelo.guardarFicha.mockResolvedValue(fila);

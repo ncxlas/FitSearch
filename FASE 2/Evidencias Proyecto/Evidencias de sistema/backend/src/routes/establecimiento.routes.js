@@ -4,6 +4,7 @@ const v = require('../validators/establecimiento.validators');
 const servicio = require('../services/establecimiento.service');
 const { autenticar, autorizarRoles } = require('../middlewares/autenticar');
 const { profesionales: reglas } = require('../../../shared/reglas.json');
+const { unirEspacios } = require('../utils/regiones');
 
 // Directorio de centros de salud y gimnasios (FS-HU-25): /api/establecimientos. Es del usuario, como el buscador de
 // profesionales (DAS, D25). Los establecimientos los registra el administrador (FS-HU-30).
@@ -18,7 +19,7 @@ const coordenada = (valor) => Math.round(Number(valor) * 1000) / 1000;
 
 const filtrosDesdeConsulta = (query) => ({
   categoria: query.categoria,
-  comuna: texto(query.comuna),
+  comuna: unirEspacios(query.comuna),
   region: texto(query.region),
   ubicacion: query.lat === undefined ? null : { lat: coordenada(query.lat), lng: coordenada(query.lng) },
   distanciaKm: entero(query.distanciaKm, null),

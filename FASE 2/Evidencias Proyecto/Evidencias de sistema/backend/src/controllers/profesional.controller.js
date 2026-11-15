@@ -1,6 +1,7 @@
 const servicio = require('../services/profesional.service');
 const geocodificacion = require('../services/geocodificacion.service');
 const { profesionales: reglas } = require('../../../shared/reglas.json');
+const { unirEspacios } = require('../utils/regiones');
 
 // Express 5 entrega req.query de solo lectura: los valores ya validados se normalizan aquí.
 const texto = (valor) => (typeof valor === 'string' ? valor.trim() : '');
@@ -12,7 +13,7 @@ function filtrosDesdeConsulta(query) {
   return {
     q: texto(query.q),
     especialidad: texto(query.especialidad),
-    comuna: texto(query.comuna),
+    comuna: unirEspacios(query.comuna),
     region: texto(query.region),
     modalidad: query.modalidad || '',
     calificacionMin: entero(query.calificacionMin, null),

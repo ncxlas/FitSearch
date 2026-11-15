@@ -1,8 +1,10 @@
 // Ficha propia del profesional (FS-HU-04) en el modelo, con el cliente de Prisma simulado.
 jest.mock('../../src/models/prisma', () => ({ $transaction: jest.fn(), $queryRaw: jest.fn(), profesional: { create: jest.fn(), updateMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() } }));
 jest.mock('../../src/models/verificacion.model', () => ({ decidir: jest.fn() }));
+const { Prisma } = require('@prisma/client');
 const prisma = require('../../src/models/prisma');
-const { guardarFicha, obtenerPorUsuario, verificarPerfil } = require('../../src/models/profesional.model');
+const { guardarFicha, obtenerPorUsuario, verificarPerfil, listar } = require('../../src/models/profesional.model');
+const { comunasDeRegion } = require('../../src/utils/regiones');
 
 // Respuestas de $queryRaw: la búsqueda por nombre devuelve el id y el bloqueo por id, si está activa.
 function catalogo({ id = 4, activa = 1, existe = true } = {}) {
@@ -18,6 +20,26 @@ beforeEach(() => {
   prisma.profesional.findUnique.mockResolvedValue(null);
   // La especialidad elegida existe (id 4) y está activa (SELECT … FOR SHARE).
   catalogo({ activa: 1 });
+});
+
+// Filtro por comuna o por región del buscador (14-11-2026): la comuna guardada se compara con sus espacios unidos, así
+// también aparece una guardada antes como «San  Antonio» (15-11-2026).
+test('el buscador compara la comuna guardada con sus espacios unidos, al filtrar por comuna o por región', async () => {
+  prisma.$queryRaw.mockImplementation((partes) => Promise.resolve(partes.join('').includes('COUNT(*) AS total') ? [{ total: 0n }] : []));
+  const comunaUnida = String.raw`TRIM\(REGEXP_REPLACE\(p\.comuna, '\[\[:space:\]\]\+', ' '\)\)`;
+
+  // Con una comuna basta: la región no agrega otra condición.
+  await listar({ usuarioId: 1, comuna: 'San Antonio', region: 'Valparaíso' });
+  const conComuna = Prisma.sql(...prisma.$queryRaw.mock.calls[0]);
+  expect(conComuna.sql).toMatch(new RegExp(`AND ${comunaUnida} = \\?`));
+  expect(conComuna.sql).not.toMatch(new RegExp(`${comunaUnida} IN`));
+  expect(conComuna.values).toContain('San Antonio');
+
+  prisma.$queryRaw.mockClear();
+  await listar({ usuarioId: 1, region: 'Valparaíso' });
+  const conRegion = Prisma.sql(...prisma.$queryRaw.mock.calls[1]);
+  expect(conRegion.sql).toMatch(new RegExp(`COUNT\\(\\*\\) AS total .* AND ${comunaUnida} IN \\(\\?(, ?\\?)+\\)`, 's'));
+  expect(conRegion.values).toEqual(comunasDeRegion('Valparaíso'));
 });
 
 test('guardar la ficha la crea si la cuenta profesional todavía no tiene una', async () => {

@@ -9,13 +9,17 @@ const NOMBRES = regiones.map(({ nombre }) => nombre);
 const DE_COMUNA = new Map(regiones.flatMap(({ nombre, comunas }) => comunas.map((comuna) => [normalizar(comuna), { region: nombre, comuna }])));
 const ordenar = (lista) => [...lista].sort((a, b) => a.localeCompare(b, 'es'));
 
+// Espacios repetidos, tabulaciones o saltos de línea quedan como un solo espacio, sin espacios a los lados. Se aplica a
+// la comuna al guardarla y al buscarla, para que «San  Antonio» y «San Antonio» sean la misma (15-11-2026).
+const unirEspacios = (texto) => (typeof texto === 'string' ? texto.replace(/\s+/g, ' ').trim() : '');
+
 const comunasDeRegion = (region) => regiones.find(({ nombre }) => nombre === region)?.comunas ?? [];
 
 // Región y nombre oficial de una comuna guardada («san antonio» → San Antonio, de Valparaíso); null si no es de Chile.
 const ubicarComuna = (comuna) => (comuna ? DE_COMUNA.get(normalizar(comuna)) ?? null : null);
 
-// Nombre oficial para mostrar una comuna guardada; si no está en la lista, tal como se guardó.
-const nombreOficial = (comuna) => (comuna ? ubicarComuna(comuna)?.comuna ?? comuna : null);
+// Nombre oficial para mostrar una comuna guardada; si no está en la lista, como se guardó pero con los espacios unidos.
+const nombreOficial = (comuna) => (comuna ? ubicarComuna(comuna)?.comuna ?? unirEspacios(comuna) : null);
 
 // Agrupa las comunas que tienen resultados por región, con su nombre oficial y de norte a sur. Una comuna que no está
 // en la lista (mal escrita) no tiene región, pero sigue en la lista general para que se pueda filtrar por ella.
@@ -25,7 +29,7 @@ function agruparPorRegion(guardadas) {
   for (const guardada of guardadas) {
     const ubicada = ubicarComuna(guardada);
     if (!ubicada) {
-      todas.add(guardada.trim());
+      todas.add(unirEspacios(guardada));
       continue;
     }
     todas.add(ubicada.comuna);
@@ -38,4 +42,4 @@ function agruparPorRegion(guardadas) {
   };
 }
 
-module.exports = { NOMBRES, comunasDeRegion, ubicarComuna, nombreOficial, agruparPorRegion, normalizar };
+module.exports = { NOMBRES, comunasDeRegion, ubicarComuna, nombreOficial, agruparPorRegion, normalizar, unirEspacios };

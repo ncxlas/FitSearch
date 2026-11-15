@@ -143,6 +143,13 @@ test('GET /api/profesionales filtra por región y rechaza una que no existe', as
   expect(mala.body.detalles.region).toBe('Selecciona una región de Chile');
 });
 
+test('GET /api/profesionales busca la comuna con los espacios unidos, igual que se guarda (15-11-2026)', async () => {
+  modelo.listar.mockResolvedValue({ filas: [], total: 0 });
+  modelo.proximasHoras.mockResolvedValue([]);
+  expect((await consulta('/api/profesionales?comuna=San%20%20%20Antonio')).status).toBe(200);
+  expect(modelo.listar).toHaveBeenLastCalledWith(expect.objectContaining({ comuna: 'San Antonio' }));
+});
+
 describe('GET /api/profesionales/:id (ficha)', () => {
   beforeEach(() => {
     resenaModel.distribucion.mockResolvedValue([{ puntaje: 5, cantidad: 1 }, { puntaje: 4, cantidad: 1 }]);

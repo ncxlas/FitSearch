@@ -31,6 +31,9 @@ function horariosLibres({ hoy, segundos }) {
     AND NOT EXISTS (SELECT 1 FROM bloqueos_agenda b WHERE b.profesional_id = d.profesional_id AND d.fecha BETWEEN b.fecha_inicio AND b.fecha_fin)`;
 }
 
+// La comuna guardada con sus espacios unidos, como unirEspacios de utils/regiones.js (15-11-2026).
+const COMUNA = Prisma.sql`TRIM(REGEXP_REPLACE(p.comuna, '[[:space:]]+', ' '))`;
+
 function construirConsulta({ q, especialidad, comuna, region, modalidad, calificacionMin, ubicacion, distanciaKm, soloFavoritosDe, ahora, conHorasHasta }) {
   const distancia = ubicacion
     ? Prisma.sql`CASE WHEN p.modalidad <> 'online' AND p.ubicacion_lng IS NOT NULL AND p.ubicacion_lat IS NOT NULL
@@ -44,9 +47,10 @@ function construirConsulta({ q, especialidad, comuna, region, modalidad, calific
   }
   if (especialidad) condiciones.push(Prisma.sql`p.especialidad = ${especialidad}`);
   // Con una comuna basta; con solo la región, cualquiera de sus comunas. La intercalación de la tabla no distingue
-  // mayúsculas ni tildes, así «san antonio» también es de Valparaíso (14-11-2026).
-  if (comuna) condiciones.push(Prisma.sql`p.comuna = ${comuna}`);
-  else if (region) condiciones.push(Prisma.sql`p.comuna IN (${Prisma.join(comunasDeRegion(region))})`);
+  // mayúsculas ni tildes, así «san antonio» también es de Valparaíso (14-11-2026). Se compara con los espacios unidos
+  // para que también aparezca una comuna guardada antes como «San  Antonio» (15-11-2026).
+  if (comuna) condiciones.push(Prisma.sql`${COMUNA} = ${comuna}`);
+  else if (region) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(comunasDeRegion(region))})`);
   // Quien atiende de ambas formas aparece tanto en "presencial" como en "online".
   if (modalidad) condiciones.push(Prisma.sql`p.modalidad IN (${modalidad}, 'ambas')`);
   if (calificacionMin) condiciones.push(Prisma.sql`COALESCE(c.promedio, 0) >= ${calificacionMin}`);

@@ -1,5 +1,5 @@
 // Regiones y comunas de Chile (14-11-2026): lista de shared/regiones.json y agrupación de las comunas guardadas.
-const { NOMBRES, comunasDeRegion, ubicarComuna, nombreOficial, agruparPorRegion } = require('../../src/utils/regiones');
+const { NOMBRES, comunasDeRegion, ubicarComuna, nombreOficial, agruparPorRegion, unirEspacios } = require('../../src/utils/regiones');
 
 test('la lista tiene las 16 regiones de norte a sur y sus 346 comunas', () => {
   expect(NOMBRES).toHaveLength(16);
@@ -30,5 +30,17 @@ test('agrupa por región con el nombre oficial, de norte a sur, y deja en la lis
       { nombre: 'La Araucanía', comunas: ['Temuco'] },
     ],
     comunas: ['Ñuñoa', 'Provdencia', 'Providencia', 'San Antonio', 'Temuco'],
+  });
+});
+
+test('une los espacios repetidos de una comuna para guardarla, buscarla y mostrarla (15-11-2026)', () => {
+  expect(unirEspacios('  San \t  Antonio\n')).toBe('San Antonio');
+  expect(unirEspacios(undefined)).toBe('');
+  expect(ubicarComuna('San  Antonio')).toEqual({ region: 'Valparaíso', comuna: 'San Antonio' });
+  // Una comuna que no está en la lista también se muestra y se ofrece en el filtro con los espacios unidos, una vez.
+  expect(nombreOficial('Ciudad  Gótica')).toBe('Ciudad Gótica');
+  expect(agruparPorRegion(['Ciudad  Gótica', 'Ciudad Gótica', 'San  Antonio'])).toEqual({
+    regiones: [{ nombre: 'Valparaíso', comunas: ['San Antonio'] }],
+    comunas: ['Ciudad Gótica', 'San Antonio'],
   });
 });
