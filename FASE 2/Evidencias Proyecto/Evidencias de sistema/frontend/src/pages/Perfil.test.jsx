@@ -1,12 +1,13 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { PERFIL_COMPLETO, renderizarApp, respuestaJson, respuestaPerfil, SESION } from '../tests/utilidades.jsx';
+import { cuentaDePrueba, PERFIL_COMPLETO, renderizarApp, respuestaJson, respuestaPerfil, SESION } from '../tests/utilidades.jsx';
 
 // Servidor simulado: guarda lo que recibe cada PUT y responde el perfil actualizado, como la API real.
 function simularServidor(inicial = {}) {
   const estado = { ...inicial };
   return vi.spyOn(globalThis, 'fetch').mockImplementation((url, opciones) => {
+    if (url === '/api/perfil/cuenta') return respuestaJson(200, { cuenta: cuentaDePrueba() });
     const cuerpo = opciones.body ? JSON.parse(opciones.body) : null;
     if (opciones.method === 'PUT' && url === '/api/perfil') estado.perfil = cuerpo;
     if (opciones.method === 'PUT' && url === '/api/perfil/objetivos') estado.objetivos = cuerpo;
@@ -45,7 +46,7 @@ describe('Asistente de perfil del usuario: 4 pasos, sin el tipo de cuenta (DAS, 
     simularServidor(PERFIL_COMPLETO);
     renderizarApp('/perfil');
 
-    expect(await screen.findByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Editar tipo de cuenta' })).not.toBeInTheDocument();
   });
 });
@@ -152,9 +153,11 @@ describe('Asistente de perfil: paso 3, información de salud (FS-HU-19), y resum
     expect(screen.getByText(/2\.556 kcal/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Ir a mi perfil' }));
-    expect(screen.getByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
-    expect(screen.getByText('Diabetes, Hipertensión arterial')).toBeInTheDocument();
-    expect(screen.getByText('Para la presión arterial')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Información de salud' }));
+    expect(screen.getByLabelText('Diabetes')).toBeChecked();
+    expect(screen.getByLabelText('Hipertensión arterial')).toBeChecked();
+    expect(screen.getByLabelText('Para la presión arterial')).toBeChecked();
     expect(screen.getByText(/2\.556 kcal/)).toBeInTheDocument();
   });
 
@@ -175,9 +178,8 @@ describe('Asistente de perfil: paso 3, información de salud (FS-HU-19), y resum
     const fetch = simularServidor(PERFIL_COMPLETO);
     renderizarApp('/perfil');
 
-    expect(await screen.findByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
-    expect(screen.getByText('Bajar de peso')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Editar objetivos y estilo de vida' }));
+    expect(await screen.findByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Objetivos y estilo de vida' }));
 
     expect(screen.getByRole('heading', { name: 'Objetivos y estilo de vida' })).toBeInTheDocument();
     expect(screen.getByLabelText('Bajar de peso')).toBeChecked();
@@ -193,10 +195,10 @@ describe('Asistente de perfil: paso 3, información de salud (FS-HU-19), y resum
     const fetch = simularServidor(PERFIL_COMPLETO);
     renderizarApp('/perfil');
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Editar información de salud' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Información de salud' }));
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
-    expect(screen.getByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
     expect(huboPut(fetch)).toBe(false);
   });
 });

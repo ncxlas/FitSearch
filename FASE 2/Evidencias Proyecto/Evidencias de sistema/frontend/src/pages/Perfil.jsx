@@ -7,7 +7,7 @@ import PasoDatosPersonales from '../components/perfil/PasoDatosPersonales.jsx';
 import PasoObjetivos from '../components/perfil/PasoObjetivos.jsx';
 import PasoSalud from '../components/perfil/PasoSalud.jsx';
 import { TarjetaEstimacion } from '../components/perfil/piezas.jsx';
-import ResumenPerfil from '../components/perfil/ResumenPerfil.jsx';
+import PerfilUsuarioEditable from '../components/perfil/PerfilUsuarioEditable.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
 import { obtenerPerfil } from '../services/perfil.service.js';
 
@@ -62,8 +62,7 @@ export default function Perfil() {
 
   if (vista.tipo === 'resumen') {
     return (
-      <ResumenPerfil datos={datos} aviso={avisos}
-        onEditar={(paso) => { setMensaje(''); setVista({ tipo: 'asistente', paso, edicion: true }); }} />
+      <PerfilUsuarioEditable datos={datos} onGuardado={setDatos} />
     );
   }
 

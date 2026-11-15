@@ -1,23 +1,4 @@
 erDiagram
-  roles ||--o{ usuarios : "rol_id"
-  usuarios ||--o| perfiles_usuario : "usuario_id"
-  usuarios ||--o| informacion_salud : "usuario_id"
-  usuarios ||--o{ tokens_recuperacion : "usuario_id"
-  usuarios ||--o| profesionales : "usuario_id"
-  establecimientos |o--o{ profesionales : "establecimiento_id"
-  especialidades ||..o{ profesionales : "especialidad (por nombre)"
-  profesionales ||--o{ disponibilidades : "profesional_id"
-  disponibilidades ||--o{ reservas : "disponibilidad_id"
-  usuarios ||--o{ reservas : "usuario_id"
-  usuarios ||--o{ conversaciones : "usuario_id"
-  conversaciones ||--o{ mensajes : "conversacion_id"
-  usuarios ||--o| uso_asistente : "usuario_id"
-  usuarios ||--o{ registro_comida : "usuario_id"
-  alimentos |o--o{ registro_comida : "alimento_id"
-  usuarios ||--o{ favoritos : "usuario_id"
-  profesionales ||--o{ favoritos : "profesional_id"
-  usuarios ||--o{ resenas : "usuario_id"
-  profesionales ||--o{ resenas : "profesional_id"
   roles {
     INT id PK
     VARCHAR30 nombre UK
@@ -26,157 +7,50 @@ erDiagram
     INT id PK
     VARCHAR100 nombre
     VARCHAR150 correo UK
-    VARCHAR255 password_hash "NULL si usa Google"
-    VARCHAR255 google_id UK "NULL"
+    VARCHAR255 password_hash "opcional"
+    VARCHAR255 google_id UK "opcional"
     INT rol_id FK
-    BOOLEAN activo "DEFAULT true"
-    INT version_sesion "DEFAULT 0"
-    BOOLEAN rol_confirmado "Sprint 2"
-    DATETIME fecha_registro
+    BOOLEAN rol_confirmado
+    DATETIME0 fecha_registro
+    BOOLEAN activo
+    INT version_sesion
   }
-  perfiles_usuario {
-    INT id PK
-    INT usuario_id FK,UK
-    DECIMAL peso_kg
-    DECIMAL altura_cm
-    INT edad
-    VARCHAR20 sexo
-    VARCHAR50 actividad_fisica
-    VARCHAR30 objetivo_principal "Sprint 2"
-    TINYINT comidas_dia "Sprint 2"
-    VARCHAR20 horas_sueno "Sprint 2"
-  }
-  informacion_salud {
-    INT id PK
-    INT usuario_id FK,UK
-    JSON condiciones_medicas
-    BOOLEAN toma_medicamentos
-    JSON medicamentos
-    JSON alergias
-    DATETIME fecha_actualizacion
-  }
-  tokens_recuperacion {
-    INT id PK
-    INT usuario_id FK
-    CHAR64 token_hash UK "SHA-256"
-    DATETIME fecha_expiracion
-    DATETIME fecha_uso "NULL"
-    DATETIME fecha_creacion
+  datos_cuenta {
+    INT usuario_id PK,FK "PR 59 en revision"
+    VARCHAR20 telefono "opcional"
+    VARCHAR500 biografia "opcional"
+    VARCHAR200 instagram "opcional"
+    VARCHAR200 linkedin "opcional"
+    VARCHAR250 sitio_web "opcional"
+    MEDIUMTEXT foto "opcional"
   }
   profesionales {
     INT id PK
     INT usuario_id FK,UK
-    INT establecimiento_id FK "NULL"
+    INT establecimiento_id FK "opcional"
     VARCHAR100 especialidad
-    TEXT descripcion
+    TEXT descripcion "opcional"
     BOOLEAN verificado
-    VARCHAR20 estado_verificacion "pendiente, verificado, rechazado"
-    VARCHAR500 motivo_rechazo "NULL"
-    JSON historial_verificacion "NULL"
-    INT revision_verificacion "DEFAULT 0"
-    VARCHAR12 rut "NULL"
-    VARCHAR20 telefono "NULL"
-    DECIMAL ubicacion_lat
-    DECIMAL ubicacion_lng
-    VARCHAR80 comuna "Sprint 3, NULL"
-    VARCHAR150 direccion "SC-24, NULL"
-    VARCHAR20 modalidad "Sprint 3"
+    VARCHAR20 estado_verificacion
+    VARCHAR500 motivo_rechazo "opcional"
+    JSON historial_verificacion "opcional"
+    INT revision_verificacion
+    VARCHAR12 rut "opcional"
+    VARCHAR20 telefono "opcional"
+    DECIMAL10_7 ubicacion_lat "opcional"
+    DECIMAL10_7 ubicacion_lng "opcional"
+    VARCHAR80 comuna "opcional"
+    VARCHAR150 direccion "opcional"
+    VARCHAR20 modalidad
+    TINYINT anios_experiencia "opcional"
+    JSON formacion "opcional"
+    JSON atiende_a "opcional"
+    VARCHAR20 registro_sis "opcional"
+    INT precio_desde "opcional"
+    BOOLEAN confirmacion_automatica
+    BOOLEAN avisos_correo
+    BOOLEAN recordatorios
   }
-  establecimientos {
-    INT id PK
-    VARCHAR150 nombre
-    VARCHAR50 categoria "centro_salud o gimnasio"
-    VARCHAR80 comuna "NULL, FS-HU-30"
-    VARCHAR255 direccion
-    DECIMAL ubicacion_lat
-    DECIMAL ubicacion_lng
-    BOOLEAN activo "DEFAULT true, FS-HU-30"
-  }
-  especialidades {
-    INT id PK
-    VARCHAR100 nombre UK
-    BOOLEAN activa "DEFAULT true"
-    DATETIME fecha_creacion
-  }
-  disponibilidades {
-    INT id PK
-    INT profesional_id FK
-    DATE fecha
-    TIME hora_inicio
-    TIME hora_fin
-    BOOLEAN retirado "DEFAULT false"
-  }
-  reservas {
-    INT id PK
-    INT usuario_id FK
-    INT disponibilidad_id FK
-    VARCHAR500 mensaje
-    ENUM estado "pendiente, confirmada, cancelada"
-    DATETIME fecha_creacion
-  }
-  conversaciones {
-    INT id PK
-    INT usuario_id FK
-    VARCHAR80 titulo "FS-HU-07"
-    BOOLEAN fijada "DEFAULT false"
-    DATETIME fecha_inicio
-    DATETIME fecha_actualizacion
-  }
-  mensajes {
-    INT id PK
-    INT conversacion_id FK
-    VARCHAR20 remitente "usuario, asistente"
-    TEXT contenido
-    VARCHAR100 especialidad "NULL, FS-HU-08"
-    JSON comidas_agregadas "NULL, FS-HU-09"
-    DATETIME fecha
-  }
-  uso_asistente {
-    INT usuario_id PK,FK
-    DATE fecha "día en Chile"
-    SMALLINT mensajes "límite diario"
-  }
-  registro_comida {
-    INT id PK
-    INT usuario_id FK
-    DATE fecha
-    VARCHAR20 momento "desayuno a cena"
-    INT alimento_id FK "NULL"
-    VARCHAR255 descripcion_alimento
-    DECIMAL gramos
-    INT calorias
-    DECIMAL proteinas_g
-    DECIMAL carbohidratos_g
-    DECIMAL grasas_g
-    VARCHAR20 origen "manual, asistente"
-    DATETIME fecha_creacion
-  }
-  alimentos {
-    INT id PK
-    VARCHAR80 nombre UK
-    VARCHAR255 sinonimos
-    DECIMAL calorias "por 100 g"
-    DECIMAL proteinas_g "por 100 g"
-    DECIMAL carbohidratos_g "por 100 g"
-    DECIMAL grasas_g "por 100 g"
-    BOOLEAN activo "DEFAULT true, FS-HU-30"
-  }
-  favoritos {
-    INT id PK
-    INT usuario_id FK "UK con profesional_id"
-    INT profesional_id FK
-    DATETIME fecha_creacion
-  }
-  resenas {
-    INT id PK
-    INT usuario_id FK "UK con profesional_id"
-    INT profesional_id FK
-    TINYINT puntaje "1 a 5"
-    VARCHAR500 comentario "NULL"
-    DATETIME fecha_creacion
-    DATETIME fecha_actualizacion
-  }
-  profesionales ||--o{ documentos_profesionales : "profesional_id (CASCADE)"
   documentos_profesionales {
     INT id PK
     INT profesional_id FK
@@ -185,5 +59,242 @@ erDiagram
     VARCHAR50 clave UK
     VARCHAR40 mime
     INT tamano
-    DATETIME fecha_creacion
+    DATETIME0 fecha_creacion
   }
+  disponibilidades {
+    INT id PK
+    INT profesional_id FK
+    DATE fecha
+    TIME0 hora_inicio
+    TIME0 hora_fin
+    BOOLEAN retirado
+  }
+  reservas {
+    INT id PK
+    INT usuario_id FK
+    INT disponibilidad_id FK
+    VARCHAR500 mensaje
+    VARCHAR20 estado
+    DATETIME0 fecha_creacion
+    VARCHAR20 modalidad "opcional"
+    BOOLEAN primera_visita "opcional"
+    VARCHAR20 cancelada_por "opcional"
+    DATETIME0 fecha_cambio "opcional"
+    DATETIME0 recordatorio_enviado "opcional"
+    DATETIME0 recordatorio_intento "opcional"
+  }
+  conversaciones {
+    INT id PK
+    INT usuario_id FK
+    VARCHAR80 titulo
+    BOOLEAN fijada
+    DATETIME0 fecha_inicio
+    DATETIME0 fecha_actualizacion
+  }
+  mensajes {
+    INT id PK
+    INT conversacion_id FK
+    VARCHAR20 remitente
+    TEXT contenido
+    VARCHAR100 especialidad "opcional"
+    JSON comidas_agregadas "opcional"
+    DATETIME0 fecha
+  }
+  uso_asistente {
+    INT usuario_id PK,FK
+    DATE fecha
+    SMALLINT mensajes
+  }
+  alimentos {
+    INT id PK
+    VARCHAR80 nombre UK
+    VARCHAR255 sinonimos
+    DECIMAL6_1 calorias
+    DECIMAL5_1 proteinas_g
+    DECIMAL5_1 carbohidratos_g
+    DECIMAL5_1 grasas_g
+    BOOLEAN activo
+  }
+  registro_comida {
+    INT id PK
+    INT usuario_id FK
+    DATE fecha
+    VARCHAR20 momento
+    INT alimento_id FK "opcional"
+    VARCHAR255 descripcion_alimento
+    DECIMAL6_1 gramos
+    INT calorias "opcional"
+    DECIMAL6_2 proteinas_g "opcional"
+    DECIMAL6_2 carbohidratos_g "opcional"
+    DECIMAL6_2 grasas_g "opcional"
+    VARCHAR20 origen
+    DATETIME0 fecha_creacion
+  }
+  planes_alimentacion {
+    INT id PK
+    INT usuario_id FK
+    DATE desde
+    VARCHAR20 tipo
+    INT plan_personalizado_id FK "opcional"
+    INT proteinas_pct "opcional"
+    INT carbohidratos_pct "opcional"
+    INT grasas_pct "opcional"
+    DATETIME0 fecha_actualizacion
+  }
+  planes_personalizados {
+    INT id PK
+    INT usuario_id FK
+    VARCHAR40 nombre
+    INT proteinas_pct
+    INT carbohidratos_pct
+    INT grasas_pct
+    DATETIME0 fecha_creacion
+    DATETIME0 fecha_actualizacion
+  }
+  metas_peso {
+    INT id PK
+    INT usuario_id FK
+    DATE desde
+    BOOLEAN activa
+    VARCHAR30 objetivo
+    DECIMAL5_2 peso_inicial_kg
+    DECIMAL5_2 peso_objetivo_kg
+    DECIMAL3_2 ritmo_semanal_kg
+    DATE fecha_inicio
+    DATETIME0 fecha_actualizacion
+  }
+  registro_agua {
+    INT id PK
+    INT usuario_id FK
+    DATE fecha
+    INT ml
+    DATETIME0 fecha_creacion
+  }
+  favoritos {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+    DATETIME0 fecha_creacion
+  }
+  resenas {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+    TINYINT puntaje
+    VARCHAR500 comentario "opcional"
+    INT reserva_id FK "opcional"
+    DATETIME0 fecha_creacion
+    DATETIME0 fecha_actualizacion
+  }
+  establecimientos {
+    INT id PK
+    VARCHAR150 nombre
+    VARCHAR50 categoria
+    VARCHAR80 comuna "opcional"
+    VARCHAR255 direccion
+    DECIMAL10_7 ubicacion_lat
+    DECIMAL10_7 ubicacion_lng
+    BOOLEAN activo
+    VARCHAR30 instagram "opcional"
+  }
+  especialidades {
+    INT id PK
+    VARCHAR100 nombre UK
+    BOOLEAN activa
+    DATETIME0 fecha_creacion
+  }
+  perfiles_usuario {
+    INT id PK
+    INT usuario_id FK,UK
+    DECIMAL5_2 peso_kg "opcional"
+    DECIMAL5_2 altura_cm "opcional"
+    INT edad "opcional"
+    VARCHAR20 sexo "opcional"
+    VARCHAR50 actividad_fisica "opcional"
+    VARCHAR30 objetivo_principal "opcional"
+    TINYINT comidas_dia "opcional"
+    VARCHAR20 horas_sueno "opcional"
+  }
+  tokens_recuperacion {
+    INT id PK
+    INT usuario_id FK
+    CHAR64 token_hash UK
+    DATETIME0 fecha_expiracion
+    DATETIME0 fecha_uso "opcional"
+    DATETIME0 fecha_creacion
+  }
+  informacion_salud {
+    INT id PK
+    INT usuario_id FK,UK
+    JSON condiciones_medicas
+    BOOLEAN toma_medicamentos
+    JSON medicamentos
+    JSON alergias
+    DATETIME0 fecha_actualizacion
+  }
+  bloqueos_agenda {
+    INT id PK
+    INT profesional_id FK
+    DATE fecha_inicio
+    DATE fecha_fin
+    VARCHAR100 motivo "opcional"
+    DATETIME0 fecha_creacion
+  }
+  lista_espera {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+    DATETIME0 fecha_creacion
+    DATETIME0 aviso_intento "opcional"
+  }
+  chats {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+    INT borrado_usuario_hasta
+    DATETIME0 borrado_usuario_en "opcional"
+    INT borrado_profesional_hasta
+    DATETIME0 borrado_profesional_en "opcional"
+    DATETIME0 fecha_creacion
+  }
+  mensajes_chat {
+    INT id PK
+    INT chat_id FK
+    INT autor_id FK
+    VARCHAR1000 texto
+    BOOLEAN leido
+    DATETIME0 fecha_creacion
+  }
+  roles ||--o{ usuarios : "rol_id RESTRICT"
+  usuarios ||--o| datos_cuenta : "usuario_id CASCADE"
+  usuarios ||--o| profesionales : "usuario_id CASCADE"
+  establecimientos |o--o{ profesionales : "establecimiento_id SETNULL"
+  profesionales ||--o{ documentos_profesionales : "profesional_id CASCADE"
+  profesionales ||--o{ disponibilidades : "profesional_id CASCADE"
+  usuarios ||--o{ reservas : "usuario_id CASCADE"
+  disponibilidades ||--o{ reservas : "disponibilidad_id RESTRICT"
+  usuarios ||--o{ conversaciones : "usuario_id CASCADE"
+  conversaciones ||--o{ mensajes : "conversacion_id CASCADE"
+  usuarios ||--o| uso_asistente : "usuario_id CASCADE"
+  usuarios ||--o{ registro_comida : "usuario_id CASCADE"
+  alimentos |o--o{ registro_comida : "alimento_id SETNULL"
+  usuarios ||--o{ planes_alimentacion : "usuario_id CASCADE"
+  planes_personalizados |o--o{ planes_alimentacion : "plan_personalizado_id SETNULL"
+  usuarios ||--o{ planes_personalizados : "usuario_id CASCADE"
+  usuarios ||--o{ metas_peso : "usuario_id CASCADE"
+  usuarios ||--o{ registro_agua : "usuario_id CASCADE"
+  usuarios ||--o{ favoritos : "usuario_id CASCADE"
+  profesionales ||--o{ favoritos : "profesional_id CASCADE"
+  usuarios ||--o{ resenas : "usuario_id CASCADE"
+  profesionales ||--o{ resenas : "profesional_id CASCADE"
+  reservas |o--o{ resenas : "reserva_id SETNULL"
+  usuarios ||--o| perfiles_usuario : "usuario_id CASCADE"
+  usuarios ||--o{ tokens_recuperacion : "usuario_id CASCADE"
+  usuarios ||--o| informacion_salud : "usuario_id CASCADE"
+  profesionales ||--o{ bloqueos_agenda : "profesional_id CASCADE"
+  usuarios ||--o{ lista_espera : "usuario_id CASCADE"
+  profesionales ||--o{ lista_espera : "profesional_id CASCADE"
+  usuarios ||--o{ chats : "usuario_id CASCADE"
+  profesionales ||--o{ chats : "profesional_id CASCADE"
+  chats ||--o{ mensajes_chat : "chat_id CASCADE"
+  usuarios ||--o{ mensajes_chat : "autor_id CASCADE"

@@ -1,0 +1,9 @@
+flowchart TB
+  F["React y Vite<br/>PerfilEditable, InformaciónCuenta y foto<br/>Usuario: datos, objetivos y salud<br/>Profesional: ficha, experiencia y certificaciones"]
+  F -->|"JSON y Bearer JWT"| R["Express: GET y PUT /api/perfil/cuenta<br/>Autenticación y validación"]
+  R --> S["cuentaPerfil.service<br/>Identidad para cambiar correo<br/>Transacción y versión de sesión"]
+  S --> P["Prisma compartido"]
+  P --> U[("usuarios<br/>Nombre y correo")]
+  P --> C[("datos_cuenta<br/>Contacto, enlaces y foto propia<br/>PR 59 en revisión")]
+  F --- E["Las rutas de salud, ficha, experiencia,<br/>verificación y agenda se conservan"]
+  C --- N["26 tablas fusionadas en main<br/>27 al aplicar la migración del PR 59"]

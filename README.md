@@ -423,6 +423,21 @@ Crea 500 profesionales temporales, mide la búsqueda, la ficha y el inicio de se
 
 Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. Las dos muestran el resultado en la consola y solo reescriben su evidencia en `Plan de Pruebas` si se agrega la opción, por ejemplo `npm run test:mysql:comidas -- --guardar-evidencia`. `npm run test:mysql:plan` comprueba el plan de alimentación, la lista de personalizados, la meta de peso y las restricciones de sus tablas. `npm run test:mysql:especialidades` comprueba que guardar una ficha y eliminar su especialidad al mismo tiempo no deje la ficha con una especialidad inexistente: una de las dos operaciones espera a la otra (revisión del PR #42).
 
+## Edición de los perfiles (14-11-2026)
+
+`/perfil` conserva el asistente al crear un perfil y ofrece edición por secciones una vez completado: información personal, datos físicos, objetivos y salud. `/profesional/perfil` reúne información y experiencia, conserva las certificaciones y permite abrir la agenda y compartir la ficha pública. Ambos diseños se adaptan a computador y celular.
+
+Guardar la ficha profesional sin modificaciones muestra "No hay cambios pendientes" y no envía otra actualización. Después de guardar una modificación, el botón vuelve a estar disponible para seguir editando sin salir de la página.
+
+Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`. La migración aditiva `20261114190000_datos_cuenta_perfil` crea `datos_cuenta`, sin modificar los registros actuales de salud ni de profesionales.
+
+- `GET /api/perfil/cuenta` devuelve los datos de la cuenta autenticada; `PUT /api/perfil/cuenta` actualiza únicamente los campos enviados.
+- Nombre, teléfono opcional, presentación y enlaces de redes se guardan en el propio perfil. Los enlaces aceptan HTTP/HTTPS; Instagram y LinkedIn deben pertenecer a sus dominios.
+- La foto se selecciona como JPG, PNG o WebP de hasta 5 MB. El navegador recorta una copia cuadrada y la comprime antes de enviarla; el servidor limita la copia a 48 KB y comprueba su formato. Se puede reemplazar o quitar y se conserva al recargar. Se muestra en la propia cuenta; no publica fotos de usuarios en el directorio.
+- Cambiar el correo exige confirmar la contraseña actual o una credencial de la misma cuenta de Google vinculada. Al guardar, se invalidan las otras sesiones y los enlaces anteriores de recuperación; la sesión actual recibe un token con el mismo vencimiento. Google necesita tener autorizado el origen local en su configuración.
+
+Las pruebas de la API de cuenta incluyen permisos, datos no válidos, correo ocupado, confirmación de identidad, archivos no admitidos, eliminación de foto y cambios concurrentes de sesión.
+
 ## Convenciones de trabajo
 
 - Metodología Scrum con sprints de 2 semanas (Sprint 5 de 3 semanas).
