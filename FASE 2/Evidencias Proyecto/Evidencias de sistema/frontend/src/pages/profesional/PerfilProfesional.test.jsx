@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
-  ESPECIALIDADES_DE_PRUEBA, fichaProfesional, MI_FICHA, renderizarApp, respuestaJson, SESION_PROFESIONAL,
+  cuentaDePrueba, ESPECIALIDADES_DE_PRUEBA, fichaProfesional, MI_FICHA, renderizarApp, respuestaJson, SESION_PROFESIONAL,
 } from '../../tests/utilidades.jsx';
 // El mapa de la ficha (SC-28) se prueba en FormularioFicha.test.jsx: aquí queda cargando.
 vi.mock('../../services/mapas.js', () => ({ cargarMapLibre: () => new Promise(() => {}), ESTILO_MAPA: 'https://estilo.prueba/style.json' }));
@@ -21,6 +21,7 @@ const RESUMEN_VACIO = { promedio: null, total: 0, distribucion: { 5: 0, 4: 0, 3:
 function simularServidor({ ficha = null, alGuardar } = {}) {
   const estado = { ficha };
   return vi.spyOn(globalThis, 'fetch').mockImplementation((url, opciones = {}) => {
+    if (url === '/api/perfil/cuenta') return respuestaJson(200, { cuenta: cuentaDePrueba(SESION_PROFESIONAL.usuario) });
     if (url === '/api/especialidades') return respuestaJson(200, { especialidades: ESPECIALIDADES_DE_PRUEBA });
     if (url.startsWith('/api/profesionales/mi-ficha/ubicacion')) return respuestaJson(200, UBICACION);
     if (url === '/api/profesionales/mi-ficha' && opciones.method === 'PUT') {
@@ -64,13 +65,13 @@ describe('Sin ficha', () => {
 
     expect(await screen.findByRole('heading', { name: 'Configura tu perfil profesional' })).toBeInTheDocument();
     expect(screen.getByText('Completa tu ficha para aparecer en el buscador de FitSearch.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument();
+    expect(within(screen.getByLabelText('Descripción sobre tu atención').closest('form')).queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument();
     await completarFicha();
     await userEvent.click(screen.getByRole('button', { name: /Guardar perfil/ }));
 
     expect(await screen.findByText('Tu ficha profesional se guardó correctamente.')).toBeInTheDocument();
     expect(cuerpoPut(fetch)).toEqual(NUEVA);
-    expect(screen.getByRole('heading', { level: 1, name: 'Matías Rojas' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Mi perfil profesional' })).toBeInTheDocument();
     expect(screen.getByText('Atención nutricional')).toBeInTheDocument();
   });
 
@@ -114,119 +115,66 @@ describe('Sin ficha', () => {
   });
 });
 
-describe('Con ficha', () => {
-  test('el perfil propio online muestra atención online sin la ubicación anterior', async () => {
-    simularServidor({ ficha: { ...MI_FICHA, modalidad: 'online', comuna: 'Comuna antigua', direccion: 'Dirección antigua 123' } });
-    renderizarApp('/profesional/perfil');
-    await screen.findByRole('heading', { level: 1, name: 'Matías Rojas' });
-    expect(screen.getAllByText('Atención online').length).toBeGreaterThan(0);
-    expect(screen.queryByRole('link', { name: /Google Maps/ })).not.toBeInTheDocument();
-    expect(screen.queryByText(/Dirección antigua|Comuna antigua/)).not.toBeInTheDocument();
-  });
-  test('muestra la verificación en el espacio profesional creado por el PR #13', async () => {
+describe('Perfil profesional editable', () => {
+  test('conserva la verificación, calificación y el enlace público', async () => {
     simularServidor({ ficha: { ...MI_FICHA, verificado: true } });
     renderizarApp('/profesional/perfil');
     expect(await screen.findByText('Verificado')).toBeInTheDocument();
-    expect(screen.queryByText('Sin verificar')).not.toBeInTheDocument();
-  });
-
-  test('muestra su ficha pública: especialidad, calificación, verificación, comuna y "Sobre mí"', async () => {
-    simularServidor({ ficha: MI_FICHA });
-    renderizarApp('/profesional/perfil');
-
-    expect(await screen.findByRole('heading', { level: 1, name: 'Matías Rojas' })).toBeInTheDocument();
-    const identidad = screen.getByRole('complementary', { name: 'Tu ficha' });
-    expect(within(identidad).getAllByText('Entrenamiento personal').length).toBeGreaterThan(0);
-    expect(within(identidad).getByText('Sin verificar')).toBeInTheDocument();
-    expect(within(identidad).getByRole('img', { name: 'Calificación 4,8 de 5, 5 reseñas' })).toBeInTheDocument();
-    expect(screen.getByText('Entrenamiento funcional y de fuerza.')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Calificación 4,8 de 5, 5 reseñas' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver mi perfil público/ })).toHaveAttribute('href', '/profesional/perfil/publico');
+    expect(screen.getByRole('link', { name: /Ir a mi agenda/ })).toHaveAttribute('href', '/profesional/agenda');
   });
-
-  test('en "Atención" muestra su dirección; si atiende presencial y no la tiene, invita a agregarla (SC-24)', async () => {
+  test('online no ofrece la ubicación antigua y conserva la modalidad', async () => {
+    simularServidor({ ficha: { ...MI_FICHA, modalidad: 'online', comuna: null, direccion: null } });
+    renderizarApp('/profesional/perfil');
+    expect(await screen.findByLabelText('Modalidad de atención (obligatorio)')).toHaveValue('online');
+    expect(screen.getAllByText('Atención online').length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText('Comuna (obligatorio)')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Google Maps/ })).not.toBeInTheDocument();
+  });
+  test('la ficha presencial permite editar directamente su dirección', async () => {
     simularServidor({ ficha: { ...MI_FICHA, direccion: 'Av. Italia 850' } });
-    const { unmount } = renderizarApp('/profesional/perfil');
-    const atencion = within(await screen.findByRole('region', { name: 'Atención' }));
-    expect(atencion.getByText('Av. Italia 850, Providencia')).toBeInTheDocument();
-    expect(atencion.queryByText(/Agrega tu dirección/)).not.toBeInTheDocument();
-    unmount();
-
+    renderizarApp('/profesional/perfil');
+    expect(await screen.findByLabelText('Dirección de atención (obligatorio)')).toHaveValue('Av. Italia 850');
+    expect(screen.getByLabelText('Descripción sobre tu atención')).toHaveValue('Entrenamiento funcional y de fuerza.');
+  });
+  test('información y experiencia siguen juntas y certificaciones se conserva aparte, sin Horarios', async () => {
     simularServidor({ ficha: MI_FICHA });
     renderizarApp('/profesional/perfil');
-    const sinDireccion = within(await screen.findByRole('region', { name: 'Atención' }));
-    expect(sinDireccion.getByText(/Agrega tu dirección de atención desde "Editar perfil"/)).toBeInTheDocument();
+    const nav = within(await screen.findByRole('navigation', { name: 'Secciones del perfil' }));
+    expect(nav.getAllByRole('button').map((b) => b.textContent)).toEqual(['Información y experiencia', 'Certificaciones']);
+    await screen.findByLabelText('Especialidad (obligatorio)');
+    await userEvent.click(screen.getByText('Experiencia y formación', { selector: 'summary' }));
+    expect(await screen.findByRole('button', { name: 'Agregar experiencia' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Horarios' })).not.toBeInTheDocument();
   });
-
-  test('Información reúne la experiencia y mantiene solo dos pestañas, sin simular datos', async () => {
-    const fetch = simularServidor({ ficha: MI_FICHA });
-    const servidor = fetch.getMockImplementation();
-    const vacia = { aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null };
-    fetch.mockImplementation((url, opciones) => (url === '/api/profesionales/mi-ficha/experiencia'
-      ? respuestaJson(200, { experiencia: vacia }) : servidor(url, opciones)));
-    renderizarApp('/profesional/perfil');
-
-    expect(await screen.findByRole('tab', { name: 'Información' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Información', 'Certificaciones']);
-    const panel = screen.getByRole('tabpanel');
-    expect(await within(panel).findByRole('button', { name: 'Agregar experiencia' })).toBeInTheDocument();
-    expect(within(panel).queryByText('Próximamente')).not.toBeInTheDocument();
+  test('las secciones se recorren con el teclado y se activan con Enter', async () => {
+    simularServidor({ ficha: MI_FICHA }); renderizarApp('/profesional/perfil');
+    const nav = within(await screen.findByRole('navigation', { name: 'Secciones del perfil' }));
+    const boton = nav.getByRole('button', { name: 'Certificaciones' });
+    boton.focus(); await userEvent.keyboard('{Enter}');
+    expect(boton).toHaveFocus(); expect(boton).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('heading', { name: 'Certificaciones' })).toBeInTheDocument();
   });
-
-  test('permite recorrer las pestañas con el teclado y mantiene foco y panel coordinados', async () => {
-    simularServidor({ ficha: MI_FICHA });
-    renderizarApp('/profesional/perfil');
-    const informacion = await screen.findByRole('tab', { name: 'Información' });
-    informacion.focus();
-
-    await userEvent.keyboard('{ArrowRight}');
-    expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveFocus();
-    expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Certificaciones');
-
-    await userEvent.keyboard('{End}');
-    expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveFocus();
-    await userEvent.keyboard('{ArrowRight}');
-    expect(informacion).toHaveFocus();
-    await userEvent.keyboard('{ArrowLeft}');
-    expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveFocus();
-    await userEvent.keyboard('{Home}');
-    expect(informacion).toHaveFocus();
-    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Información');
-  });
-
-  test('"Editar perfil" abre el formulario con sus datos y "Cancelar" vuelve sin guardar', async () => {
+  test('Cancelar descarta cambios de la ficha sin guardar', async () => {
     const fetch = simularServidor({ ficha: { ...MI_FICHA, direccion: 'Av. Italia 850' } });
     renderizarApp('/profesional/perfil');
-
-    await userEvent.click(await screen.findByRole('button', { name: /Editar perfil/ }));
-    expect(screen.getByRole('heading', { name: 'Editar perfil profesional' })).toBeInTheDocument();
+    const comuna = await screen.findByLabelText('Comuna (obligatorio)');
+    await userEvent.clear(comuna); await userEvent.type(comuna, 'Santiago');
+    const form = within(comuna.closest('form'));
+    await userEvent.click(form.getByRole('button', { name: 'Cancelar' }));
     expect(screen.getByLabelText('Comuna (obligatorio)')).toHaveValue('Providencia');
-    expect(screen.getByLabelText('Dirección de atención (obligatorio)')).toHaveValue('Av. Italia 850');
-    expect(screen.getByLabelText('Especialidad (obligatorio)')).toHaveValue('Entrenamiento personal');
-    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
-
-    expect(screen.getByRole('heading', { level: 1, name: 'Matías Rojas' })).toBeInTheDocument();
     expect(huboPut(fetch)).toBe(false);
   });
-
-  test('copia el enlace de la ficha compartida, no la ruta privada del profesional', async () => {
-    const usuario = userEvent.setup();
+  test('copia el enlace público y ofrece alternativa manual si falla el portapapeles', async () => {
+    const u = userEvent.setup();
     const copiar = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
-    simularServidor({ ficha: MI_FICHA });
-    renderizarApp('/profesional/perfil');
-    await usuario.click(await screen.findByRole('button', { name: 'Copiar enlace' }));
+    simularServidor({ ficha: MI_FICHA }); renderizarApp('/profesional/perfil');
+    await u.click(await screen.findByRole('button', { name: 'Copiar enlace' }));
     expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/profesionales/${MI_FICHA.id}`);
     expect(await screen.findByText('Enlace de tu perfil copiado.')).toBeInTheDocument();
-  });
-
-  test('si el navegador impide copiar, permite seleccionar el enlace manualmente', async () => {
-    const usuario = userEvent.setup();
-    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('Sin permiso'));
-    simularServidor({ ficha: MI_FICHA });
-    renderizarApp('/profesional/perfil');
-    await usuario.click(await screen.findByRole('button', { name: 'Copiar enlace' }));
-    expect(await screen.findByRole('textbox', { name: /No pudimos copiarlo automáticamente/ }))
-      .toHaveValue(`${window.location.origin}/profesionales/${MI_FICHA.id}`);
-    expect(screen.queryByText('Enlace de tu perfil copiado.')).not.toBeInTheDocument();
+    copiar.mockRejectedValue(new Error('Sin permiso'));
+    await u.click(screen.getByRole('button', { name: 'Enlace copiado' }));
+    expect(await screen.findByRole('textbox', { name: /No pudimos copiarlo automáticamente/ })).toHaveValue(`${window.location.origin}/profesionales/${MI_FICHA.id}`);
   });
 });

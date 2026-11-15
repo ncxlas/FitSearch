@@ -42,7 +42,7 @@ describe('Con sesión', () => {
 
     await userEvent.click(boton);
     await userEvent.click(within(document.getElementById('menu-cuenta')).getByRole('link', { name: 'Mi perfil' }));
-    expect(await screen.findByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
     expect(screen.queryByText('ana@correo.cl')).not.toBeInTheDocument();
   });
 
@@ -50,14 +50,14 @@ describe('Con sesión', () => {
     renderizarApp('/inicio');
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
     await userEvent.click(within(menu).getByRole('link', { name: 'Mi perfil' }));
-    expect(await screen.findByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Mi perfil' })).toHaveAttribute('aria-current', 'page');
 
     await userEvent.click(within(menu).getByRole('link', { name: 'Inicio' }));
     const barra = screen.getByRole('navigation', { name: 'Navegación inferior' });
     expect(within(barra).getAllByRole('link').map((enlace) => enlace.textContent)).toEqual(['Inicio', 'Profesionales', 'Chat IA', 'Comidas', 'Perfil']);
     await userEvent.click(within(barra).getByRole('link', { name: 'Perfil' }));
-    expect(await screen.findByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
   });
 
   test('el menú lateral tiene las secciones del mockup con "Profesionales" en vez de "Buscar profesionales"', () => {
