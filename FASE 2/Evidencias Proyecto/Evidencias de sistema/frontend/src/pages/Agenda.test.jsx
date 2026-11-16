@@ -3,7 +3,7 @@ import { StrictMode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, test, expect, vi } from 'vitest';
-import { renderizarApp, simularApi, SESION_PROFESIONAL } from '../tests/utilidades.jsx';
+import { renderizarApp, simularApi, SESION, SESION_PROFESIONAL } from '../tests/utilidades.jsx';
 import { SesionProvider } from '../context/SesionContext.jsx';
 import AgendaProfesional from './Agenda.jsx';
 const h = { id: 2, fecha: '2099-10-15', horaInicio: '09:00', horaFin: '10:00', ocupado: false };
@@ -110,18 +110,19 @@ test('no envía un horario que termina antes de empezar y lo avisa', async () =>
 test('cancelar requiere confirmación explícita y actualiza el historial', async () => {
   let estado = 'pendiente';
   const fetch = simularApi({ '/api/reservas/4': () => { estado = 'cancelada'; return [200, { reserva: { ...r, estado } }]; }, '/api/reservas': () => [200, { reservas: [{ ...r, estado }] }] });
-  renderizarApp('/profesional/agenda');
+  // Desde el 15-11-2026 la lista de reservas recibidas va en la pestaña «Reservas» de la agenda.
+  renderizarApp('/profesional/agenda?vista=reservas');
   await userEvent.click(await screen.findByRole('button', { name: 'Cancelar reserva' }));
   expect(fetch.mock.calls.some(([, o]) => o.method === 'PATCH')).toBe(false);
   await userEvent.click(screen.getByRole('button', { name: 'Confirmar cambio' }));
   expect(await screen.findByText(/Reserva cancelada/)).toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Todas e historial' }));
-  expect(await screen.findByText('cancelada')).toBeInTheDocument();
+  expect(within(await screen.findByRole('article')).getByText('Cancelada')).toBeInTheDocument();
 });
 test('la confirmación aparece dentro de la tarjeta elegida (no al final de la lista) y al volver el foco regresa al botón', async () => {
   const otra = { ...r, id: 5, usuario: { id: 2, nombre: 'Bruno' }, horario: { ...h, id: 3, horaInicio: '11:00', horaFin: '12:00' } };
   simularApi({ '/api/reservas': { reservas: [r, otra] } });
-  renderizarApp('/profesional/agenda');
+  renderizarApp('/profesional/agenda?vista=reservas');
   const tarjetaBruno = (await screen.findByRole('heading', { name: 'Bruno' })).closest('article');
   const cancelar = within(tarjetaBruno).getByRole('button', { name: 'Cancelar reserva' });
   await userEvent.click(cancelar);
@@ -137,5 +138,73 @@ test('la confirmación aparece dentro de la tarjeta elegida (no al final de la l
   await userEvent.keyboard('{Escape}');
   expect(within(tarjetaBruno).queryByRole('group')).not.toBeInTheDocument();
   expect(cancelar).toHaveFocus();
+});
+
+// Pedido del PO del 15-11-2026: buscador, filtros por estado y fecha, y el historial de la cita más reciente a la más antigua.
+const reservaDe = (id, nombre, estado, fecha, horaInicio = '09:00') => ({
+  ...r, id, estado, usuario: { id: id + 10, nombre }, profesional: { id: 3, nombre: nombre === 'Ana' ? 'Juan Soto' : 'Marta Ríos' },
+  horario: { id: id + 20, fecha, horaInicio, horaFin: '10:00', ocupado: true },
+});
+const VARIAS = [
+  reservaDe(41, 'Diego Lagos', 'pendiente', '2099-09-20'),
+  reservaDe(42, 'José Núñez', 'cancelada', '2099-10-01'),
+  reservaDe(43, 'Carla Soto', 'confirmada', '2099-10-05'),
+  reservaDe(44, 'Ana', 'pendiente', '2099-10-15'),
+  reservaDe(45, 'Bruno Díaz', 'confirmada', '2099-10-20', '11:00'),
+];
+const nombres = () => screen.queryAllByRole('article').map((a) => within(a).getByRole('heading').textContent);
+
+test('las reservas recibidas se buscan por nombre y se filtran por estado y fecha; el historial va de la más reciente a la más antigua', async () => {
+  fijarHoy('2099-10-12T13:00:00Z');
+  simularApi({ '/api/reservas': { reservas: VARIAS } });
+  renderizarApp('/profesional/agenda?vista=reservas');
+
+  await screen.findByRole('search', { name: 'Buscar reservas' });
+  expect(nombres()).toEqual(['Ana', 'Bruno Díaz']);
+  expect(screen.getByText('2 reservas')).toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Todas e historial' }));
+  expect(nombres()).toEqual(['Bruno Díaz', 'Ana', 'Carla Soto', 'José Núñez', 'Diego Lagos']);
+  expect(screen.getByText('5 reservas, de la más reciente a la más antigua')).toBeInTheDocument();
+  expect(within(screen.getAllByRole('article')[2]).getByText('Realizada')).toBeInTheDocument();
+  expect(within(screen.getAllByRole('article')[4]).getByText('No realizada')).toBeInTheDocument();
+
+  // Sin importar tildes ni mayúsculas.
+  await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar' }), 'jose nu');
+  expect(nombres()).toEqual(['José Núñez']);
+  await userEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+  expect(nombres()).toHaveLength(5);
+
+  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'realizada');
+  expect(nombres()).toEqual(['Carla Soto']);
+  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'todos');
+
+  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Fecha de la cita' }), 'mesPasado');
+  expect(nombres()).toEqual(['Diego Lagos']);
+  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Fecha de la cita' }), 'rango');
+  fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2099-10-01' } });
+  fireEvent.change(screen.getByLabelText('Hasta'), { target: { value: '2099-10-10' } });
+  expect(nombres()).toEqual(['Carla Soto', 'José Núñez']);
+
+  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'cancelada');
+  await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar' }), 'carla');
+  expect(nombres()).toEqual([]);
+  expect(screen.getByRole('heading', { name: 'No hay reservas con esos filtros' })).toBeInTheDocument();
+
+  // En «Próximas» no hay canceladas ni «Mes pasado»: esos filtros vuelven a «todos».
+  await userEvent.click(screen.getByRole('button', { name: 'Próximas' }));
+  expect(screen.getByRole('combobox', { name: 'Estado' })).toHaveValue('todos');
+  expect(within(screen.getByRole('combobox', { name: 'Estado' })).queryByRole('option', { name: 'Cancelada' })).not.toBeInTheDocument();
+});
+
+test('en «Mis citas» la persona busca por el nombre del profesional', async () => {
+  sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+  fijarHoy('2099-10-12T13:00:00Z');
+  simularApi({ '/api/reservas': { reservas: VARIAS } });
+  renderizarApp('/citas');
+  await userEvent.click(await screen.findByRole('button', { name: 'Todas e historial' }));
+  await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar' }), 'juan');
+  expect(nombres()).toEqual(['Juan Soto']);
+  expect(screen.getByText('1 cita, de la más reciente a la más antigua')).toBeInTheDocument();
 });
 // La reserva desde la ficha (calendario, horas, mensaje y límite por profesional) se prueba en components/reservas/ReservarHora.test.jsx.

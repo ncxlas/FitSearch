@@ -50,16 +50,42 @@ export function rangoVisible(horarios, { horaInicio, horaFin }) {
   return { inicio, fin: Math.min(fin, 24 * 60) };
 }
 
+// Estados que se ven en la agenda (pedido del PO del 15-11-2026). Una hora que ya comenzó deja de estar «por
+// confirmar» o «confirmada»: si se confirmó, se cuenta como realizada (igual que en Reportes); si no, como no
+// realizada. Un horario libre de un día bloqueado no se ofrece a los usuarios.
 export const ESTADOS = {
   libre: 'Libre',
   pendiente: 'Por confirmar',
   confirmada: 'Confirmada',
+  realizada: 'Realizada',
+  noRealizada: 'No realizada',
+  bloqueado: 'Bloqueado',
+  sinReservas: 'Sin reservas',
+  cancelada: 'Cancelada',
+};
+// Orden de la leyenda del calendario.
+export const LEYENDA = ['libre', 'pendiente', 'confirmada', 'realizada', 'noRealizada', 'bloqueado'];
+
+// Estado visible de un horario de la semana ({ estado, pasado, bloqueado }) o de una reserva ({ estado } y si ya pasó).
+export function estadoVisible({ estado, pasado, bloqueado }) {
+  if (estado === 'cancelada') return 'cancelada';
+  if (estado === 'confirmada') return pasado ? 'realizada' : 'confirmada';
+  if (estado === 'pendiente') return pasado ? 'noRealizada' : 'pendiente';
+  if (pasado) return 'sinReservas';
+  return bloqueado ? 'bloqueado' : 'libre';
+}
+
+// Explicación corta de las horas que ya pasaron, para el detalle.
+export const NOTA_ESTADO = {
+  realizada: 'La cita estaba confirmada y su hora ya comenzó.',
+  noRealizada: 'La reserva no se confirmó antes de la hora de la cita.',
 };
 
 // Texto que leen los lectores de pantalla para cada horario del calendario.
 export function describirHorario(h) {
-  const quien = h.reserva ? `${h.reserva.usuario.nombre}, ${ESTADOS[h.estado].toLowerCase()}` : 'libre';
-  return `${diaLargo(h.fecha)}, ${h.horaInicio} a ${h.horaFin}, ${quien}${h.bloqueado ? ', día bloqueado' : ''}${h.pasado ? ', ya pasó' : ''}`;
+  const estado = ESTADOS[estadoVisible(h)].toLowerCase();
+  const quien = h.reserva ? `${h.reserva.usuario.nombre}, ${estado}` : estado;
+  return `${diaLargo(h.fecha)}, ${h.horaInicio} a ${h.horaFin}, ${quien}${h.bloqueado && h.reserva ? ', día bloqueado' : ''}`;
 }
 
 // Horas en que se publicarán los bloques (uno solo o una serie de igual duración).

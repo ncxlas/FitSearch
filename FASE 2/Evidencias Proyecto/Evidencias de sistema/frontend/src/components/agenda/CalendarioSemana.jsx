@@ -1,7 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Icono from '../Icono.jsx';
-import { aHora, aMinutos, describirHorario, diaLargo, diasDeSemana, ESTADOS } from './semana.js';
+import { aHora, aMinutos, describirHorario, diaLargo, diasDeSemana, ESTADOS, estadoVisible } from './semana.js';
 import './CalendarioSemana.css';
+
+// Alto de una hora en la semana (15-11-2026): se ajusta para que el día completo quepa en la pantalla, entre un mínimo
+// en que todavía se distingue cada bloque y el alto cómodo de antes. Bajo el mínimo, el calendario vuelve a desplazarse.
+const HORA_MINIMA = 24;
+const HORA_MAXIMA = 64;
+const AIRE_INFERIOR = 16;
+// Según su alto en píxeles, un bloque muestra una sola línea chica (solo el nombre), una línea (hora y nombre) o dos.
+const BLOQUE_MINI = 22;
+const BLOQUE_CORTO = 40;
 
 function Detalles({ h }) {
   if (!h.reserva) return null;
@@ -13,38 +22,72 @@ function Detalles({ h }) {
   );
 }
 
-// Semana con columnas por día y una fila por hora. Cada horario es un botón ubicado según
-// su hora; un clic en un espacio vacío (futuro) propone publicar un horario a esa hora (redondeada a la media hora).
-function VistaSemana({ datos, rango, ahora, seleccionId, onElegirHorario, onElegirHueco }) {
+// Alto de una hora para que la rejilla entre en lo que queda de pantalla bajo el calendario (con la página arriba del todo)
+// y, si ni con el mínimo cabe, el alto máximo del calendario: se desplaza por dentro y la página queda quieta.
+function useAltoHora(caja, horas) {
+  const [medida, setMedida] = useState({ alto: HORA_MAXIMA, maximo: null });
+  useLayoutEffect(() => {
+    const elemento = caja.current;
+    if (!elemento) return undefined;
+    const medir = () => {
+      const estilo = getComputedStyle(elemento);
+      const raiz = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const margen = (parseFloat(estilo.getPropertyValue('--margen-rejilla')) || 0.75) * raiz;
+      const cabecera = elemento.querySelector('.semana__cabecera')?.offsetHeight ?? 0;
+      const arriba = elemento.getBoundingClientRect().top + window.scrollY;
+      // Si el calendario empieza muy abajo (en pantallas angostas el costado va arriba), se calcula para verlo entero
+      // al bajar hasta él: bajo el encabezado fijo de la aplicación.
+      const encabezado = document.querySelector('.encabezado')?.offsetHeight ?? 68;
+      const pantalla = window.innerHeight - (arriba > window.innerHeight * 0.45 ? encabezado + 12 : arriba) - AIRE_INFERIOR;
+      const alto = Math.max(HORA_MINIMA, Math.min(HORA_MAXIMA, Math.floor((pantalla - cabecera - margen * 2 - 2) / horas)));
+      const maximo = alto === HORA_MINIMA ? Math.max(320, Math.floor(pantalla)) : null;
+      setMedida((antes) => (antes.alto === alto && antes.maximo === maximo ? antes : { alto, maximo }));
+    };
+    medir();
+    // Lo que está sobre el calendario puede cambiar de alto (un aviso, la barra en dos líneas): se vuelve a medir.
+    const observador = typeof ResizeObserver === 'function' ? new ResizeObserver(medir) : null;
+    observador?.observe(elemento.closest('.agenda-semanal') || document.body);
+    window.addEventListener('resize', medir);
+    return () => {
+      observador?.disconnect();
+      window.removeEventListener('resize', medir);
+    };
+  }, [caja, horas]);
+  return medida;
+}
+
+// Semana con columnas por día y una fila por hora. Cada horario es un botón ubicado según su hora; un clic en un
+// espacio vacío (futuro) propone publicar un horario a esa hora (redondeada a la media hora). Al tocar un día de la
+// cabecera, el costado muestra las reservas de ese día. previa: el horario que se está por publicar (la casilla elegida
+// o lo escrito en «Publicar horarios»), marcado en el calendario para saber cuál es.
+function VistaSemana({ datos, rango, ahora, dia, onDia, seleccionId, onElegirHorario, onElegirHueco, previa }) {
   const desplazable = useRef(null);
   const dias = diasDeSemana(datos.desde);
+  const totalHoras = (rango.fin - rango.inicio) / 60;
+  const { alto: altoHora, maximo } = useAltoHora(desplazable, totalHoras);
   const horas = [];
   for (let m = rango.inicio; m <= rango.fin; m += 60) horas.push(m);
   const posicion = (minutos) => `calc(var(--margen-rejilla) + var(--alto-hora) * ${(minutos - rango.inicio) / 60})`;
   const bloqueoDe = (fecha) => datos.bloqueos.find((b) => b.fechaInicio <= fecha && b.fechaFin >= fecha);
   const [hoy, horaAhora] = ahora.split('T');
 
-  // Al abrir la semana se muestra la mañana (o la hora actual si es hoy), no la medianoche.
+  // Si el día no cabe entero (pantallas bajas), al abrir la semana se muestra la mañana, no la medianoche.
   useEffect(() => {
     const caja = desplazable.current;
-    if (!caja) return;
-    const alto = parseFloat(getComputedStyle(caja).getPropertyValue('--alto-hora')) || 64;
-    const pxHora = alto * (alto < 10 ? parseFloat(getComputedStyle(document.documentElement).fontSize) : 1);
+    if (!caja || caja.scrollHeight <= caja.clientHeight) return;
     // Desde la hora entera del primer horario de la semana (o las 8:00 si no hay), con un cuarto de hora de aire.
     const primero = Math.min(...datos.horarios.map((h) => aMinutos(h.horaInicio)), 8 * 60);
     const objetivo = Math.max(Math.floor(primero / 60) * 60 - 15, rango.inicio);
-    caja.scrollTop = ((objetivo - rango.inicio) / 60) * pxHora;
-    // Solo al cambiar de semana: no se mueve el scroll cada minuto.
-  }, [datos.desde]); // eslint-disable-line react-hooks/exhaustive-deps
+    caja.scrollTop = ((objetivo - rango.inicio) / 60) * altoHora;
+    // Solo al cambiar de semana o de pantalla: no se mueve el scroll cada minuto.
+  }, [datos.desde, maximo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const elegirHueco = (evento, fecha) => {
     if (evento.target !== evento.currentTarget || !onElegirHueco) return;
     const caja = evento.currentTarget.getBoundingClientRect();
-    const estilo = getComputedStyle(evento.currentTarget);
     const raiz = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    const pxHora = parseFloat(estilo.getPropertyValue('--alto-hora')) * raiz;
-    const margen = parseFloat(estilo.getPropertyValue('--margen-rejilla')) * raiz;
-    const minutos = rango.inicio + Math.floor(((evento.clientY - caja.top - margen) / pxHora) * 2) * 30;
+    const margen = (parseFloat(getComputedStyle(evento.currentTarget).getPropertyValue('--margen-rejilla')) || 0.75) * raiz;
+    const minutos = rango.inicio + Math.floor(((evento.clientY - caja.top - margen) / altoHora) * 2) * 30;
     if (minutos < rango.inicio || minutos >= rango.fin) return;
     const hora = aHora(minutos);
     if (`${fecha}T${hora}` <= ahora || bloqueoDe(fecha)) return;
@@ -52,23 +95,25 @@ function VistaSemana({ datos, rango, ahora, seleccionId, onElegirHorario, onEleg
   };
 
   return (
-    <div className="semana" ref={desplazable} style={{ '--horas': (rango.fin - rango.inicio) / 60 }}>
+    <div className="semana" ref={desplazable} style={{ '--horas': totalHoras, '--alto-hora': `${altoHora}px`, ...(maximo && { maxHeight: maximo }) }}>
       <div className="semana__cabecera">
         <span className="semana__esquina" aria-hidden="true" />
         {dias.map((d) => {
-          const cantidad = datos.horarios.filter((h) => h.fecha === d.fecha && h.estado !== 'libre').length;
+          const cantidad = datos.horarios.filter((h) => h.fecha === d.fecha && h.reserva).length;
           const bloqueo = bloqueoDe(d.fecha);
           return (
-            <div key={d.fecha} className={`semana__dia${d.fecha === hoy ? ' semana__dia--hoy' : ''}`}>
+            <button key={d.fecha} type="button" aria-pressed={d.fecha === dia} onClick={() => onDia?.(d.fecha)}
+              aria-label={`Ver las reservas del ${diaLargo(d.fecha)}: ${cantidad ? `${cantidad} ${cantidad === 1 ? 'reserva' : 'reservas'}` : 'sin reservas'}${bloqueo ? ', día bloqueado' : ''}`}
+              className={`semana__dia${d.fecha === hoy ? ' semana__dia--hoy' : ''}`}>
               <span className="semana__dia-nombre">{d.corto}</span>
               <span className="semana__dia-numero">{d.numero}</span>
-              {/* El bloqueo se anuncia en la cabecera, que siempre está a la vista (la columna se desplaza). */}
+              {/* El bloqueo se anuncia en la cabecera, que siempre está a la vista. */}
               {bloqueo ? (
                 <span className="semana__dia-cuenta semana__dia-bloqueo" title={bloqueo.motivo || 'Día bloqueado'}>
                   <Icono nombre="candadoCerrado" tamano={12} /> Bloqueado
                 </span>
-              ) : <span className="semana__dia-cuenta">{cantidad ? `${cantidad} ${cantidad === 1 ? 'cita' : 'citas'}` : ' '}</span>}
-            </div>
+              ) : <span className="semana__dia-cuenta">{cantidad ? `${cantidad} ${cantidad === 1 ? 'reserva' : 'reservas'}` : ' '}</span>}
+            </button>
           );
         })}
       </div>
@@ -78,25 +123,39 @@ function VistaSemana({ datos, rango, ahora, seleccionId, onElegirHorario, onEleg
         </div>
         {dias.map((d) => {
           const bloqueo = bloqueoDe(d.fecha);
-          const clases = ['semana__columna', d.fecha === hoy && 'semana__columna--hoy', bloqueo && 'semana__columna--bloqueada',
-            d.fecha < hoy && 'semana__columna--pasada'].filter(Boolean).join(' ');
+          const clases = ['semana__columna', d.fecha === hoy && 'semana__columna--hoy', d.fecha === dia && 'semana__columna--elegida',
+            bloqueo && 'semana__columna--bloqueada', d.fecha < hoy && 'semana__columna--pasada'].filter(Boolean).join(' ');
           return (
             // El clic en un espacio vacío es un atajo del mouse; con teclado se usa «Publicar horarios».
             <div key={d.fecha} className={clases} onClick={(evento) => elegirHueco(evento, d.fecha)}>
               {datos.horarios.filter((h) => h.fecha === d.fecha).map((h) => {
                 const duracion = aMinutos(h.horaFin) - aMinutos(h.horaInicio);
-                const clasesHorario = ['horario', `horario--${h.estado}`, h.pasado && 'horario--pasado', duracion <= 30 && 'horario--corto',
+                const alto = (altoHora * duracion) / 60;
+                const visible = estadoVisible(h);
+                const clasesHorario = ['horario', `horario--${visible}`, alto < BLOQUE_MINI ? 'horario--mini' : alto < BLOQUE_CORTO && 'horario--corto',
                   h.id === seleccionId && 'horario--elegido'].filter(Boolean).join(' ');
                 return (
                   <button key={h.id} type="button" className={clasesHorario} aria-pressed={h.id === seleccionId} aria-label={describirHorario(h)}
+                    title={`${h.horaInicio}–${h.horaFin} · ${h.reserva ? `${h.reserva.usuario.nombre} · ` : ''}${ESTADOS[visible]}`}
                     style={{ top: posicion(aMinutos(h.horaInicio)), height: `calc(var(--alto-hora) * ${duracion / 60} - 2px)` }}
                     onClick={() => onElegirHorario(h)}>
                     <span className="horario__hora">{h.horaInicio}</span>
-                    <span className="horario__quien">{h.reserva ? h.reserva.usuario.nombre : ESTADOS.libre}</span>
+                    <span className="horario__quien">{h.reserva ? h.reserva.usuario.nombre : ESTADOS[visible]}</span>
                     <Detalles h={h} />
                   </button>
                 );
               })}
+              {previa?.fecha === d.fecha && (() => {
+                const duracion = aMinutos(previa.horaFin) - aMinutos(previa.horaInicio);
+                const alto = (altoHora * duracion) / 60;
+                return (
+                  <span className={['horario', 'horario--nuevo', alto < BLOQUE_MINI ? 'horario--mini' : alto < BLOQUE_CORTO && 'horario--corto'].filter(Boolean).join(' ')}
+                    aria-hidden="true" style={{ top: posicion(aMinutos(previa.horaInicio)), height: `calc(var(--alto-hora) * ${duracion / 60} - 2px)` }}>
+                    <span className="horario__hora">{previa.horaInicio}</span>
+                    <span className="horario__quien">Nuevo horario</span>
+                  </span>
+                );
+              })()}
               {d.fecha === hoy && aMinutos(horaAhora) >= rango.inicio && aMinutos(horaAhora) <= rango.fin && (
                 <span className="semana__ahora" style={{ top: posicion(aMinutos(horaAhora)) }} aria-hidden="true" />
               )}
@@ -119,11 +178,11 @@ function VistaDia({ datos, ahora, dia, onDia, seleccionId, onElegirHorario }) {
       <div className="semana-dia__selector" role="group" aria-label="Día de la semana">
         {dias.map((d) => {
           const total = datos.horarios.filter((h) => h.fecha === d.fecha).length;
-          const citas = datos.horarios.filter((h) => h.fecha === d.fecha && h.estado !== 'libre').length;
+          const citas = datos.horarios.filter((h) => h.fecha === d.fecha && h.reserva).length;
           return (
             <button key={d.fecha} type="button" aria-pressed={d.fecha === dia} onClick={() => onDia(d.fecha)}
               className={`semana-dia__opcion${d.fecha === hoy ? ' semana-dia__opcion--hoy' : ''}`}
-              aria-label={`${diaLargo(d.fecha)}: ${total ? `${total} ${total === 1 ? 'horario' : 'horarios'}, ${citas} ${citas === 1 ? 'cita' : 'citas'}` : 'sin horarios'}`}>
+              aria-label={`${diaLargo(d.fecha)}: ${total ? `${total} ${total === 1 ? 'horario' : 'horarios'}, ${citas} ${citas === 1 ? 'reserva' : 'reservas'}` : 'sin horarios'}`}>
               <span>{d.corto}</span>
               <strong>{d.numero}</strong>
               <i className={`semana-dia__punto${citas ? ' semana-dia__punto--citas' : total ? '' : ' semana-dia__punto--vacio'}`} aria-hidden="true" />
@@ -137,19 +196,22 @@ function VistaDia({ datos, ahora, dia, onDia, seleccionId, onElegirHorario }) {
       )}
       {delDia.length ? (
         <ol className="semana-dia__lista">
-          {delDia.map((h) => (
-            <li key={h.id}>
-              <button type="button" aria-pressed={h.id === seleccionId} aria-label={describirHorario(h)} onClick={() => onElegirHorario(h)}
-                className={['semana-dia__horario', `horario--${h.estado}`, h.pasado && 'horario--pasado', h.id === seleccionId && 'horario--elegido'].filter(Boolean).join(' ')}>
-                <time className="semana-dia__hora">{h.horaInicio}<small>{h.horaFin}</small></time>
-                <span className="semana-dia__quien">
-                  <strong>{h.reserva ? h.reserva.usuario.nombre : 'Horario libre'}</strong>
-                  <span>{ESTADOS[h.estado]}{h.reserva?.modalidad === 'online' ? ' · Online' : ''}{h.reserva?.primeraVisita ? ' · Primera visita' : ''}{h.pasado ? ' · Ya pasó' : ''}</span>
-                </span>
-                <Icono nombre="chevron" tamano={18} className="semana-dia__flecha" />
-              </button>
-            </li>
-          ))}
+          {delDia.map((h) => {
+            const visible = estadoVisible(h);
+            return (
+              <li key={h.id}>
+                <button type="button" aria-pressed={h.id === seleccionId} aria-label={describirHorario(h)} onClick={() => onElegirHorario(h)}
+                  className={['semana-dia__horario', `horario--${visible}`, h.id === seleccionId && 'horario--elegido'].filter(Boolean).join(' ')}>
+                  <time className="semana-dia__hora">{h.horaInicio}<small>{h.horaFin}</small></time>
+                  <span className="semana-dia__quien">
+                    <strong>{h.reserva ? h.reserva.usuario.nombre : 'Horario libre'}</strong>
+                    <span>{ESTADOS[visible]}{h.reserva?.modalidad === 'online' ? ' · Online' : ''}{h.reserva?.primeraVisita ? ' · Primera visita' : ''}</span>
+                  </span>
+                  <Icono nombre="chevron" tamano={18} className="semana-dia__flecha" />
+                </button>
+              </li>
+            );
+          })}
         </ol>
       ) : (
         <p className="semana-dia__vacio">No tienes horarios publicados este día.</p>
