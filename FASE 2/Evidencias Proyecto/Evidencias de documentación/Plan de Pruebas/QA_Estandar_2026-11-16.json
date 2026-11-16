@@ -1,0 +1,342 @@
+{
+  "fecha": "2026-11-16",
+  "alcance": "Solo se marcan los criterios con evidencia indicada; los demás requieren revisión específica.",
+  "resultados": [
+    {
+      "id": "E-1.1",
+      "criterio": "Verificar que se encuentre un ícono en todos los mensajes desplegados por la aplicación",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-1.2",
+      "criterio": "Verificar que los botones tengan un ícono o frase adecuado a su función.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-1.3",
+      "criterio": "Verificar que las aplicaciones con múltiples pantallas exista la opción “Retornar” a la pantalla anterior.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-1.4",
+      "criterio": "Verificar orden y tamaño de los botones.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-1.5",
+      "criterio": "Verificar que la etiqueta de los botones no se visualice al perderse el foco.",
+      "estado": "NA",
+      "evidencia": "Las etiquetas accesibles de botones web deben permanecer visibles, también sin foco."
+    },
+    {
+      "id": "E-1.6",
+      "criterio": "Verificar que los botones de ingreso, modificación o eliminación de estén habilitados.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-1.7",
+      "criterio": "Verificar que el botón cerrar de la ventana, (ubicación superior derecha de la ventana [X]), se encuentre deshabitado mientras se realiza un proceso",
+      "estado": "NA",
+      "evidencia": "La web no controla el botón de cerrar la ventana del navegador."
+    },
+    {
+      "id": "E-1.8",
+      "criterio": "Verificar que si un combo-box es sólo de selección, enonces no permita modificar su contenido.",
+      "estado": "OK",
+      "evidencia": "Controles select nativos del panel y pruebas de selección."
+    },
+    {
+      "id": "E-1.9",
+      "criterio": "Verificar la validación del botón “Aceptar” cuando no se han ingresado los datos.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-1.10",
+      "criterio": "Verificar que existe mensaje de \"Aceptar/Cancelar\" en botón “Salir de la Aplicación” ",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-1.11",
+      "criterio": "Verificar que al minimizar la pantalla, aparezca un ícono estándar del producto.",
+      "estado": "NA",
+      "evidencia": "Minimizar depende del navegador y del sistema operativo."
+    },
+    {
+      "id": "E-1.12",
+      "criterio": "Verificar que sólo la Pantalla Principal o Inicial sea minimizable.",
+      "estado": "NA",
+      "evidencia": "La web no administra ventanas minimizables de escritorio."
+    },
+    {
+      "id": "E-1.13",
+      "criterio": "Verificar correcta ortografía en todas las Pantallas.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-1.14",
+      "criterio": "Verificar que el TAB esté operando en forma ordenada y secuencialmente bajo un orden lógico de ingreso.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-1.15",
+      "criterio": "Verificar que el tamaño de las letras de las pantallas sean uniformes.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-1.16",
+      "criterio": "Verificar que la información ingresada sea legible, sin cortes, y que no se exceda el largo del formato de pantalla   ",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.1",
+      "criterio": "Verificar correcta lectura de la información ingresada.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.2",
+      "criterio": "Verificar que no se puedan hacer modificaciones en las pantallas de Consultas",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.3",
+      "criterio": "Verificar la eliminación de la información.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.4",
+      "criterio": "Verificar formatos de rut, montos, fechas, etc.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.5",
+      "criterio": "Verificar que la cantidad de caracteres que permita un campo tenga un largo limitado.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.6",
+      "criterio": "Verificar el ingreso de datos alfanuméricos donde correspondan.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.7",
+      "criterio": "Verificar el ingreso de datos sólo numéricos donde corresponda.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.8",
+      "criterio": "Verificar el ingreso sólo de caracteres alfabéticos donde corresponda.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.9",
+      "criterio": "Verificar validación en el ingreso de los días correspondientes al mes.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.10",
+      "criterio": "Verificar validación en el ingreso de los meses correspondientes al año.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.11",
+      "criterio": "Verificar que se esté validando el formato de las fechas.",
+      "estado": "OK",
+      "evidencia": "Validación de fechas en las suites de agenda/reservas."
+    },
+    {
+      "id": "E-2.12",
+      "criterio": "Verificar la validación de decimales (con comas).",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.13",
+      "criterio": "Verificar validación de puntos para la separación de miles.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.14",
+      "criterio": "Verificar el tratamiento de decimales numéricos que utilizan decimales 0.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.15",
+      "criterio": "Verificar comportamiento del sistema ante cambios en la configuración (si interactúa con otros sistemas).",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.16",
+      "criterio": "Verificar redacción clara y precisa.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-2.17",
+      "criterio": "Verificar correcta ortografía.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-3.1",
+      "criterio": "Verificar que la Aplicación sea compatible con el resto de  las Aplicaciones del Ambiente de Pruebas.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-3.2",
+      "criterio": "Determinar y validar aspectos técnicos (Tablas, Bases de Datos, perfiles , etc)",
+      "estado": "OK",
+      "evidencia": "MySQL real: plan 75, especialidades 7, agenda 55 y mejoras 86."
+    },
+    {
+      "id": "E-3.3",
+      "criterio": "Verificar correcto acceso a sub módulos o Programas",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-3.4",
+      "criterio": "Verificar que los botones para grabar, eliminar, modificar, salir, procesar, etc. realmente cumplan su función.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-3.5",
+      "criterio": "Detectar tiempos de respuesta frente a un gran número de registros procesados.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-3.6",
+      "criterio": "Verificar comportamiento del Sistema o Módulo con gran volumen de datos (pruebas de estrés)",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-3.7",
+      "criterio": "Validar la existencia de un Manual asociado que permite llevar a cabo el proceso de instalación. ",
+      "estado": "OK",
+      "evidencia": "Manual Técnico recuperado íntegramente de la versión de Nicolás en Drive."
+    },
+    {
+      "id": "E-3.8",
+      "criterio": "Verificar el correcto Ingreso y Salida de las Aplicaciones.",
+      "estado": "OK",
+      "evidencia": "Suites de registro, inicio y cierre de sesión aprobadas."
+    },
+    {
+      "id": "E-3.9",
+      "criterio": "En Pantalla de ingreso de datos, no ingresar un campo y dar Aceptar.",
+      "estado": "OK",
+      "evidencia": "Pruebas de formularios vacíos y respuestas 400."
+    },
+    {
+      "id": "E-3.10",
+      "criterio": "En Pantalla de ingreso de datos, ingresar un campo y dar Aceptar, verificando la actualización de la formación.",
+      "estado": "OK",
+      "evidencia": "Pruebas de guardado y actualización de perfiles/comidas."
+    },
+    {
+      "id": "E-3.11",
+      "criterio": "Borrar el Rut o el Nombre del Cliente y seguir navegando.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-3.12",
+      "criterio": "Borrar un dígito al Rut o al Nombre y seguir navegando.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-3.13",
+      "criterio": "Ingresar Montos negativos, con el largo máximo permitido y dar aceptar.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-3.14",
+      "criterio": "Ingresar en campos puntos, comas y signos (¡”·$%&/()=?¿/*-+) y dar aceptar.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-3.15",
+      "criterio": "Borrar un dígito al rut o al Nombre y seguir navegando.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-4.1",
+      "criterio": "Verificar el correcto formato de los informes generados ",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-4.2",
+      "criterio": "Verificar que  se esté siguiendo una numeración secuencial lógica de acuerdo a un orden establecido.",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-4.3",
+      "criterio": "Verificar que se realice el proceso de emisión del informe",
+      "estado": "Pendiente",
+      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+    },
+    {
+      "id": "E-5.1",
+      "criterio": "En listados revisar márgenes, verificando que el ancho del listado no sobrepase la hoja.",
+      "estado": "NA",
+      "evidencia": "No existe módulo propio de impresión en el alcance."
+    },
+    {
+      "id": "E-5.2",
+      "criterio": "Verificar que el formato de la información que aparezca en las impresiones sea comprensible.",
+      "estado": "NA",
+      "evidencia": "No existe módulo propio de impresión en el alcance."
+    },
+    {
+      "id": "E-5.3",
+      "criterio": "Verificar que las operaciones de impresión entreguen un aviso que permita Cancelar o Aceptar este mandato.",
+      "estado": "NA",
+      "evidencia": "No existe mandato de impresión propio."
+    },
+    {
+      "id": "E-5.4",
+      "criterio": "Verificar envío de mensajes adecuados cada vez que la impresora este desconectada.",
+      "estado": "NA",
+      "evidencia": "La aplicación web no administra impresoras."
+    },
+    {
+      "id": "E-5.5",
+      "criterio": "Verificar correcta lectura y ortografía de la información impresa.",
+      "estado": "NA",
+      "evidencia": "No hay salida impresa propia del producto."
+    }
+  ]
+}

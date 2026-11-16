@@ -1,0 +1,48 @@
+{
+  "fecha": "2026-11-16",
+  "baseCodigo": "a33f13a492eb7ecc95e781f61913e0dadda99b8c",
+  "backend": {
+    "suites": 59,
+    "aprobadas": 628,
+    "fallidas": 0
+  },
+  "frontend": {
+    "archivos": 51,
+    "aprobadas": 489,
+    "fallidas": 0,
+    "advertencias": "act en pruebas preexistentes"
+  },
+  "lint": "correcto en ambos",
+  "build": "correcto",
+  "mysql": {
+    "plan": 75,
+    "especialidades": 7,
+    "agenda": 55,
+    "mejoras": 86,
+    "total": 223,
+    "limpieza": "Los scripts eliminaron solo sus datos temporales.",
+    "correo": "En mejoras se simuló; agenda intentó avisos SMTP y el entorno rechazó las conexiones. No se valida envío real."
+  },
+  "docker": {
+    "repetido": false,
+    "motivo": "WSL devolvió acceso denegado al enumerar distribuciones; se conserva la evidencia histórica."
+  },
+  "planilla": {
+    "total": 248,
+    "aprobados": 246,
+    "pendientes": [
+      "CP-024",
+      "CP-025"
+    ]
+  },
+  "registroDefectos": {
+    "total": 55,
+    "corregidos": 55
+  },
+  "qa": {
+    "ok": 7,
+    "noAplica": 9,
+    "pendientes": 40
+  },
+  "aceptacionPO": "Pendiente de respuesta expresa; no inferida"
+}
