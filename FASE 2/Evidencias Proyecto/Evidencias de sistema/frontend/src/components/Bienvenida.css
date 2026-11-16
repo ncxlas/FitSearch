@@ -1,0 +1,41 @@
+.bienvenida {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center;
+  padding: 1rem; overflow-y: auto; background: rgb(8 58 95 / 60%);
+}
+.bienvenida__tarjeta {
+  width: min(100%, 27rem); max-height: calc(100dvh - 2rem); overflow-y: auto;
+  border-radius: 1.4rem; background: var(--color-superficie); text-align: center;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 25%);
+}
+.bienvenida__marca {
+  position: relative; height: 6.2rem;
+  background: radial-gradient(ellipse at 85% 0%, #ffa43c55, transparent 55%), linear-gradient(120deg, #062c42, #0b4f80);
+}
+.bienvenida__cerrar {
+  position: absolute; top: 0.65rem; right: 0.65rem; display: grid; place-items: center;
+  width: 2.5rem; height: 2.5rem; padding: 0; border: 0; border-radius: 50%;
+  color: #fff; background: transparent; cursor: pointer;
+}
+.bienvenida__cerrar:hover { background: rgb(255 255 255 / 15%); }
+.bienvenida__logo {
+  position: absolute; left: 50%; bottom: -2.2rem; transform: translateX(-50%);
+  display: grid; place-items: center; width: 4.7rem; height: 4.7rem; border-radius: 50%;
+  background: #fff; box-shadow: 0 8px 20px rgb(6 44 66 / 23%);
+}
+.bienvenida__logo img { width: 3.1rem; height: 3.1rem; object-fit: contain; }
+.bienvenida__contenido { padding: 3rem 1.5rem 1.5rem; }
+.bienvenida__contenido h2 { margin: 0; color: var(--color-primario-oscuro); font-size: clamp(1.4rem, 5vw, 1.8rem); overflow-wrap: anywhere; }
+.bienvenida__contenido > p { margin: 0.6rem 0 1.25rem; }
+.bienvenida__cuenta {
+  display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.5rem;
+  padding: 1rem; border-radius: 1rem; background: #edf5fc; text-align: left;
+}
+.bienvenida__iniciales {
+  flex: 0 0 3rem; display: grid; place-items: center; height: 3rem; border-radius: 50%;
+  color: #fff; font-size: 1.05rem; font-weight: 600; background: linear-gradient(135deg, #1871a5, #0b4f80);
+}
+.bienvenida__cuenta > div { display: grid; gap: 0.2rem; min-width: 0; overflow-wrap: anywhere; }
+.bienvenida__cuenta strong { color: var(--color-primario-oscuro); }
+.bienvenida__cuenta > div > span { font-size: 0.9rem; color: var(--color-texto-secundario); }
+.bienvenida__continuar { display: flex; align-items: center; justify-content: center; gap: 0.75rem; width: 100%; }
+.bienvenida__contenido > .bienvenida__nota { margin: 1.25rem 0 0; font-size: 0.85rem; color: var(--color-texto-secundario); }

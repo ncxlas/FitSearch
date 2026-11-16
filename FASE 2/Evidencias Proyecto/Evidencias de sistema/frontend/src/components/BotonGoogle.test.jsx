@@ -2,7 +2,7 @@
 // en las pruebas, así que se define window.google y se invoca el callback como lo haría Google tras elegir la cuenta.
 import { screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import { renderizarApp, respuestaJson, respuestaPerfil, SESION_NUEVA } from '../tests/utilidades.jsx';
+import { CLIMA, MI_FICHA, PERFIL_COMPLETO, renderizarApp, respuestaJson, respuestaPerfil, SESION, SESION_NUEVA, SESION_PROFESIONAL, simularApi } from '../tests/utilidades.jsx';
 
 const CLIENTE_ID = '420482881439-pruebas.apps.googleusercontent.com';
 
@@ -23,6 +23,23 @@ function simularGoogle() {
 }
 
 describe('FS-HU-16: continuar con Google', () => {
+  test.each([SESION, SESION_PROFESIONAL])('la cuenta existente de Google muestra la bienvenida para $usuario.rol', async (sesion) => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', CLIENTE_ID);
+    simularApi({
+      '/api/auth/google': { ...sesion, cuentaNueva: false },
+      '/api/perfil': respuestaPerfil(PERFIL_COMPLETO),
+      '/api/profesionales/mi-ficha': { ficha: MI_FICHA },
+      '/api/clima': CLIMA,
+    });
+    const { elegirCuenta } = simularGoogle();
+    renderizarApp('/iniciar-sesion');
+    await elegirCuenta();
+    const dialogo = await screen.findByRole('dialog', { name: `Bienvenido, ${sesion.usuario.nombre.split(' ')[0]}` });
+    expect(dialogo).toHaveTextContent(sesion.usuario.nombre);
+    expect(dialogo).toHaveTextContent(sesion.usuario.correo);
+    expect(screen.queryByText(`Sesión iniciada como ${sesion.usuario.nombre}.`)).not.toBeInTheDocument();
+  });
+
   test('sin VITE_GOOGLE_CLIENT_ID el botón queda desactivado', () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '');
     renderizarApp('/iniciar-sesion');

@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import {
@@ -42,7 +42,10 @@ describe('Inicio de sesión (FS-HU-01)', () => {
 
     expect(await screen.findByRole('heading', TITULO_INICIO)).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Menú principal' })).toBeInTheDocument();
-    expect(await screen.findByText('Sesión iniciada como Ana Pérez.')).toBeInTheDocument();
+    const bienvenida = await screen.findByRole('dialog', { name: 'Bienvenido, Ana' });
+    expect(within(bienvenida).getByText(SESION.usuario.nombre)).toBeInTheDocument();
+    expect(within(bienvenida).getByText(SESION.usuario.correo)).toBeInTheDocument();
+    expect(screen.queryByText('Sesión iniciada como Ana Pérez.')).not.toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem('fitsearch_sesion')).token).toBe('token-de-prueba');
     expect(sessionStorage.getItem('fitsearch_sesion')).toBeNull();
     expect(JSON.parse(fetch.mock.calls[0][1].body).recordar).toBe(true);
@@ -123,7 +126,9 @@ describe('Inicio de sesión (FS-HU-01)', () => {
     await ingresar();
 
     expect(await screen.findByRole('heading', { level: 1, name: '¡Hola, Matías!' })).toBeInTheDocument();
-    expect(screen.getByText('Sesión iniciada como Matías Rojas.')).toBeInTheDocument();
+    const bienvenida = screen.getByRole('dialog', { name: 'Bienvenido, Matías' });
+    expect(within(bienvenida).getByText(SESION_PROFESIONAL.usuario.correo)).toBeInTheDocument();
+    expect(screen.queryByText('Sesión iniciada como Matías Rojas.')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', TITULO_INICIO)).not.toBeInTheDocument();
   });
 
@@ -146,5 +151,42 @@ describe('Inicio de sesión (FS-HU-01)', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Crea tu cuenta' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  test('la bienvenida retiene el foco, se cierra con Continuar y no vuelve al navegar o recargar', async () => {
+    simularApi(API_CON_SESION);
+    const { unmount } = renderizarApp('/iniciar-sesion');
+    await ingresar();
+    const dialogo = await screen.findByRole('dialog', { name: 'Bienvenido, Ana' });
+    const continuar = within(dialogo).getByRole('button', { name: 'Continuar' });
+    const cerrar = within(dialogo).getByRole('button', { name: 'Cerrar bienvenida' });
+    await waitFor(() => expect(continuar).toHaveFocus());
+    expect(document.querySelector('.app').closest('[inert]')).not.toBeNull();
+    expect(document.body.style.overflow).toBe('hidden');
+    await userEvent.tab();
+    expect(cerrar).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    expect(continuar).toHaveFocus();
+    await userEvent.click(continuar);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.querySelector('.app').closest('[inert]')).toBeNull();
+    expect(document.getElementById('contenido')).toHaveFocus();
+    expect(document.body.style.overflow).toBe('');
+    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menú principal' })).getByRole('link', { name: 'Profesionales' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    unmount();
+    renderizarApp('/inicio');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  test.each(['Escape', 'cerrar'])('la bienvenida del profesional se puede cerrar con %s', async (accion) => {
+    simularApi({ '/api/auth/login': SESION_PROFESIONAL, '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA });
+    renderizarApp('/iniciar-sesion');
+    await ingresar();
+    await screen.findByRole('dialog', { name: 'Bienvenido, Matías' });
+    if (accion === 'Escape') await userEvent.keyboard('{Escape}');
+    else await userEvent.click(screen.getByRole('button', { name: 'Cerrar bienvenida' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: '¡Hola, Matías!' })).toBeInTheDocument();
   });
 });
