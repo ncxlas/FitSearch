@@ -9,7 +9,7 @@ import { ESTADOS, LEYENDA, lunesDe, rangoVisible, sumarDias, tituloSemana } from
 import useAncho from '../../components/agenda/useAncho.js';
 import { MisCitas } from '../Agenda.jsx';
 import { solicitar } from '../../services/api.js';
-import { ahoraChile, futura } from '../../services/agenda.js';
+import { ahoraChile } from '../../services/agenda.js';
 import './AgendaSemanal.css';
 
 // Bajo este ancho (del área de la agenda) se muestra un día a la vez: siete columnas no caben en un celular.
@@ -34,7 +34,7 @@ export default function AgendaSemanal() {
   const vista = parametros.get('vista') === 'reservas' ? 'reservas' : 'calendario';
   const [revision, setRevision] = useState(0);
   const [respuesta, setRespuesta] = useState(null);
-  const [pendientes, setPendientes] = useState(null);
+  const [reservasPendientes, setReservasPendientes] = useState(null);
   const [seleccionId, setSeleccionId] = useState(null);
   const [panel, setPanel] = useState(null);
   const [aviso, setAviso] = useState('');
@@ -46,7 +46,7 @@ export default function AgendaSemanal() {
   const modo = useAncho(contenedor) >= ANCHO_SEMANA ? 'semana' : 'dia';
   const clave = `${semana}-${revision}`;
 
-  // La línea de la hora actual avanza cada minuto.
+  // La línea de la hora actual y los estados de las citas avanzan cada minuto.
   useEffect(() => {
     const temporizador = setInterval(() => setAhora(ahoraChile()), 60000);
     return () => clearInterval(temporizador);
@@ -58,12 +58,19 @@ export default function AgendaSemanal() {
       .then((datos) => activo && setRespuesta({ clave, datos }))
       .catch((error) => activo && setRespuesta({ clave, error: error.message }));
     solicitar('/reservas')
-      .then(({ reservas }) => activo && setPendientes(reservas.filter((r) => r.estado === 'pendiente' && futura(r))))
-      .catch(() => activo && setPendientes([]));
+      .then(({ reservas }) => activo && setReservasPendientes(reservas.filter((r) => r.estado === 'pendiente')))
+      .catch(() => activo && setReservasPendientes([]));
     return () => { activo = false; };
   }, [clave, semana]);
 
-  const datos = respuesta?.datos?.desde === semana ? respuesta.datos : null;
+  // «pasado» corresponde al instante en que se consultó la API. Se recalcula con el reloj de la página para que el
+  // calendario, el resumen y el detalle abierto cambien al comenzar la cita, sin tener que recargar la semana.
+  const semanaCargada = respuesta?.datos?.desde === semana ? respuesta.datos : null;
+  const datos = semanaCargada && {
+    ...semanaCargada, hoy, ahora: ahora.slice(11),
+    horarios: semanaCargada.horarios.map((h) => ({ ...h, pasado: `${h.fecha}T${h.horaInicio}` <= ahora })),
+  };
+  const pendientes = reservasPendientes?.filter((r) => `${r.horario.fecha}T${r.horario.horaInicio}` > ahora) ?? null;
   const cargando = respuesta?.clave !== clave;
   const seleccionado = datos?.horarios.find((h) => h.id === seleccionId) || null;
   const dia = diaElegido && diaElegido >= semana && diaElegido <= sumarDias(semana, 6) ? diaElegido : hoy >= semana && hoy <= sumarDias(semana, 6) ? hoy : semana;
