@@ -4,7 +4,7 @@ sequenceDiagram
   participant F as Perfil editable
   participant B as API Express
   participant D as MySQL
-  Note over F,D: PR 59 en revisión. datos_cuenta requiere migración aditiva
+  Note over F,D: PR 59 fusionado. datos_cuenta se creó con una migración aditiva
   P->>F: Abre su perfil de usuario o profesional
   F->>B: GET /api/perfil/cuenta con JWT
   B->>D: Consulta la cuenta propia y datos_cuenta
