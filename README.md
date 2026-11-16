@@ -6,6 +6,8 @@ Proyecto Capstone (PTY4614) — Duoc UC, Escuela de Informática y Telecomunicac
 
 > **Estado (16-11-2026):** Fase 2 — Sprint 5 en curso (02 al 22-11-2026). Las correcciones de las revisiones de ubicación, fotos, agenda y filtros están integradas en main (PR #67 y #70 a #72); la documentación técnica se consolidó en el PR #73. Verificación: 628 pruebas backend, 489 frontend y 223 comprobaciones MySQL reales aprobadas. Planilla: 248 casos, 246 aprobados y CP-024/025 pendientes de acceso real con Google; DAS 1.35 y Plan de Pruebas 1.0.2. El cierre formal requiere la aceptación del PO, los criterios finales de FS-HU-32, horas, retrospectiva, revisión QA residual y actualización manual del Drive.
 
+Las cifras anteriores corresponden a la consolidación hasta el PR #75 (`bf3a857`). Los PR #76 y #77 se incorporaron después: bienvenida al iniciar sesión e informe final. El #77 informa 494 pruebas frontend sobre esa versión; la copia local todavía ejecuta las 489 anteriores. La declaración de Sprint 5 terminado en el informe debe conciliarse con las aceptaciones y registros de cierre pendientes de los documentos oficiales.
+
 ## Equipo
 
 | Integrante | Rol Scrum | Foco de desarrollo |
@@ -84,6 +86,8 @@ cd "FASE 2/Evidencias Proyecto/Evidencias de sistema"
 ```
 
 ## Requisitos previos
+
+La instalación local, arquitectura, configuración, API, operación y pruebas se reúnen en el [Manual Técnico General](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Manual%20T%C3%A9cnico/Manual_Tecnico_General.md). El manual de Docker complementa ese documento para el despliegue con contenedores.
 
 - Node.js 20 LTS o superior y npm
 - MySQL 8

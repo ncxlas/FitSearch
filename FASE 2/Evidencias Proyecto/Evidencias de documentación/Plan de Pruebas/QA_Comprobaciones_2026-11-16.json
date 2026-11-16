@@ -1,0 +1,139 @@
+{
+  "fecha": "2026-11-16",
+  "tipo": "Comprobaciones QA de validadores y formatos reales, sin modificar la base de datos",
+  "alcance": "Fechas de comidas, cantidades, precio referencial, texto de cuenta y formato es-CL. No sustituye la revisión visual ni prueba Google real.",
+  "resultados": [
+    {
+      "nombre": "Fecha inválida rechazada: 2026-04-31",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Fecha inválida rechazada: 2026-02-29",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Fecha inválida rechazada: 2026-00-01",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Fecha inválida rechazada: 2026-13-01",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Fecha inválida rechazada: 2026-11-00",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Fecha inválida rechazada: 2026-11-32",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Fecha inválida rechazada: 2026-1-01",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Fecha válida aceptada: 2024-02-29",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Fecha válida aceptada: 2026-02-28",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Fecha válida aceptada: 2026-04-30",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Fecha válida aceptada: 2026-12-31",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Gramos inválidos rechazados: -1",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Gramos inválidos rechazados: 0",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Gramos inválidos rechazados: 10001",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Gramos inválidos rechazados: texto",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Gramos inválidos rechazados: ¡”·$%&/()=?¿/*-+",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Gramos con decimal cero conservan su valor",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Gramos se redondean a un decimal",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Precio inválido rechazado: -1",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Precio inválido rechazado: 0",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Precio inválido rechazado: 999",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Precio inválido rechazado: 1000001",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Precio inválido rechazado: 1e+30",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Precio inválido rechazado: ¡”·$%&/()=?¿/*-+",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Precio límite aceptado: 1000",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Precio límite aceptado: 1000000",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Nombre vacío se rechaza",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Nombre de 101 caracteres se rechaza",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Nombre con tilde, apóstrofo y guion se conserva",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Biografía con signos se conserva como texto",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Presentación de miles con punto",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Presentación decimal con coma",
+      "resultado": "OK"
+    },
+    {
+      "nombre": "Presentación de decimal cero sin fracción espuria",
+      "resultado": "OK"
+    }
+  ]
+}
