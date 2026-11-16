@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
@@ -207,4 +207,67 @@ test('en «Mis citas» la persona busca por el nombre del profesional', async ()
   expect(nombres()).toEqual(['Juan Soto']);
   expect(screen.getByText('1 cita, de la más reciente a la más antigua')).toBeInTheDocument();
 });
+
+test.each([
+  ['hoy', ['Domingo']],
+  ['semana', ['Domingo', 'Lunes']],
+  ['mes', ['Fin', 'Siguiente', 'Domingo', 'Lunes', 'Inicio']],
+  ['mesPasado', ['Anterior']],
+])('el período %s incluye sus límites, también al consultar un domingo', async (periodo, esperados) => {
+  fijarHoy('2099-10-18T15:00:00Z');
+  const filas = [
+    reservaDe(61, 'Anterior', 'confirmada', '2099-09-30'),
+    reservaDe(62, 'Inicio', 'confirmada', '2099-10-01'),
+    reservaDe(63, 'Lunes', 'confirmada', '2099-10-12'),
+    reservaDe(64, 'Domingo', 'confirmada', '2099-10-18'),
+    reservaDe(65, 'Siguiente', 'confirmada', '2099-10-19'),
+    reservaDe(66, 'Fin', 'confirmada', '2099-10-31'),
+    reservaDe(67, 'Otro mes', 'confirmada', '2099-11-01'),
+  ];
+  simularApi({ '/api/reservas': { reservas: filas } });
+  renderizarApp('/profesional/agenda?vista=reservas');
+  await userEvent.click(await screen.findByRole('button', { name: 'Todas e historial' }));
+  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Fecha de la cita' }), periodo);
+  expect(nombres()).toEqual(esperados);
+});
+
+test('Mes pasado en enero corresponde a diciembre del año anterior', async () => {
+  fijarHoy('2100-01-10T15:00:00Z');
+  simularApi({ '/api/reservas': { reservas: [
+    reservaDe(71, 'Noviembre', 'confirmada', '2099-11-30'),
+    reservaDe(72, 'Primero', 'confirmada', '2099-12-01'),
+    reservaDe(73, 'Ultimo', 'confirmada', '2099-12-31'),
+    reservaDe(74, 'Enero', 'confirmada', '2100-01-01'),
+  ] } });
+  renderizarApp('/profesional/agenda?vista=reservas');
+  await userEvent.click(await screen.findByRole('button', { name: 'Todas e historial' }));
+  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Fecha de la cita' }), 'mesPasado');
+  expect(nombres()).toEqual(['Ultimo', 'Primero']);
+});
 // La reserva desde la ficha (calendario, horas, mensaje y límite por profesional) se prueba en components/reservas/ReservarHora.test.jsx.
+
+// Revisión del PR 63 (16-11-2026): con «Mis citas» abierta (sin otro reloj en la página), una cita que comienza deja de
+// ofrecer cancelarla y pasa al historial como no realizada, sin recargar.
+test.each(['pendiente', 'confirmada'])('una cita %s que comienza con «Mis citas» abierta deja «Próximas» y actualiza su estado', async (estado) => {
+  sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+  vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+  vi.setSystemTime(new Date('2099-10-15T11:50:00Z'));
+  simularApi({ '/api/reservas': { reservas: [{ ...r, estado }] } });
+  renderizarApp('/citas');
+
+  const tarjeta = (await screen.findByRole('heading', { name: 'Juan' })).closest('article');
+  expect(within(tarjeta).getByText(estado === 'pendiente' ? 'Por confirmar' : 'Confirmada')).toBeInTheDocument();
+  await userEvent.click(within(tarjeta).getByRole('button', { name: 'Cancelar reserva' }));
+  expect(within(tarjeta).getByRole('group', { name: '¿Cancelar esta reserva?' })).toBeInTheDocument();
+
+  // La cita era a las 09:00 (hora de Chile): pasan once minutos y ya comenzó.
+  vi.setSystemTime(new Date('2099-10-15T12:01:00Z'));
+  act(() => { vi.advanceTimersByTime(60000); });
+  expect(screen.queryByRole('heading', { name: 'Juan' })).not.toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Todas e historial' }));
+  const pasada = screen.getByRole('heading', { name: 'Juan' }).closest('article');
+  expect(within(pasada).getByText(estado === 'pendiente' ? 'No realizada' : 'Realizada')).toBeInTheDocument();
+  expect(within(pasada).queryByRole('group', { name: '¿Cancelar esta reserva?' })).not.toBeInTheDocument();
+  expect(within(pasada).queryByRole('button', { name: 'Cancelar reserva' })).not.toBeInTheDocument();
+});

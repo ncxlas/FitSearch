@@ -153,6 +153,14 @@ export function MisCitas({ compacto = false, onCambio }) {
   const [ocupado, setOcupado] = useState(false);
   const [filtro, setFiltro] = useState('proximas');
   const [filtros, setFiltros] = useState(SIN_FILTROS);
+  // Revisión del PR 63 (16-11-2026): con la lista abierta (por ejemplo, «Mis citas» del usuario, que no tiene otro reloj),
+  // una cita que comienza pasa a realizada o no realizada y deja de ofrecer confirmar o cancelar sin recargar. futura()
+  // lee la hora actual: basta con volver a dibujar cada minuto.
+  const [, setMinuto] = useState(0);
+  useEffect(() => {
+    const temporizador = setInterval(() => setMinuto((m) => m + 1), 60000);
+    return () => clearInterval(temporizador);
+  }, []);
   const filtrar = (cambio) => setFiltros((antes) => ({ ...antes, ...cambio }));
   // Al pasar a «Próximas», los filtros que ahí no caben vuelven a «todos».
   const cambiarFiltro = (valor) => {
@@ -361,7 +369,8 @@ export function MisCitas({ compacto = false, onCambio }) {
                 </button>
               </div>
             )}
-            {confirmacion?.id === r.id && (
+            {/* Si la hora llega con la pregunta abierta, la pregunta se cierra sola. */}
+            {confirmacion?.id === r.id && futura(r) && (
               <Confirmacion
                 id={`confirmar-reserva-${r.id}`}
                 titulo={`¿${confirmacion.estado === 'cancelada' ? 'Cancelar' : 'Confirmar'} esta reserva?`}
