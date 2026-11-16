@@ -334,6 +334,38 @@ describe('Ajustar el marcador', () => {
     expect(screen.queryByText(AVISO_GUARDAR)).not.toBeInTheDocument();
   });
 
+  // Revisión del PR 61: la búsqueda de la dirección escrita respondía después del clic, devolvía el marcador y quedaban
+  // la comuna y la dirección del clic con las coordenadas de la dirección escrita.
+  test('si sale del campo y enseguida hace clic en el mapa, guarda el punto del clic con su dirección', async () => {
+    const LOS_LEONES = { lat: -33.4205, lng: -70.6012, precision: 'exacta', encontrada: 'Los Leones 120, Providencia' };
+    const IRARRAZAVAL = {
+      comuna: 'Ñuñoa', region: 'Metropolitana', regionCompleta: 'Región Metropolitana de Santiago', direccion: 'Avenida Irarrázaval 3000', precision: 'exacta',
+    };
+    let responderUbicar;
+    const { fetch, marcador, mapa } = await conMapa({
+      ubicar: ({ direccion }) => (direccion === 'Los Leones 120'
+        ? new Promise((listo) => { responderUbicar = () => listo(respuestaJson(200, LOS_LEONES)); })
+        : respuestaJson(200, PROVIDENCIA)),
+      punto: () => respuestaJson(200, IRARRAZAVAL),
+    });
+    const direccion = screen.getByLabelText(/^Dirección de atención/);
+    await userEvent.clear(direccion);
+    await userEvent.type(direccion, 'Los Leones 120');
+    await salirDelCampo();
+    await waitFor(() => expect(responderUbicar).toBeDefined());
+
+    mapa.clic(-70.6, -33.455);
+    await waitFor(() => expect(marcador.getLngLat()).toEqual({ lng: -70.6, lat: -33.455 }));
+    responderUbicar();
+    expect(await screen.findByText(/^Actualizamos tu comuna y tu dirección según el marcador: Avenida Irarrázaval 3000, Ñuñoa\./, {}, ESPERA))
+      .toBeInTheDocument();
+    expect(marcador.getLngLat()).toEqual({ lng: -70.6, lat: -33.455 });
+    await guardar();
+
+    await waitFor(() => expect(huboPut(fetch)).toBe(true));
+    expect(cuerpoPut(fetch)).toMatchObject({ comuna: 'Ñuñoa', direccion: 'Avenida Irarrázaval 3000', ubicacionLat: -33.455, ubicacionLng: -70.6 });
+  });
+
   test('si escribe la dirección justo después de mover el marcador, gana lo escrito', async () => {
     const { fetch, marcador } = await conMapa();
     marcador.arrastrar(-70.7, -33.5);
