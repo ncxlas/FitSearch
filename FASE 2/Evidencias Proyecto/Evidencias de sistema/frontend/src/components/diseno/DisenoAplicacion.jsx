@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import { useSesion } from '../../context/SesionContext.jsx';
 import Alerta from '../Alerta.jsx';
+import Bienvenida from '../Bienvenida.jsx';
 import Encabezado from '../Encabezado.jsx';
 import BarraInferior from './BarraInferior.jsx';
 import MenuLateral from './MenuLateral.jsx';
@@ -11,7 +12,7 @@ import './DisenoAplicacion.css';
 // Estructura común de las pantallas con sesión: encabezado, menú lateral, contenido y barra inferior (DAS, D22).
 // "espacio" elige el menú del usuario o el del profesional (DAS, D25).
 export default function DisenoAplicacion({ espacio = 'usuario' }) {
-  const { aviso: avisoSesion, limpiarAviso } = useSesion();
+  const { sesion, aviso: avisoSesion, limpiarAviso } = useSesion();
   const { pathname } = useLocation();
   const tipoNavegacion = useNavigationType();
   const [menuAbierto, setMenuAbierto] = useState(false);
@@ -30,6 +31,8 @@ export default function DisenoAplicacion({ espacio = 'usuario' }) {
     if (avisoSesion) limpiarAviso();
   }, [avisoSesion, limpiarAviso]);
   const cerrarMenu = useCallback(() => setMenuAbierto(false), []);
+  const cerrarBienvenida = useCallback(() => setAviso(null), []);
+  const esBienvenida = aviso?.origen === 'ingreso' && ['usuario', 'profesional'].includes(sesion?.usuario.rol);
 
   return (
     <div className={`app app--${espacio}`}>
@@ -38,12 +41,13 @@ export default function DisenoAplicacion({ espacio = 'usuario' }) {
       <div className="app__cuerpo">
         <MenuLateral abierto={menuAbierto} onCerrar={cerrarMenu} espacio={espacio} compacto={menuCompacto} onAlternarCompacto={alternarMenuCompacto} />
         <main id="contenido" className="app__contenido" tabIndex={-1}>
-          {aviso && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
+          {aviso && !esBienvenida && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
           {/* Las pantallas pueden descartar el aviso cuando la persona avanza (por ejemplo, en el asistente de perfil). */}
           <Outlet context={{ descartarAviso: () => setAviso(null) }} />
         </main>
       </div>
       <BarraInferior espacio={espacio} />
+      {esBienvenida && <Bienvenida usuario={sesion.usuario} onCerrar={cerrarBienvenida} />}
     </div>
   );
 }

@@ -41,7 +41,7 @@ export function SesionProvider({ children }) {
     iniciarSesion: async (datos) => {
       const nuevaSesion = await authService.iniciarSesion(datos);
       establecer(nuevaSesion, Boolean(datos.recordar));
-      setAviso({ tipo: 'exito', texto: `Sesión iniciada como ${nuevaSesion.usuario.nombre}.` });
+      setAviso({ tipo: 'exito', origen: 'ingreso', texto: `Sesión iniciada como ${nuevaSesion.usuario.nombre}.` });
       return nuevaSesion;
     },
     iniciarSesionConGoogle: async ({ credencial, recordar = false }) => {
@@ -50,6 +50,7 @@ export function SesionProvider({ children }) {
       setAviso({
         tipo: 'exito',
         ...(cuentaNueva ? { destino: ELEGIR_PERFIL } : {}),
+        ...(!cuentaNueva ? { origen: 'ingreso' } : {}),
         texto: cuentaNueva
           ? `Tu cuenta fue creada con Google y la sesión está iniciada como ${usuario.nombre}.`
           : `Sesión iniciada como ${usuario.nombre}.`,
