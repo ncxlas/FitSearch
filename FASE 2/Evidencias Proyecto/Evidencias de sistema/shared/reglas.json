@@ -34,8 +34,8 @@
       "maxDias": 90
     },
     "vistaSemana": {
-      "horaInicio": "07:00",
-      "horaFin": "21:00"
+      "horaInicio": "08:00",
+      "horaFin": "20:00"
     },
     "proximasHoras": {
       "cantidad": 3,

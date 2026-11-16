@@ -5,7 +5,7 @@ import Alerta from '../Alerta.jsx';
 import Icono from '../Icono.jsx';
 import { solicitar } from '../../services/api.js';
 import { textoDuracion } from '../../services/agenda.js';
-import { aHora, aMinutos, bloquesPrevistos, diaCorto, diaLargo, ESTADOS, sumarDias } from './semana.js';
+import { aHora, aMinutos, bloquesPrevistos, diaCorto, diaLargo, ESTADOS, estadoVisible, NOTA_ESTADO, sumarDias } from './semana.js';
 import './PanelesAgenda.css';
 
 const { duraciones, serie, bloqueo: reglasBloqueo } = reglas.agenda;
@@ -52,6 +52,7 @@ export function DetalleHorario({ horario, onCambio, onCerrar }) {
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState('');
   const { reserva, pasado, estado } = horario;
+  const visible = estadoVisible(horario);
 
   async function ejecutar(peticion, aviso) {
     setOcupado(true);
@@ -78,7 +79,8 @@ export function DetalleHorario({ horario, onCambio, onCerrar }) {
         <Icono nombre="reloj" tamano={18} />
         <span>{horario.horaInicio} – {horario.horaFin} · {textoDuracion(aMinutos(horario.horaFin) - aMinutos(horario.horaInicio))}</span>
       </p>
-      <span className={`estado-agenda estado-agenda--${estado}`}>{ESTADOS[estado]}{pasado ? ' · ya pasó' : ''}</span>
+      <span className={`estado-agenda estado-agenda--${visible}`}>{ESTADOS[visible]}</span>
+      {NOTA_ESTADO[visible] && <p className="panel-agenda__nota">{NOTA_ESTADO[visible]}</p>}
       {horario.bloqueado && <p className="panel-agenda__nota"><Icono nombre="candadoCerrado" tamano={16} /> Este día está bloqueado: el horario no se muestra a los usuarios.</p>}
       <Alerta>{error}</Alerta>
       {reserva ? (
@@ -133,7 +135,8 @@ export function DetalleHorario({ horario, onCambio, onCerrar }) {
 const lista = (horas) => (horas.length < 2 ? horas.join('') : `${horas.slice(0, -1).join(', ')} y ${horas.at(-1)}`);
 
 // Publicar horarios: uno solo o varios bloques de igual duración en el mismo día (POST /disponibilidades/serie).
-export function PublicarHorarios({ inicial, hoy, onPublicado, onCerrar }) {
+// onPrevia: avisa el día y las horas que se están por publicar, para marcarlos en el calendario (15-11-2026).
+export function PublicarHorarios({ inicial, hoy, onPublicado, onCerrar, onPrevia }) {
   const horaInicial = inicial?.hora || '09:00';
   const [campos, setCampos] = useState({
     fecha: inicial?.fecha || hoy,
@@ -146,6 +149,11 @@ export function PublicarHorarios({ inicial, hoy, onPublicado, onCerrar }) {
   const [error, setError] = useState('');
   const previstos = bloquesPrevistos(campos);
   const cambiar = (cambio) => { setError(''); setCampos((actual) => ({ ...actual, ...cambio })); };
+  useEffect(() => {
+    const { fecha, horaInicio, horaFin } = campos;
+    onPrevia?.(fecha && horaInicio && horaFin && horaInicio < horaFin ? { fecha, horaInicio, horaFin } : null);
+  }, [campos, onPrevia]);
+  useEffect(() => () => onPrevia?.(null), [onPrevia]);
 
   async function publicar(evento) {
     evento.preventDefault();
@@ -300,26 +308,69 @@ export function BloquearFechas({ hoy, onCambio, onCerrar }) {
   );
 }
 
-// Resumen del costado cuando no hay nada elegido: lo de hoy, lo que falta confirmar y la lista de espera.
-export function ResumenAgenda({ datos, pendientes, onElegirPendiente }) {
-  const hoyHorarios = datos.horarios.filter((h) => h.fecha === datos.hoy);
-  const citasHoy = hoyHorarios.filter((h) => h.reserva && h.estado === 'confirmada');
+const MODALIDAD_CORTA = { presencial: 'Presencial', online: 'Online' };
+
+// Reservas del día elegido (pedido del PO del 15-11-2026): todas, ordenadas por hora y con su estado, para no tener que
+// buscarlas en el calendario. Empieza en hoy; las flechas, el selector de fecha y la cabecera del calendario cambian el día.
+function ReservasDelDia({ datos, dia, onDia, onElegirHorario }) {
+  const delDia = datos.horarios.filter((h) => h.fecha === dia);
+  const reservas = delDia.filter((h) => h.reserva).sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
+  const libres = delDia.filter((h) => estadoVisible(h) === 'libre').length;
+  const esHoy = dia === datos.hoy;
+  return (
+    <section className="panel-agenda resumen-agenda__dia" aria-labelledby="titulo-dia">
+      <header className="resumen-agenda__dia-cabecera">
+        <h2 id="titulo-dia" className="panel-agenda__titulo-chico">Reservas del día</h2>
+        {!esHoy && <button type="button" className="boton-texto" onClick={() => onDia(datos.hoy)}>Ir a hoy</button>}
+      </header>
+      <p className="resumen-agenda__fecha-texto" aria-live="polite">{esHoy ? `Hoy, ${diaLargo(dia)}` : diaLargo(dia)}</p>
+      <div className="resumen-agenda__dia-navegacion">
+        <button type="button" className="boton-icono" aria-label="Día anterior" onClick={() => onDia(sumarDias(dia, -1))}>
+          <Icono nombre="chevronIzquierda" tamano={18} />
+        </button>
+        <input type="date" className="resumen-agenda__fecha" aria-label="Elegir el día" value={dia}
+          onChange={(e) => { if (/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)) onDia(e.target.value); }} />
+        <button type="button" className="boton-icono" aria-label="Día siguiente" onClick={() => onDia(sumarDias(dia, 1))}>
+          <Icono nombre="chevronDerecha" tamano={18} />
+        </button>
+      </div>
+      <dl className="resumen-agenda__cifras">
+        <div><dt>Reservas</dt><dd className="cifra">{reservas.length}</dd></div>
+        <div><dt>Horas libres</dt><dd className="cifra">{libres}</dd></div>
+      </dl>
+      {reservas.length ? (
+        <ul className="resumen-agenda__reservas" aria-label={`Reservas del ${diaLargo(dia)}`}>
+          {reservas.map((h) => {
+            const visible = estadoVisible(h);
+            return (
+              <li key={h.id}>
+                <button type="button" className="resumen-agenda__reserva" onClick={() => onElegirHorario(h)}
+                  aria-label={`${h.horaInicio} a ${h.horaFin}, ${h.reserva.usuario.nombre}, ${ESTADOS[visible].toLowerCase()}${h.reserva.modalidad ? `, ${MODALIDAD_CORTA[h.reserva.modalidad].toLowerCase()}` : ''}`}>
+                  <time className="resumen-agenda__hora">{h.horaInicio}<small>{h.horaFin}</small></time>
+                  <span className="resumen-agenda__quien">
+                    <strong>{h.reserva.usuario.nombre}</strong>
+                    <span className="resumen-agenda__datos">
+                      <span className={`estado-agenda estado-agenda--${visible}`}>{ESTADOS[visible]}</span>
+                      {h.reserva.modalidad && <small>{MODALIDAD_CORTA[h.reserva.modalidad]}{h.reserva.primeraVisita ? ' · 1.ª visita' : ''}</small>}
+                    </span>
+                  </span>
+                  <Icono nombre="chevronDerecha" tamano={16} className="resumen-agenda__flecha" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : <p className="panel-agenda__texto">{esHoy ? 'No tienes reservas hoy.' : 'No tienes reservas este día.'}</p>}
+    </section>
+  );
+}
+
+// Resumen del costado cuando no hay nada elegido: las reservas del día, lo que falta confirmar y la lista de espera.
+// En pantallas angostas el calendario ya muestra la lista del día, así que aquí se omite (conLista).
+export function ResumenAgenda({ datos, dia, onDia, onElegirHorario, conLista = true, pendientes, onElegirPendiente }) {
   return (
     <div className="resumen-agenda">
-      <section className="panel-agenda" aria-labelledby="titulo-hoy">
-        <h2 id="titulo-hoy" className="panel-agenda__titulo-chico">Hoy</h2>
-        <dl className="resumen-agenda__cifras">
-          <div><dt>Citas</dt><dd className="cifra">{citasHoy.length}</dd></div>
-          <div><dt>Horas libres</dt><dd className="cifra">{hoyHorarios.filter((h) => h.estado === 'libre' && !h.pasado).length}</dd></div>
-        </dl>
-        {citasHoy.length > 0 && (
-          <ul className="panel-agenda__lista">
-            {citasHoy.map((h) => (
-              <li key={h.id}><span><strong className="cifra">{h.horaInicio}</strong><small>{h.reserva.usuario.nombre}</small></span></li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {conLista && <ReservasDelDia datos={datos} dia={dia} onDia={onDia} onElegirHorario={onElegirHorario} />}
       <section className="panel-agenda" aria-labelledby="titulo-por-confirmar">
         <h2 id="titulo-por-confirmar" className="panel-agenda__titulo-chico">
           Por confirmar {pendientes?.length ? <span className="resumen-agenda__contador">{pendientes.length}</span> : null}
