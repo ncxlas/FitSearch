@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom';
-import { etiquetaModalidad, formatearKm, iniciales } from '../../services/formato.js';
+import { etiquetaModalidad, formatearKm } from '../../services/formato.js';
 import { Calificacion } from '../Calificacion.jsx';
 import Icono from '../Icono.jsx';
 import BotonFavorito from './BotonFavorito.jsx';
 import { diaCorto } from '../agenda/semana.js';
 import { precioCLP } from '../profesional/experiencia.js';
 import './TarjetaProfesional.css';
+import Avatar from '../Avatar.jsx';
 
 // Ficha resumida de un profesional. "destacado" es la versión compacta del Inicio; "completa", la de favoritos; "fila",
 // la del buscador junto al mapa (SC-27): horizontal, con «Ver en el mapa» y resaltada cuando su marcador lo está.
-// No hay fotos de perfil todavía (llegarán con FS-HU-04): se muestran las iniciales.
+// Con la foto de perfil del profesional, o sus iniciales si no tiene (15-11-2026).
 
 // Próximas horas libres (09-11-2026): cada una abre la ficha con esa hora elegida.
 function HorasDisponibles({ profesional, desde }) {
@@ -37,7 +38,8 @@ export default function TarjetaProfesional({
   profesional, variante = 'completa', nivelTitulo = 3, desde, onCambioFavorito, id: idElemento,
   seleccionado = false, resaltado = false, onResaltar, onVerEnMapa,
 }) {
-  const { id, nombre, especialidad, descripcion, comuna, modalidad, establecimiento, calificacion, distanciaKm, verificado } = profesional;
+  // La presentación llega resumida desde la API (16-11-2026); completa, solo en la ficha del profesional.
+  const { id, nombre, especialidad, presentacion, comuna, modalidad, establecimiento, calificacion, distanciaKm, verificado } = profesional;
   const Titulo = `h${nivelTitulo}`;
   const lugar = modalidad === 'online' ? 'Atención online' : [comuna || establecimiento?.direccion || 'Ubicación por confirmar', distanciaKm != null && formatearKm(distanciaKm)]
     .filter(Boolean).join(' · ');
@@ -54,7 +56,7 @@ export default function TarjetaProfesional({
       onFocus: () => onResaltar(id), onBlur: () => onResaltar(null) };
     return (
       <article id={idElemento} className={clases} {...resaltar}>
-        <span className="tarjeta-profesional__iniciales" aria-hidden="true">{iniciales(nombre)}</span>
+        <Avatar className="tarjeta-profesional__iniciales" nombre={nombre} fotoUrl={profesional.fotoUrl} />
         <div className="tarjeta-profesional__cuerpo">
           <Titulo className="tarjeta-profesional__nombre">{enlace}</Titulo>
           <p className="tarjeta-profesional__linea">
@@ -72,7 +74,7 @@ export default function TarjetaProfesional({
               {profesional.aniosExperiencia ? <span>{profesional.aniosExperiencia} {profesional.aniosExperiencia === 1 ? 'año' : 'años'} de experiencia</span> : null}
             </p>
           ) : null}
-          <p className="tarjeta-profesional__descripcion">{descripcion || 'Este profesional todavía no ha añadido una descripción de sus servicios.'}</p>
+          <p className="tarjeta-profesional__descripcion">{presentacion || 'Este profesional todavía no ha escrito su presentación.'}</p>
           {'proximaHora' in profesional && <HorasDisponibles profesional={profesional} desde={desde} />}
           <div className="tarjeta-profesional__acciones">
             {onVerEnMapa && (
@@ -92,7 +94,7 @@ export default function TarjetaProfesional({
   return (
     <article className={`tarjeta-profesional tarjeta-profesional--${variante}`}>
       <div className="tarjeta-profesional__portada">
-        <span className="tarjeta-profesional__iniciales" aria-hidden="true">{iniciales(nombre)}</span>
+        <Avatar className="tarjeta-profesional__iniciales" nombre={nombre} fotoUrl={profesional.fotoUrl} />
         <BotonFavorito profesional={profesional} onCambio={onCambioFavorito} className="tarjeta-profesional__favorito" />
       </div>
       <div className="tarjeta-profesional__cuerpo">
@@ -104,7 +106,7 @@ export default function TarjetaProfesional({
         {variante === 'completa' && (
           <>
             <span className="tarjeta-profesional__modalidad">{etiquetaModalidad(modalidad)}</span>
-            <p className="tarjeta-profesional__descripcion">{descripcion || 'Este profesional todavía no ha añadido una descripción de sus servicios.'}</p>
+            <p className="tarjeta-profesional__descripcion">{presentacion || 'Este profesional todavía no ha escrito su presentación.'}</p>
             <span className="tarjeta-profesional__ver" aria-hidden="true">Ver perfil y reseñas <Icono nombre="flecha" tamano={16} /></span>
           </>
         )}

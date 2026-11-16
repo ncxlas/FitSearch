@@ -85,7 +85,7 @@ describe('GET /api/establecimientos/:id', () => {
     expect(res.body).toEqual({
       establecimiento: {
         ...esperado, totalProfesionales: 1,
-        profesionales: [{ id: 8, nombre: 'Ana Demo', especialidad: 'Kinesiología', modalidad: 'presencial', verificado: true }],
+        profesionales: [{ id: 8, nombre: 'Ana Demo', fotoUrl: null, especialidad: 'Kinesiología', modalidad: 'presencial', verificado: true }],
       },
     });
     expect(modelo.buscarPorId).toHaveBeenCalledWith(3);

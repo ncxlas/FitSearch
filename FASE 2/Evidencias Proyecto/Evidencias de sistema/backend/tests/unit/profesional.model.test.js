@@ -30,16 +30,37 @@ test('el buscador compara la comuna guardada con sus espacios unidos, al filtrar
 
   // Con una comuna basta: la región no agrega otra condición.
   await listar({ usuarioId: 1, comuna: 'San Antonio', region: 'Valparaíso' });
-  const conComuna = Prisma.sql(...prisma.$queryRaw.mock.calls[0]);
-  expect(conComuna.sql).toMatch(new RegExp(`AND ${comunaUnida} = \\?`));
-  expect(conComuna.sql).not.toMatch(new RegExp(`${comunaUnida} IN`));
-  expect(conComuna.values).toContain('San Antonio');
+  const conComuna = Prisma.sql(...prisma.$queryRaw.mock.calls[1]);
+  expect(conComuna.sql).toMatch(new RegExp(`AND ${comunaUnida} IN \\(\\?\\)`));
+  expect(conComuna.values).toEqual(['San Antonio']);
 
   prisma.$queryRaw.mockClear();
   await listar({ usuarioId: 1, region: 'Valparaíso' });
   const conRegion = Prisma.sql(...prisma.$queryRaw.mock.calls[1]);
   expect(conRegion.sql).toMatch(new RegExp(`COUNT\\(\\*\\) AS total .* AND ${comunaUnida} IN \\(\\?(, ?\\?)+\\)`, 's'));
-  expect(conRegion.values).toEqual(comunasDeRegion('Valparaíso'));
+  // Las comunas de la región y, al final, la forma anterior de Llaillay («Llay-Llay», 15-11-2026).
+  expect(conRegion.values).toEqual([...comunasDeRegion('Valparaíso'), 'Llay-Llay']);
+});
+
+// Pedido del PO del 16-11-2026: la palabra clave se busca en la presentación del profesional, que el listado trae
+// en lugar de la descripción de la ficha (que ya no se edita).
+test('la palabra clave se busca en el nombre, la especialidad y la presentación, no en la descripción de la ficha', async () => {
+  prisma.$queryRaw.mockImplementation((partes) => Promise.resolve(partes.join('').includes('COUNT(*) AS total') ? [{ total: 0n }] : []));
+  await listar({ usuarioId: 1, q: 'trail' });
+  const [filas, conteo] = prisma.$queryRaw.mock.calls.map((llamada) => Prisma.sql(...llamada));
+  for (const consulta of [filas, conteo]) {
+    expect(consulta.sql).toContain('LEFT JOIN datos_cuenta dc ON dc.usuario_id = p.usuario_id');
+    expect(consulta.sql).toMatch(/\(u\.nombre LIKE \? OR p\.especialidad LIKE \? OR dc\.biografia LIKE \?\)/);
+    expect(consulta.sql).not.toContain('p.descripcion');
+  }
+  expect(filas.sql).toContain('dc.biografia AS presentacion');
+});
+
+// Listado del PO del 15-11-2026: una ficha guardada con el nombre anterior de la comuna también aparece al filtrar.
+test('al filtrar por Llaillay también busca la forma anterior «Llay-Llay»', async () => {
+  prisma.$queryRaw.mockImplementation((partes) => Promise.resolve(partes.join('').includes('COUNT(*) AS total') ? [{ total: 0n }] : []));
+  await listar({ usuarioId: 1, comuna: 'llaillay' });
+  expect(Prisma.sql(...prisma.$queryRaw.mock.calls[1]).values).toEqual(['Llaillay', 'Llay-Llay']);
 });
 
 test('guardar la ficha la crea si la cuenta profesional todavía no tiene una', async () => {

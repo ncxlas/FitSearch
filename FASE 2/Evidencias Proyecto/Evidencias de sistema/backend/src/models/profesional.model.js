@@ -1,7 +1,11 @@
 const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
-const { comunasDeRegion } = require('../utils/regiones');
+const { formasDeComuna, formasDeRegion } = require('../utils/regiones');
+const { claveFotoSql } = require('../utils/fotos');
 const ErrorHttp = require('../utils/ErrorHttp');
+
+// Clave de la foto de perfil del profesional, para armar su dirección (15-11-2026).
+const CLAVE_FOTO = claveFotoSql(Prisma.raw('p.usuario_id'));
 const verificacion = require('./verificacion.model');
 
 // Solo datos de la ficha pública. Nunca incluir correo de acceso, contraseña ni salud.
@@ -42,15 +46,16 @@ function construirConsulta({ q, especialidad, comuna, region, modalidad, calific
   const condiciones = [Prisma.sql`r.nombre = 'profesional'`, Prisma.sql`u.activo = true`];
   if (q) {
     const patron = `%${escaparLike(q)}%`;
-    // La intercalación utf8mb4_unicode_ci ignora mayúsculas y tildes: "nutricion" encuentra "Nutrición".
-    condiciones.push(Prisma.sql`(u.nombre LIKE ${patron} OR p.especialidad LIKE ${patron} OR p.descripcion LIKE ${patron})`);
+    // La intercalación utf8mb4_unicode_ci ignora mayúsculas y tildes: "nutricion" encuentra "Nutrición". Desde el
+    // 16-11-2026 la palabra clave se busca en la presentación del profesional (la descripción de la ficha ya no se edita).
+    condiciones.push(Prisma.sql`(u.nombre LIKE ${patron} OR p.especialidad LIKE ${patron} OR dc.biografia LIKE ${patron})`);
   }
   if (especialidad) condiciones.push(Prisma.sql`p.especialidad = ${especialidad}`);
   // Con una comuna basta; con solo la región, cualquiera de sus comunas. La intercalación de la tabla no distingue
   // mayúsculas ni tildes, así «san antonio» también es de Valparaíso (14-11-2026). Se compara con los espacios unidos
   // para que también aparezca una comuna guardada antes como «San  Antonio» (15-11-2026).
-  if (comuna) condiciones.push(Prisma.sql`${COMUNA} = ${comuna}`);
-  else if (region) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(comunasDeRegion(region))})`);
+  if (comuna) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(formasDeComuna(comuna))})`);
+  else if (region) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(formasDeRegion(region))})`);
   // Quien atiende de ambas formas aparece tanto en "presencial" como en "online".
   if (modalidad) condiciones.push(Prisma.sql`p.modalidad IN (${modalidad}, 'ambas')`);
   if (calificacionMin) condiciones.push(Prisma.sql`COALESCE(c.promedio, 0) >= ${calificacionMin}`);
@@ -66,6 +71,7 @@ function construirConsulta({ q, especialidad, comuna, region, modalidad, calific
     JOIN usuarios u ON u.id = p.usuario_id
     JOIN roles r ON r.id = u.rol_id
     LEFT JOIN establecimientos e ON e.id = p.establecimiento_id
+    LEFT JOIN datos_cuenta dc ON dc.usuario_id = p.usuario_id
     LEFT JOIN (SELECT profesional_id, AVG(puntaje) AS promedio, COUNT(*) AS total FROM resenas GROUP BY profesional_id) c
       ON c.profesional_id = p.id
     WHERE ${Prisma.join(condiciones, ' AND ')}`;
@@ -96,12 +102,13 @@ async function listar({ usuarioId, orden = 'nombre', pagina = 1, limite = 12, ..
   const { desde, distancia, proxima } = construirConsulta(filtros);
   const [filas, [{ total }]] = await Promise.all([
     prisma.$queryRaw`
-      SELECT p.id, u.nombre, p.especialidad, p.descripcion, p.comuna, p.direccion, p.modalidad, p.verificado,
+      SELECT p.id, p.usuario_id AS usuarioId, u.nombre, p.especialidad, dc.biografia AS presentacion, p.comuna, p.direccion, p.modalidad, p.verificado,
         p.ubicacion_lat AS ubicacionLat, p.ubicacion_lng AS ubicacionLng,
         e.nombre AS establecimientoNombre, e.direccion AS establecimientoDireccion,
         COALESCE(c.promedio, 0) AS promedio, COALESCE(c.total, 0) AS totalResenas,
         ${distancia} AS distanciaKm, ${proxima} AS proximaHora, ${COLUMNAS_EXPERIENCIA},
-        EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito
+        EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito,
+        ${CLAVE_FOTO} AS fotoClave
       ${desde}
       ORDER BY ${ORDENES[orden] || ORDENES.nombre}
       LIMIT ${limite} OFFSET ${(pagina - 1) * limite}`,
@@ -114,12 +121,14 @@ async function listar({ usuarioId, orden = 'nombre', pagina = 1, limite = 12, ..
 async function buscarPorId(id, usuarioId) {
   const { desde, distancia } = construirConsulta({});
   const filas = await prisma.$queryRaw`
-    SELECT p.id, p.usuario_id AS usuarioId, u.nombre, p.especialidad, p.descripcion, p.comuna, p.direccion, p.modalidad, p.verificado,
+    SELECT p.id, p.usuario_id AS usuarioId, u.nombre, p.especialidad, p.comuna, p.direccion, p.modalidad, p.verificado,
       p.ubicacion_lat AS ubicacionLat, p.ubicacion_lng AS ubicacionLng,
       e.nombre AS establecimientoNombre, e.direccion AS establecimientoDireccion,
       COALESCE(c.promedio, 0) AS promedio, COALESCE(c.total, 0) AS totalResenas,
       ${distancia} AS distanciaKm, ${COLUMNAS_EXPERIENCIA},
-      EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito
+      EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito,
+      dc.biografia AS presentacion,
+      ${CLAVE_FOTO} AS fotoClave
     ${desde} AND p.id = ${id}`;
   return filas[0] || null;
 }

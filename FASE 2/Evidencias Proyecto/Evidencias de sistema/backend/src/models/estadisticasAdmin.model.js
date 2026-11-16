@@ -1,6 +1,7 @@
 // Datos del dashboard y los reportes del administrador (11-11-2026). Se traen filas mínimas de un rango de fechas y el
 // servicio las agrupa por día de Chile (la base guarda las fechas y horas en UTC).
 const prisma = require('./prisma');
+const { CON_FOTO } = require('../utils/fotos');
 
 const rango = (desde, hasta) => ({ gte: desde, lt: hasta });
 // Columnas de tipo DATE (el día ya viene cortado): se comparan con fechas 'AAAA-MM-DD'.
@@ -11,9 +12,15 @@ const cuentas = (desde, hasta) => prisma.usuario.findMany({
   where: { fechaRegistro: rango(desde, hasta) }, select: { fechaRegistro: true, rol: { select: { nombre: true } } },
 });
 
+// Con la foto de cada cuenta (15-11-2026).
 const ultimasCuentas = (limite) => prisma.usuario.findMany({
-  select: { id: true, nombre: true, activo: true, fechaRegistro: true, rol: { select: { nombre: true } } },
+  select: { id: true, nombre: true, activo: true, fechaRegistro: true, rol: { select: { nombre: true } }, ...CON_FOTO },
   orderBy: [{ fechaRegistro: 'desc' }, { id: 'desc' }], take: limite,
+});
+
+// Fotos de unas pocas cuentas (las que muestra la cola de verificación), sin traer las de todos los profesionales.
+const fotosDe = (usuarioIds) => prisma.datosCuenta.findMany({
+  where: { usuarioId: { in: usuarioIds }, foto: { not: null } }, select: { usuarioId: true, foto: true },
 });
 
 const reservas = (desde, hasta) => prisma.reserva.findMany({
@@ -35,7 +42,7 @@ const profesionales = () => prisma.profesional.findMany({
   where: profesionalVigente,
   select: {
     id: true, especialidad: true, comuna: true, verificado: true, estadoVerificacion: true, historialVerificacion: true,
-    usuario: { select: { nombre: true, activo: true } }, _count: { select: { documentos: true } },
+    usuario: { select: { id: true, nombre: true, activo: true } }, _count: { select: { documentos: true } },
   },
 });
 
@@ -71,5 +78,5 @@ async function plataforma() {
 const verificacionesPendientes = () => prisma.profesional.count({ where: { ...profesionalVigente, estadoVerificacion: 'pendiente' } });
 
 module.exports = {
-  cuentas, ultimasCuentas, reservas, resenas, preguntasAsistente, profesionales, personasPorFuncion, plataforma, verificacionesPendientes,
+  cuentas, ultimasCuentas, reservas, resenas, preguntasAsistente, profesionales, personasPorFuncion, plataforma, verificacionesPendientes, fotosDe,
 };

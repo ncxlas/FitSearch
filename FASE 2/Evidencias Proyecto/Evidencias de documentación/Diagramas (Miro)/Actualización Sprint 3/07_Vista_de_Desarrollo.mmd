@@ -18,7 +18,7 @@ flowchart TB
   end
   SPA -->|"HTTP /api; Bearer JWT"| API
   API --> PR["models/prisma.js<br/>Conexión compartida"]
-  PR --> DB[("MySQL<br/>26 tablas en main<br/>27 con PR 59 en revisión<br/>catálogos de especialidades, alimentos y establecimientos")]
+  PR --> DB[("MySQL<br/>27 tablas en main<br/>catálogos de especialidades, alimentos y establecimientos")]
   API --> G["shared/reglas.json<br/>Nutrición, comidas y límites de los catálogos"]
   API --> O["Open-Meteo<br/>HTTPS; caché 30 min"]
   API --> NM["Nominatim (OpenStreetMap)<br/>Dirección a coordenadas de la ficha<br/>1 consulta/s; caché 24 h (D36)"]
@@ -29,4 +29,4 @@ flowchart TB
   SPA --> CP["GET y PUT /api/perfil/cuenta<br/>Solo cuenta autenticada"]
   CP --> CT["cuentaPerfil.service y validadores<br/>Identidad para cambiar correo<br/>Versión de sesión y transacción"]
   CT --> PR
-  CT --> DC[("datos_cuenta<br/>Contacto, enlaces y foto propia<br/>PR 59 en revisión")]
+  CT --> DC[("datos_cuenta<br/>Contacto, enlaces y foto propia<br/>Incorporada con el PR 59")]

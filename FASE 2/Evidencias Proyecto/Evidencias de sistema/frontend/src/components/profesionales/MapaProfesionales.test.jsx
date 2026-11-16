@@ -262,7 +262,8 @@ describe('Detalle bajo el mapa', () => {
       { id: 5, fecha: '2099-10-15', horaInicio: '09:00', horaFin: '10:00' }, { id: 6, fecha: '2099-10-16', horaInicio: '11:00', horaFin: '12:00' },
     ] } });
     const onCerrar = vi.fn();
-    detalle(fichaProfesional({ distanciaKm: 2.3 }), onCerrar);
+    // La presentación llega resumida desde la API (16-11-2026).
+    detalle(fichaProfesional({ distanciaKm: 2.3, presentacion: 'Atención nutricional para deportistas…' }), onCerrar);
     const seccion = within(screen.getByRole('region', { name: 'Ana Demo' }));
     expect(seccion.getByRole('heading', { name: 'Ana Demo' })).toBeInTheDocument();
     expect(seccion.getByText('Nutrición · Presencial y online')).toBeInTheDocument();
@@ -270,7 +271,7 @@ describe('Detalle bajo el mapa', () => {
     expect(seccion.getByText('2,3 km')).toBeInTheDocument();
     expect(seccion.getByText('Sin verificar')).toBeInTheDocument();
     expect(seccion.getByText(/Consulta Demo/).closest('span')).toHaveTextContent('Consulta Demo · Melipilla');
-    expect(seccion.getByText('Atención nutricional')).toBeInTheDocument();
+    expect(seccion.getByText('Atención nutricional para deportistas…')).toBeInTheDocument();
     expect(await seccion.findByText('Próxima hora: jueves 15 de octubre, 09:00 (2 horas disponibles)')).toBeInTheDocument();
     expect(seccion.getByRole('link', { name: 'Ver ficha y reservar' })).toHaveAttribute('href', '/profesionales/1');
     expect(seccion.getByRole('link', { name: /Cómo llegar/ })).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=-33.686%2C-71.215');

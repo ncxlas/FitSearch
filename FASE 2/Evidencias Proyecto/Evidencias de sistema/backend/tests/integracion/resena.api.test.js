@@ -31,8 +31,8 @@ describe('GET /api/profesionales/:id/resenas', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       resenas: [
-        { id: 5, autor: 'Ana P.', puntaje: 5, comentario: 'Excelente atención', fecha: fecha.toISOString(), propia: true, verificada: false },
-        { id: 6, autor: 'Luis', puntaje: 3, comentario: null, fecha: fecha.toISOString(), propia: false, verificada: false },
+        { id: 5, autor: 'Ana P.', fotoUrl: null, puntaje: 5, comentario: 'Excelente atención', fecha: fecha.toISOString(), propia: true, verificada: false },
+        { id: 6, autor: 'Luis', fotoUrl: null, puntaje: 3, comentario: null, fecha: fecha.toISOString(), propia: false, verificada: false },
       ],
       pagina: 2, total: 7, totalPaginas: 2,
     });

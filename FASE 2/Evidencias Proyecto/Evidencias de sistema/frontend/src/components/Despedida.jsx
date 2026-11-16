@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import iconoLogo from '../assets/logo-fitsearch-icono.png';
 import './Despedida.css';
@@ -7,7 +7,9 @@ import './Despedida.css';
 export default function Despedida({ nombre, texto, onCerrar }) {
   const dialogo = useRef(null);
   const principal = useRef(null);
-  useEffect(() => {
+  // Antes de pintar (revisión del PR 61, 16-11-2026): con useEffect el cuadro alcanzaba a verse un instante con el foco
+  // afuera y el fondo todavía activo, y con el equipo cargado las pruebas de la portada caían en ese instante.
+  useLayoutEffect(() => {
     // Mientras está abierta, el resto de la portada queda inerte: el lector de pantalla no lee lo de atrás. Al cerrarla,
     // el foco vuelve al contenido de la portada en vez de quedar en el body.
     const fondo = [...(dialogo.current?.parentElement?.children ?? [])]

@@ -3,6 +3,7 @@
 // pendiente, como no confirmada a tiempo. Las personas se muestran solo con su nombre, sin correo ni datos de salud.
 const modelo = require('../models/actividadProfesional.model');
 const ErrorHttp = require('../utils/ErrorHttp');
+const { fotoUrlDe } = require('../utils/fotos');
 const { fechaEnChile, horaEnChile, sumarDias, lunesDeLaSemana } = require('../utils/fechaChile');
 
 const ZONA = 'America/Santiago';
@@ -40,19 +41,20 @@ function agruparPorCliente(filas, ahora) {
   const clientes = new Map();
   for (const fila of filas) {
     const c = cita(fila, ahora);
-    if (!clientes.has(fila.usuario.id)) clientes.set(fila.usuario.id, { id: fila.usuario.id, nombre: fila.usuario.nombre, citas: [] });
+    if (!clientes.has(fila.usuario.id)) clientes.set(fila.usuario.id, { id: fila.usuario.id, nombre: fila.usuario.nombre, fotoUrl: fotoUrlDe(fila.usuario), citas: [] });
     clientes.get(fila.usuario.id).citas.push(c);
   }
   return [...clientes.values()];
 }
 
-function resumenCliente({ id, nombre, citas }) {
+function resumenCliente({ id, nombre, fotoUrl, citas }) {
   const activas = citas.filter((c) => c.estado !== 'cancelada');
   const proximas = activas.filter((c) => !c.pasada);
   const anteriores = activas.filter((c) => c.pasada);
   return {
     id,
     nombre,
+    fotoUrl,
     totalCitas: citas.length,
     estados: contarEstados(citas),
     // La próxima es la más cercana en el futuro; la última, la más reciente que ya ocurrió.

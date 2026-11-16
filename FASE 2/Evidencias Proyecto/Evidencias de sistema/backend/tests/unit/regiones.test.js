@@ -1,5 +1,7 @@
 // Regiones y comunas de Chile (14-11-2026): lista de shared/regiones.json y agrupación de las comunas guardadas.
-const { NOMBRES, comunasDeRegion, ubicarComuna, nombreOficial, agruparPorRegion, unirEspacios } = require('../../src/utils/regiones');
+const {
+  NOMBRES, comunasDeRegion, ubicarComuna, nombreOficial, agruparPorRegion, unirEspacios, nombreCompletoRegion, formasDeComuna, formasDeRegion, ubicarRegion,
+} = require('../../src/utils/regiones');
 
 test('la lista tiene las 16 regiones de norte a sur y sus 346 comunas', () => {
   expect(NOMBRES).toHaveLength(16);
@@ -43,4 +45,36 @@ test('une los espacios repetidos de una comuna para guardarla, buscarla y mostra
     regiones: [{ nombre: 'Valparaíso', comunas: ['San Antonio'] }],
     comunas: ['Ciudad Gótica', 'San Antonio'],
   });
+});
+
+// Listado de regiones y comunas entregado por el PO el 15-11-2026.
+test('usa los nombres del listado del PO y reconoce las formas anteriores de cuatro comunas', () => {
+  expect(comunasDeRegion('Valparaíso')).toContain('Llaillay');
+  expect(comunasDeRegion('Metropolitana')).toContain('Tiltil');
+  expect(comunasDeRegion("O'Higgins")).toContain('Marchihue');
+  expect(comunasDeRegion('Biobío')).toContain('San Pedro de la Paz');
+  expect(ubicarComuna('Llay-Llay')).toEqual({ region: 'Valparaíso', comuna: 'Llaillay' });
+  expect(ubicarComuna('til til')).toEqual({ region: 'Metropolitana', comuna: 'Tiltil' });
+  expect(nombreOficial('Marchigüe')).toBe('Marchihue');
+  expect(nombreOficial('san pedro de la paz')).toBe('San Pedro de la Paz');
+  // Al filtrar se buscan también las formas anteriores, por si una ficha quedó guardada así.
+  expect(formasDeComuna('Llaillay')).toEqual(['Llaillay', 'Llay-Llay']);
+  expect(formasDeComuna('Providencia')).toEqual(['Providencia']);
+  expect(formasDeComuna('Ciudad Gótica')).toEqual(['Ciudad Gótica']);
+  expect(formasDeRegion('Metropolitana')).toEqual([...comunasDeRegion('Metropolitana'), 'Til Til']);
+});
+
+test('reconoce una región por su nombre corto o completo, como la escribe el mapa', () => {
+  expect(ubicarRegion('Región de Valparaíso')).toBe('Valparaíso');
+  expect(ubicarRegion('region metropolitana de santiago')).toBe('Metropolitana');
+  expect(ubicarRegion('Biobío')).toBe('Biobío');
+  expect(ubicarRegion('Provincia de Santiago')).toBeNull();
+  expect(ubicarRegion(undefined)).toBeNull();
+});
+
+test('entrega el nombre completo de cada región', () => {
+  expect(nombreCompletoRegion('Valparaíso')).toBe('Región de Valparaíso');
+  expect(nombreCompletoRegion('Metropolitana')).toBe('Región Metropolitana de Santiago');
+  expect(nombreCompletoRegion('Magallanes')).toBe('Región de Magallanes y de la Antártica Chilena');
+  expect(nombreCompletoRegion('Narnia')).toBeNull();
 });

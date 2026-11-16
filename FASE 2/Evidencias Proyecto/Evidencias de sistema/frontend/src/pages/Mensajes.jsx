@@ -8,8 +8,9 @@ import { diaCorto, diaLargo } from '../components/agenda/semana.js';
 import { coincidencias, extracto, partes, terminos } from '../components/mensajes/buscar.js';
 import { useSesion } from '../context/SesionContext.jsx';
 import { solicitar } from '../services/api.js';
-import { iniciales } from '../services/formato.js';
+
 import './Mensajes.css';
+import Avatar from '../components/Avatar.jsx';
 
 const { texto: limites, intervaloSegundos } = reglas.mensajesReserva;
 const ESTADO = { pendiente: 'Por confirmar', confirmada: 'Confirmada', cancelada: 'Cancelada' };
@@ -79,7 +80,7 @@ function Bandeja({ base, chats, activo, profesional, onElegir }) {
           <li key={c.id}>
             <Link to={`${base}/${c.id}`} onClick={onElegir} className={`conversacion${c.id === activo ? ' conversacion--activa' : ''}`}
               aria-current={c.id === activo ? 'page' : undefined}>
-              <span className="avatar conversacion__avatar" aria-hidden="true">{iniciales(c.con.nombre)}</span>
+              <Avatar className="avatar conversacion__avatar" nombre={c.con.nombre} fotoUrl={c.con.fotoUrl} />
               <span className="conversacion__texto">
                 <span className="conversacion__fila">
                   {/* Para el usuario, la especialidad del profesional va junto al nombre (pedido del PO del 11-11-2026).
@@ -339,7 +340,7 @@ function ChatAbierto({ base, datos, profesional, onEnviado, onEliminado }) {
     <>
       <header className="mensajes__cabecera">
         <Link to={base} className="boton-icono mensajes__volver" aria-label="Volver a los chats"><Icono nombre="flechaIzquierda" tamano={20} /></Link>
-        <span className="avatar mensajes__avatar" aria-hidden="true">{iniciales(con.nombre)}</span>
+        <Avatar className="avatar mensajes__avatar" nombre={con.nombre} fotoUrl={con.fotoUrl} />
         <div className="mensajes__quien">
           <h2>
             {con.profesionalId

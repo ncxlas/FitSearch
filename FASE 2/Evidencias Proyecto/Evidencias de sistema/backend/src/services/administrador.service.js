@@ -1,9 +1,13 @@
 const modelo = require('../models/administrador.model');
 const { documentosActuales, decidir } = require('../models/verificacion.model');
 const ErrorHttp = require('../utils/ErrorHttp');
+const { fotoUrlDe } = require('../utils/fotos');
 
 function usuario(fila) {
-  return { id: fila.id, nombre: fila.nombre, correo: fila.correo, activo: fila.activo, rol: fila.rol.nombre, fechaRegistro: fila.fechaRegistro.toISOString() };
+  return {
+    id: fila.id, nombre: fila.nombre, fotoUrl: fotoUrlDe(fila), correo: fila.correo, activo: fila.activo, rol: fila.rol.nombre,
+    fechaRegistro: fila.fechaRegistro.toISOString(),
+  };
 }
 const DIA_MS = 86400000;
 const ultimaSolicitud = (historial) => (Array.isArray(historial) ? historial : [])
@@ -23,7 +27,7 @@ function profesional(fila, ahora = new Date()) {
       calificacion: fila.calificacion && { promedio: Math.round(fila.calificacion.promedio * 10) / 10, total: fila.calificacion.total },
       reservas: fila.reservas,
     }),
-    id: fila.id, nombre: fila.usuario.nombre, correo: fila.usuario.correo,
+    id: fila.id, nombre: fila.usuario.nombre, fotoUrl: fotoUrlDe(fila.usuario), correo: fila.usuario.correo,
     especialidad: fila.especialidad, descripcion: fila.descripcion, comuna: fila.comuna,
     modalidad: fila.modalidad, verificado: fila.verificado,
     estado: fila.estadoVerificacion || (fila.verificado ? 'verificado' : 'sin_solicitud'), activo: fila.usuario.activo,

@@ -33,7 +33,7 @@ test('con ubicación calcula la distancia en MySQL, filtra por comuna y radio y 
   const { sql, values } = consulta(prisma.$queryRaw.mock.calls[0]);
   expect(sql).toMatch(/ST_Distance_Sphere\(POINT\(e\.ubicacion_lng, e\.ubicacion_lat\), POINT\(\?, \?\)\) \/ 1000 AS distanciaKm/);
   // La comuna guardada se compara con sus espacios unidos (15-11-2026).
-  expect(sql).toMatch(/AND TRIM\(REGEXP_REPLACE\(e\.comuna, '\[\[:space:\]\]\+', ' '\)\) = \? AND ST_Distance_Sphere\(.*\) \/ 1000 <= \?/);
+  expect(sql).toMatch(/AND TRIM\(REGEXP_REPLACE\(e\.comuna, '\[\[:space:\]\]\+', ' '\)\) IN \(\?\) AND ST_Distance_Sphere\(.*\) \/ 1000 <= \?/);
   expect(sql).toMatch(/ORDER BY distanciaKm ASC, e\.id ASC/);
   expect(values).toEqual([-70.6, -33.45, 'centro_salud', 'Ñuñoa', -70.6, -33.45, 5, 12, 0]);
 });
@@ -42,7 +42,8 @@ test('con solo la región filtra por cualquiera de sus comunas, comparando la co
   await modelo.listar({ categoria: 'gimnasio', region: 'Valparaíso', pagina: 1, limite: 12 });
   const { sql, values } = consulta(prisma.$queryRaw.mock.calls[0]);
   expect(sql).toMatch(/AND TRIM\(REGEXP_REPLACE\(e\.comuna, '\[\[:space:\]\]\+', ' '\)\) IN \(\?(, ?\?)+\)/);
-  expect(values).toEqual(['gimnasio', ...comunasDeRegion('Valparaíso'), 12, 0]);
+  // Al final, la forma anterior de Llaillay («Llay-Llay»), por si una ficha quedó guardada así (15-11-2026).
+  expect(values).toEqual(['gimnasio', ...comunasDeRegion('Valparaíso'), 'Llay-Llay', 12, 0]);
 });
 
 test('la ficha solo existe si el establecimiento está activo y trae a sus profesionales visibles', async () => {
@@ -50,8 +51,8 @@ test('la ficha solo existe si el establecimiento está activo y trae a sus profe
   const [{ where, select }] = prisma.establecimiento.findFirst.mock.calls[0];
   expect(where).toEqual({ id: 3, activo: true });
   expect(select.profesionales.where).toEqual({ usuario: { activo: true, rol: { nombre: 'profesional' } } });
-  // Nunca el correo ni otros datos de la cuenta: solo el nombre.
-  expect(select.profesionales.select.usuario).toEqual({ select: { nombre: true } });
+  // Nunca el correo ni otros datos de la cuenta: solo el nombre y la foto (15-11-2026), con su id para armar la dirección.
+  expect(select.profesionales.select.usuario).toEqual({ select: { id: true, nombre: true, datosCuenta: { select: { foto: true } } } });
 });
 
 test('las comunas del filtro son las de establecimientos activos de la categoría, sin repetir', async () => {

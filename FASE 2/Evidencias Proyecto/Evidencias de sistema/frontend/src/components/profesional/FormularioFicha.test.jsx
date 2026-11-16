@@ -1,6 +1,6 @@
 // Ubicación de atención de la ficha (SC-28): el profesional escribe su comuna y su dirección, la API las ubica y el
 // mapa muestra el lugar; si no quedó exacto, mueve el marcador. Ya no hay campos de latitud ni longitud.
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { cargarMapLibre } from '../../services/mapas.js';
@@ -41,20 +41,31 @@ function simularMapLibre({ falla = false } = {}) {
   return registro;
 }
 
-// Servidor simulado: el catálogo de especialidades (FS-HU-30), la búsqueda de la ubicación (configurable) y el guardado
-// de la ficha.
-function simularServidor({ ubicar = () => respuestaJson(200, PROVIDENCIA), alGuardar } = {}) {
+// Dirección del punto donde quedó el marcador (15-11-2026), como la entrega la API.
+const PUNTO = {
+  comuna: 'Providencia', region: 'Metropolitana', regionCompleta: 'Región Metropolitana de Santiago',
+  direccion: 'Avenida Providencia 1300', precision: 'exacta',
+};
+
+// Servidor simulado: el catálogo de especialidades (FS-HU-30), la búsqueda de la ubicación (configurable), la dirección
+// de un punto del mapa (configurable) y el guardado de la ficha.
+function simularServidor({ ubicar = () => respuestaJson(200, PROVIDENCIA), punto = () => respuestaJson(200, PUNTO), alGuardar } = {}) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation((url, opciones = {}) => {
     const direccion = new URL(url, 'http://localhost');
     if (direccion.pathname === '/api/especialidades') return respuestaJson(200, { especialidades: ESPECIALIDADES_DE_PRUEBA });
     if (direccion.pathname === '/api/profesionales/mi-ficha/ubicacion') return ubicar(Object.fromEntries(direccion.searchParams));
+    if (direccion.pathname === '/api/profesionales/mi-ficha/ubicacion/punto') return punto(Object.fromEntries(direccion.searchParams));
     if (direccion.pathname === '/api/profesionales/mi-ficha' && opciones.method === 'PUT') {
       return alGuardar ? alGuardar() : respuestaJson(200, { ficha: { id: 3, ...JSON.parse(opciones.body) } });
     }
     return respuestaJson(404, { error: 'Recurso no encontrado' });
   });
 }
-const busquedas = (fetch) => fetch.mock.calls.filter(([url]) => url.startsWith('/api/profesionales/mi-ficha/ubicacion'));
+// Búsquedas de la dirección escrita (no las de un punto del mapa).
+const busquedas = (fetch) => fetch.mock.calls.filter(([url]) => new URL(url, 'http://localhost').pathname === '/api/profesionales/mi-ficha/ubicacion');
+const puntos = (fetch) => fetch.mock.calls.filter(([url]) => url.startsWith('/api/profesionales/mi-ficha/ubicacion/punto'));
+// La dirección del marcador se busca tras una pausa de 600 ms (ESPERA_PUNTO_MS).
+const ESPERA = { timeout: 3000 };
 // Consultas enviadas a la búsqueda de la ubicación, en orden. Al salir del campo Comuna ya se busca la comuna (el mapa
 // aparece antes de escribir la dirección) y al salir de Dirección se busca la dirección.
 const consultas = (fetch) => busquedas(fetch).map(([url]) => new URL(url, 'http://localhost').searchParams.toString());
@@ -63,17 +74,17 @@ const CON_DIRECCION = 'comuna=Providencia&direccion=Av.+Providencia+1234%2C+ofic
 const cuerpoPut = (fetch) => JSON.parse(fetch.mock.calls.find(([, o = {}]) => o.method === 'PUT')[1].body);
 const huboPut = (fetch) => fetch.mock.calls.some(([, o = {}]) => o.method === 'PUT');
 
+// Desde el 16-11-2026 este formulario es solo el lugar de atención: la especialidad se elige en «Información personal»
+// y llega aquí (la primera vez, la elegida; después, la guardada en la ficha).
 async function completar({ modalidad = 'presencial', comuna = 'Providencia', direccion = 'Av. Providencia 1234, oficina 501' } = {}) {
-  // El catálogo de especialidades llega de la API (FS-HU-30).
-  await screen.findByRole('option', { name: 'Nutrición' });
-  await userEvent.selectOptions(screen.getByLabelText('Especialidad (obligatorio)'), 'Nutrición');
   await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), modalidad);
   await userEvent.type(screen.getByLabelText('Comuna (obligatorio)'), comuna);
   if (direccion) await userEvent.type(screen.getByLabelText(/^Dirección de atención/), direccion);
 }
 const salirDelCampo = () => userEvent.click(screen.getByText('Ubicación de atención'));
-const guardar = () => userEvent.click(screen.getByRole('button', { name: /Guardar perfil/ }));
-const formulario = (props = {}) => render(<FormularioFicha ficha={null} onGuardado={vi.fn()} {...props} />);
+const guardar = () => userEvent.click(screen.getByRole('button', { name: /Guardar (perfil|cambios)/ }));
+const formulario = (props = {}) => render(<FormularioFicha ficha={null} especialidad="Nutrición" onGuardado={vi.fn()} {...props} />);
+const cambiarModalidad = (valor) => userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), valor);
 
 beforeEach(() => cargarMapLibre.mockReset());
 
@@ -143,8 +154,6 @@ describe('Nueva ficha', () => {
     simularMapLibre();
     const fetch = simularServidor({ ubicar: () => respuestaJson(200, { lat: -33.58, lng: -71.61, precision: 'comuna', encontrada: 'San Antonio' }) });
     formulario();
-    await screen.findByRole('option', { name: 'Nutrición' });
-    await userEvent.selectOptions(screen.getByLabelText('Especialidad (obligatorio)'), 'Nutrición');
     await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), 'online');
     expect(screen.getByRole('region', { name: 'Atención online' })).toBeInTheDocument();
     expect(screen.queryByLabelText('Comuna (obligatorio)')).not.toBeInTheDocument();
@@ -190,9 +199,9 @@ describe('Nueva ficha', () => {
 });
 
 describe('Ajustar el marcador', () => {
-  async function conMapa() {
+  async function conMapa(opcionesServidor) {
     const registro = simularMapLibre();
-    const fetch = simularServidor();
+    const fetch = simularServidor(opcionesServidor);
     formulario();
     await completar();
     await salirDelCampo();
@@ -200,18 +209,140 @@ describe('Ajustar el marcador', () => {
     return { registro, fetch, marcador: registro.marcadores[0], mapa: registro.mapas[0] };
   }
 
-  test('arrastrarlo guarda ese punto (con 7 decimales) sin volver a buscar ni mover el mapa', async () => {
+  // Desde el 15-11-2026, mover el marcador también actualiza la comuna y la dirección con las de ese punto.
+  test('arrastrarlo actualiza la comuna y la dirección, y guarda ese punto (con 7 decimales) sin volver a buscar ni mover el mapa', async () => {
     const { registro, fetch, marcador } = await conMapa();
     registro.easeTo.mockClear();
 
     marcador.arrastrar(-70.621512345678, -33.429334567891);
-    expect(await screen.findByText('Ajustaste el marcador: guardaremos ese punto como tu lugar de atención.')).toBeInTheDocument();
+    expect(await screen.findByText(
+      'Actualizamos tu comuna y tu dirección según el marcador: Avenida Providencia 1300, Providencia. Si atiendes en una oficina o departamento, agrégalo a la dirección.',
+      {}, ESPERA,
+    )).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Dirección de atención/)).toHaveValue('Avenida Providencia 1300');
+    expect(screen.getByLabelText('Comuna (obligatorio)')).toHaveValue('Providencia');
+    expect(screen.getByText('Región Metropolitana de Santiago')).toBeInTheDocument();
+    expect(Object.fromEntries(new URL(puntos(fetch)[0][0], 'http://localhost').searchParams))
+      .toEqual({ lat: '-33.4293346', lng: '-70.6215123' });
     expect(registro.easeTo).not.toHaveBeenCalled();
     await guardar();
 
     await waitFor(() => expect(huboPut(fetch)).toBe(true));
-    expect(cuerpoPut(fetch)).toMatchObject({ ubicacionLat: -33.4293346, ubicacionLng: -70.6215123 });
+    expect(cuerpoPut(fetch)).toMatchObject({
+      comuna: 'Providencia', direccion: 'Avenida Providencia 1300', ubicacionLat: -33.4293346, ubicacionLng: -70.6215123,
+    });
     expect(consultas(fetch)).toEqual([COMUNA, CON_DIRECCION]);
+  });
+
+  test('en otra comuna cambia la comuna y la región; si guarda antes de que llegue la dirección, la espera', async () => {
+    const SAN_ANTONIO = { comuna: 'San Antonio', region: 'Valparaíso', regionCompleta: 'Región de Valparaíso', direccion: 'Avenida Barros Luco', precision: 'calle' };
+    const { fetch, marcador } = await conMapa({ punto: () => respuestaJson(200, SAN_ANTONIO) });
+
+    marcador.arrastrar(-71.6136, -33.5933);
+    await guardar();
+
+    await waitFor(() => expect(huboPut(fetch)).toBe(true), ESPERA);
+    expect(cuerpoPut(fetch)).toMatchObject({ comuna: 'San Antonio', direccion: 'Avenida Barros Luco', ubicacionLat: -33.5933 });
+    expect(screen.getByText('Región de Valparaíso')).toBeInTheDocument();
+  });
+
+  test('con varias flechas seguidas busca la dirección una sola vez, y si la API falla lo dice', async () => {
+    const { fetch, marcador } = await conMapa({
+      punto: () => respuestaJson(404, { error: 'No encontramos una comuna de Chile en ese punto. Mueve el marcador hasta tu lugar de atención.' }),
+    });
+    const boton = screen.getByRole('button', { name: /Tu lugar de atención/ });
+    fireEvent.keyDown(boton, { key: 'ArrowLeft' });
+    fireEvent.keyDown(boton, { key: 'ArrowLeft' });
+    fireEvent.keyDown(boton, { key: 'ArrowLeft' });
+    expect(await screen.findByText(/No encontramos una comuna de Chile en ese punto/, {}, ESPERA)).toBeInTheDocument();
+    expect(puntos(fetch)).toHaveLength(1);
+    expect(marcador.getLngLat().lng).toBeCloseTo(-70.6214027, 7);
+    expect(screen.getByLabelText('Comuna (obligatorio)')).toHaveValue('Providencia');
+  });
+
+  // Revisión del PR 61: no se guardan las coordenadas nuevas con la dirección anterior sin que el profesional la revise.
+  const AVISO_GUARDAR = 'Antes de guardar, corrige tu dirección o confirma que corresponde al marcador.';
+  const SIN_CALLE = { comuna: 'San Antonio', region: 'Valparaíso', regionCompleta: 'Región de Valparaíso', direccion: null, precision: 'comuna' };
+
+  test('si falla la búsqueda de la dirección del punto, no guarda hasta buscar de nuevo o confirmar la dirección', async () => {
+    const { fetch, marcador } = await conMapa({
+      punto: () => respuestaJson(503, { error: 'No pudimos buscar la dirección de ese punto en este momento. Intenta de nuevo en unos segundos.' }),
+    });
+    marcador.arrastrar(-71.6136, -33.5933);
+    expect(await screen.findByText(/^No pudimos buscar la dirección de ese punto/, {}, ESPERA)).toBeInTheDocument();
+    await guardar();
+
+    expect(await screen.findByText(AVISO_GUARDAR)).toBeInTheDocument();
+    expect(huboPut(fetch)).toBe(false);
+    expect(screen.getByRole('button', { name: /Guardar perfil/ })).toBeEnabled();
+    expect(consultas(fetch)).toEqual([COMUNA, CON_DIRECCION]);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Buscar de nuevo' }));
+    await waitFor(() => expect(puntos(fetch)).toHaveLength(2), ESPERA);
+    expect(await screen.findByText(/^No pudimos buscar la dirección de ese punto/, {}, ESPERA)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar dirección' }));
+    expect(screen.getByText('Confirmaste tu dirección: guardaremos el marcador donde lo dejaste.')).toBeInTheDocument();
+    await guardar();
+    await waitFor(() => expect(huboPut(fetch)).toBe(true));
+    expect(cuerpoPut(fetch)).toMatchObject({
+      comuna: 'Providencia', direccion: 'Av. Providencia 1234, oficina 501', ubicacionLat: -33.5933, ubicacionLng: -71.6136,
+    });
+  });
+
+  test('si el punto no tiene calle, cambia la comuna pero no guarda la dirección anterior hasta corregirla', async () => {
+    const BARROS_LUCO = { lat: -33.5921, lng: -71.6122, precision: 'exacta', encontrada: 'Avenida Barros Luco 1500, San Antonio' };
+    const { fetch, marcador } = await conMapa({
+      punto: () => respuestaJson(200, SIN_CALLE),
+      ubicar: ({ comuna }) => respuestaJson(200, comuna === 'San Antonio' ? BARROS_LUCO : PROVIDENCIA),
+    });
+    marcador.arrastrar(-71.6136, -33.5933);
+    expect(await screen.findByText(
+      'Ajustaste el marcador en San Antonio, pero no encontramos una calle en ese punto: revisa tu dirección.', {}, ESPERA,
+    )).toBeInTheDocument();
+    expect(screen.getByLabelText('Comuna (obligatorio)')).toHaveValue('San Antonio');
+    expect(screen.getByLabelText(/^Dirección de atención/)).toHaveValue('Av. Providencia 1234, oficina 501');
+    await guardar();
+
+    expect(await screen.findByText(AVISO_GUARDAR)).toBeInTheDocument();
+    expect(huboPut(fetch)).toBe(false);
+
+    // Al corregir la dirección se busca de nuevo y se guarda el lugar encontrado para esa dirección.
+    const direccion = screen.getByLabelText(/^Dirección de atención/);
+    await userEvent.clear(direccion);
+    await userEvent.type(direccion, 'Barros Luco 1500');
+    expect(screen.queryByRole('button', { name: 'Confirmar dirección' })).not.toBeInTheDocument();
+    await guardar();
+    await waitFor(() => expect(huboPut(fetch)).toBe(true));
+    expect(cuerpoPut(fetch)).toMatchObject({
+      comuna: 'San Antonio', direccion: 'Barros Luco 1500', ubicacionLat: -33.5921, ubicacionLng: -71.6122,
+    });
+  });
+
+  test('si el punto no tiene calle y la dirección es correcta, la confirma y guarda el marcador', async () => {
+    const { fetch, marcador } = await conMapa({ punto: () => respuestaJson(200, { ...SIN_CALLE, comuna: 'Providencia', region: 'Metropolitana' }) });
+    marcador.arrastrar(-70.6215, -33.4294);
+    await screen.findByRole('button', { name: 'Confirmar dirección' }, ESPERA);
+    expect(screen.queryByRole('button', { name: 'Buscar de nuevo' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar dirección' }));
+    await guardar();
+    await waitFor(() => expect(huboPut(fetch)).toBe(true));
+    expect(cuerpoPut(fetch)).toMatchObject({
+      comuna: 'Providencia', direccion: 'Av. Providencia 1234, oficina 501', ubicacionLat: -33.4294, ubicacionLng: -70.6215,
+    });
+    expect(screen.queryByText(AVISO_GUARDAR)).not.toBeInTheDocument();
+  });
+
+  test('si escribe la dirección justo después de mover el marcador, gana lo escrito', async () => {
+    const { fetch, marcador } = await conMapa();
+    marcador.arrastrar(-70.7, -33.5);
+    const direccion = screen.getByLabelText(/^Dirección de atención/);
+    await userEvent.clear(direccion);
+    await userEvent.type(direccion, 'Los Leones 120');
+    await new Promise((listo) => { setTimeout(listo, 900); });
+    expect(direccion).toHaveValue('Los Leones 120');
+    expect(puntos(fetch)).toHaveLength(0);
   });
 
   test('un clic en el mapa lleva el marcador ahí; un clic sobre el marcador no lo mueve', async () => {
@@ -265,7 +396,7 @@ describe('Editar ficha', () => {
     await guardar();
 
     expect(await screen.findByText('No hay cambios pendientes.')).toHaveAttribute('role', 'status');
-    expect(screen.getByRole('button', { name: /Guardar perfil/ })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeEnabled();
     expect(huboPut(fetch)).toBe(false);
     expect(busquedas(fetch)).toHaveLength(0);
     expect(onGuardado).not.toHaveBeenCalled();
@@ -276,19 +407,19 @@ describe('Editar ficha', () => {
     const fetch = simularServidor();
     const onGuardado = vi.fn();
     formulario({ ficha: { ...MI_FICHA, direccion: 'Av. Italia 850' }, onGuardado });
-    await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), ' Atención personalizada.');
+    await cambiarModalidad('presencial');
     await guardar();
 
     await waitFor(() => expect(onGuardado).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole('button', { name: /Guardar perfil/ })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeEnabled();
     await guardar();
     expect(await screen.findByText('No hay cambios pendientes.')).toBeInTheDocument();
     expect(onGuardado).toHaveBeenCalledTimes(1);
-    await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), ' Nuevas sesiones.');
+    await cambiarModalidad('ambas');
     await guardar();
     await waitFor(() => expect(onGuardado).toHaveBeenCalledTimes(2));
     expect(fetch.mock.calls.filter(([, o = {}]) => o.method === 'PUT')).toHaveLength(2);
-    expect(screen.getByRole('button', { name: /Guardar perfil/ })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeEnabled();
   });
 
   test('muestra la ubicación guardada sin buscarla y, si no cambia la dirección, guarda las mismas coordenadas', async () => {
@@ -299,7 +430,7 @@ describe('Editar ficha', () => {
     expect(await screen.findByText(/^Esta es la ubicación guardada en tu ficha/)).toBeInTheDocument();
     await waitFor(() => expect(registro.marcadores).toHaveLength(1));
     expect(registro.marcadores[0].getLngLat()).toEqual({ lng: -70.6116, lat: -33.4263 });
-    await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), ' Atención personalizada.');
+    await cambiarModalidad('presencial');
     await guardar();
 
     await waitFor(() => expect(huboPut(fetch)).toBe(true));
@@ -329,21 +460,76 @@ describe('Editar ficha', () => {
     const registro = simularMapLibre();
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar mapa' }));
     await waitFor(() => expect(registro.marcadores).toHaveLength(1));
-    await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), ' Atención personalizada.');
+    await cambiarModalidad('presencial');
     await guardar();
     await waitFor(() => expect(huboPut(fetch)).toBe(true));
   });
 });
 
-// FS-HU-30: las especialidades vienen del catálogo que administra el administrador.
-test('ofrece la especialidad que ya tenía la ficha aunque el administrador la haya desactivado', async () => {
-  simularMapLibre();
-  simularServidor();
-  formulario({ ficha: { ...MI_FICHA, especialidad: 'Masoterapia' }, onCancelar: vi.fn() });
-  await screen.findByRole('option', { name: 'Nutrición' });
-  expect(screen.getByLabelText('Especialidad (obligatorio)')).toHaveValue('Masoterapia');
-  const opciones = within(screen.getByLabelText('Especialidad (obligatorio)')).getAllByRole('option');
-  expect(opciones.map((opcion) => opcion.textContent)).toEqual([
-    'Selecciona tu especialidad', 'Entrenamiento personal', 'Kinesiología', 'Medicina deportiva', 'Nutrición', 'Psicología deportiva', 'Masoterapia',
-  ]);
+// Pedido del PO del 16-11-2026: la especialidad se elige en «Información personal»; este formulario solo guarda el
+// lugar de atención y reenvía la especialidad y la descripción guardadas.
+describe('Solo el lugar de atención', () => {
+  const FICHA = { ...MI_FICHA, direccion: 'Av. Italia 850' };
+
+  test('no pide la especialidad ni la descripción', () => {
+    simularMapLibre();
+    simularServidor();
+    formulario({ ficha: FICHA, onCancelar: vi.fn() });
+    expect(screen.getByRole('form', { name: 'Lugar de atención' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Especialidad (obligatorio)')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Descripción sobre tu atención')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Modalidad de atención (obligatorio)')).toHaveValue('ambas');
+  });
+
+  test('sin ficha ni especialidad elegida no guarda y lleva a elegirla en «Información personal»', async () => {
+    simularMapLibre();
+    const fetch = simularServidor();
+    const onIrA = vi.fn();
+    formulario({ especialidad: '', onIrA });
+    expect(screen.getByText(/Primero elige tu especialidad/)).toBeInTheDocument();
+    await completar();
+    await guardar();
+    expect(await screen.findByText('Antes de guardar, elige tu especialidad en «Información personal».')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Ir a «Información personal»' }));
+    expect(onIrA).toHaveBeenCalledWith('informacion');
+    expect(huboPut(fetch)).toBe(false);
+  });
+
+  test('sin ficha, con la especialidad elegida, el último paso la muestra y permite cambiarla', async () => {
+    simularMapLibre();
+    simularServidor();
+    const onIrA = vi.fn();
+    formulario({ onIrA });
+    expect(screen.getByText(/Último paso/).closest('p')).toHaveTextContent('Especialidad: Nutrición');
+    await userEvent.click(screen.getByRole('button', { name: 'Cambiar' }));
+    expect(onIrA).toHaveBeenCalledWith('informacion');
+  });
+
+  test('con ficha, guardar reenvía la especialidad y la descripción guardadas', async () => {
+    simularMapLibre();
+    const fetch = simularServidor();
+    const onGuardado = vi.fn();
+    formulario({ ficha: FICHA, especialidad: 'Entrenamiento personal', onGuardado, onCancelar: vi.fn() });
+    expect(screen.queryByText(/Último paso/)).not.toBeInTheDocument();
+    await cambiarModalidad('online');
+    await guardar();
+
+    await waitFor(() => expect(onGuardado).toHaveBeenCalled());
+    expect(cuerpoPut(fetch)).toEqual({
+      especialidad: 'Entrenamiento personal', descripcion: 'Entrenamiento funcional y de fuerza.', comuna: null, direccion: null,
+      modalidad: 'online', ubicacionLat: null, ubicacionLng: null,
+    });
+  });
+
+  test('un error de la API en la especialidad ofrece ir a «Información personal»', async () => {
+    simularMapLibre();
+    simularServidor({ alGuardar: () => respuestaJson(400, { error: 'Revisa los datos ingresados', detalles: { especialidad: 'Selecciona tu especialidad' } }) });
+    const onIrA = vi.fn();
+    formulario({ ficha: FICHA, onIrA, onCancelar: vi.fn() });
+    await cambiarModalidad('online');
+    await guardar();
+    expect(await screen.findByText('Revisa los datos ingresados')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Ir a «Información personal»' }));
+    expect(onIrA).toHaveBeenCalledWith('informacion');
+  });
 });

@@ -28,6 +28,31 @@
 @media (hover: hover) and (pointer: fine) {
   .agenda__filtros .boton[aria-pressed='true']:hover { background: var(--color-primario-oscuro); }
 }
+/* Buscador y filtros por estado y fecha (15-11-2026). Los campos son de 1rem para que el iPhone no acerque la página. */
+.agenda__buscador {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.7rem 0.85rem;
+  align-items: end;
+  margin-top: 0.9rem;
+}
+.agenda__campo { display: grid; gap: 0.3rem; min-width: 0; }
+.agenda__campo > span { font-size: 0.82rem; font-weight: 600; color: var(--color-texto-secundario); }
+.agenda__campo .campo__control { width: 100%; min-height: 2.75rem; padding-block: 0.5rem; font-size: 1rem; }
+.agenda__campo--texto { grid-column: 1 / -1; }
+.agenda__conteo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.88rem;
+  color: var(--color-texto-secundario);
+}
+@media (min-width: 48rem) {
+  .agenda__campo--texto { grid-column: span 2; }
+}
 .agenda__cabecera h2 {
   display: flex;
   align-items: center;
@@ -149,11 +174,23 @@
   border-radius: 99px;
   background: #e9f4fb;
   font-size: 0.85rem;
-  text-transform: capitalize;
+}
+/* Mismos colores que la agenda del profesional (15-11-2026). */
+.agenda__estado--pendiente {
+  background: #fff4ea;
+  color: #833705;
 }
 .agenda__estado--confirmada {
   background: #def5ec;
   color: #076342;
+}
+.agenda__estado--realizada {
+  background: #2d7a55;
+  color: #fff;
+}
+.agenda__estado--noRealizada {
+  background: #fdecec;
+  color: #8f2424;
 }
 .agenda__estado--cancelada {
   background: #fce5e5;

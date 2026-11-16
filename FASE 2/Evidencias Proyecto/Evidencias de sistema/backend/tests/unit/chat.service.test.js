@@ -26,9 +26,22 @@ test('un solo chat por pareja: el historial reúne los mensajes y los avisos de 
   modelo.reservasDePareja.mockResolvedValue([reserva(40, 'cancelada', '2026-10-20T12:00:00Z'), reserva(42, 'pendiente', '2026-10-30T12:00:00Z')]);
   const r = await servicio.abrir(profesional, 3);
   expect(modelo.marcarLeidos).toHaveBeenCalledWith(3, 30);
-  expect(r.chat.con).toEqual({ nombre: 'Ana Pérez', detalle: 'Cliente', clienteId: 7 });
+  expect(r.chat.con).toEqual({ nombre: 'Ana Pérez', fotoUrl: null, detalle: 'Cliente', clienteId: 7 });
   expect(r.chat.reservas.map((x) => [x.id, x.estado])).toEqual([[40, 'cancelada'], [42, 'pendiente']]);
   expect(r.mensajes.map((m) => [m.texto, m.propio])).toEqual([['Hola', false], ['Hola Ana', true]]);
+});
+
+// Fotos de perfil en Mensajes (15-11-2026): cada lado ve la foto del otro, como una dirección corta.
+test('cada participante ve la foto de perfil del otro', async () => {
+  const FOTO = 'data:image/jpeg;base64,Rk9UTw==';
+  modelo.buscar.mockResolvedValue(chat({
+    usuario: { id: 7, nombre: 'Ana Pérez', datosCuenta: { foto: FOTO } },
+    profesional: { id: 4, usuarioId: 30, especialidad: 'Nutrición', usuario: { id: 30, nombre: 'Camila Rojas', datosCuenta: null } },
+  }));
+  modelo.mensajes.mockResolvedValue([]);
+  modelo.reservasDePareja.mockResolvedValue([]);
+  expect((await servicio.abrir(profesional, 3)).chat.con.fotoUrl).toMatch(/^\/api\/fotos\/7\/[0-9a-f]{16}$/);
+  expect((await servicio.abrir(usuario, 3)).chat.con.fotoUrl).toBeNull();
 });
 
 test('la reserva cancelada no cierra el chat: se puede seguir escribiendo', async () => {

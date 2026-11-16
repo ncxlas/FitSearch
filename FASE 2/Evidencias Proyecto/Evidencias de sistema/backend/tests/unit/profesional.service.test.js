@@ -1,6 +1,6 @@
 // Formato del directorio y de las reseñas (FS-HU-22, FS-HU-24), sin base de datos.
 const { escaparLike } = jest.requireActual('../../src/models/profesional.model');
-const { formatearFicha, nombrePublico, resumirResenas } = require('../../src/services/profesional.service');
+const { formatearFicha, nombrePublico, resumir, resumirResenas } = require('../../src/services/profesional.service');
 
 test('el nombre público del autor es el nombre y la inicial del apellido', () => {
   expect(nombrePublico('Rodrigo Cárcamo Rojas')).toBe('Rodrigo C.');
@@ -22,7 +22,7 @@ test('la ficha convierte los tipos de MySQL y redondea la distancia', () => {
     distanciaKm: 12.349, esFavorito: 0n,
   });
   expect(ficha).toEqual({
-    id: 2, nombre: 'Diego Demo', especialidad: 'Kinesiología', descripcion: null, comuna: null, direccion: null, modalidad: 'ambas', verificado: true,
+    id: 2, nombre: 'Diego Demo', fotoUrl: null, especialidad: 'Kinesiología', comuna: null, direccion: null, modalidad: 'ambas', verificado: true,
     ubicacionLat: -33.689, ubicacionLng: -71.213, establecimiento: null, calificacion: { promedio: 3.7, total: 3 }, distanciaKm: 12.3, esFavorito: false,
     aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null,
   });
@@ -44,4 +44,15 @@ test('la ficha muestra la experiencia (FS-HU-29) y acepta el JSON como texto o y
 test('la búsqueda por texto escapa los comodines de LIKE', () => {
   expect(escaparLike('50% de_descuento\\')).toBe('50\\% de\\_descuento\\\\');
   expect(escaparLike('nutrición')).toBe('nutrición');
+});
+
+// Presentación resumida para el buscador y el mapa (16-11-2026).
+test('resume la presentación en una palabra completa, sin espacios de más y con «…»', () => {
+  expect(resumir(null)).toBeNull();
+  expect(resumir('   ')).toBeNull();
+  expect(resumir('  Soy   Ana.  ')).toBe('Soy Ana.');
+  expect(resumir('uno dos tres cuatro', 12)).toBe('uno dos tres…');
+  expect(resumir('Atiendo en Ñuñoa, Providencia y alrededores', 30)).toBe('Atiendo en Ñuñoa, Providencia…');
+  // Una palabra muy larga se corta igual, sin pasar del largo.
+  expect(resumir('a'.repeat(50), 20)).toBe(`${'a'.repeat(20)}…`);
 });

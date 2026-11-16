@@ -2,6 +2,7 @@
 // Solo se leen las reservas y reseñas del propio profesional; nunca la información de salud de las personas.
 const prisma = require('./prisma');
 const ErrorHttp = require('../utils/ErrorHttp');
+const { CON_FOTO } = require('../utils/fotos');
 
 async function fichaDe(usuarioId) {
   const ficha = await prisma.profesional.findUnique({ where: { usuarioId }, select: { id: true } });
@@ -15,7 +16,8 @@ function reservas(profesionalId, usuarioId) {
     where: { disponibilidad: { profesionalId }, ...(usuarioId && { usuarioId }) },
     select: {
       id: true, estado: true, mensaje: true, fechaCreacion: true,
-      usuario: { select: { id: true, nombre: true } },
+      // Con la foto de cada cliente (15-11-2026).
+      usuario: { select: { id: true, nombre: true, ...CON_FOTO } },
       disponibilidad: { select: { fecha: true, horaInicio: true, horaFin: true } },
     },
     orderBy: [{ disponibilidad: { fecha: 'desc' } }, { disponibilidad: { horaInicio: 'desc' } }, { id: 'desc' }],

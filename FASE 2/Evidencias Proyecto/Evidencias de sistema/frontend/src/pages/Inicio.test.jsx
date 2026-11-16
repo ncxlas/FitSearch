@@ -205,6 +205,21 @@ describe('Inicio con datos', () => {
     expect(await screen.findByText('No pudimos guardar tu favorito')).toBeInTheDocument();
     expect(boton).toHaveAttribute('aria-pressed', 'false');
   });
+
+  test('el saludo va dentro del banner de la foto, con el nombre en mayúscula inicial y sin el titular anterior', () => {
+    sessionStorage.setItem('fitsearch_sesion', JSON.stringify({ ...SESION, usuario: { ...SESION.usuario, nombre: 'nicolas silva' } }));
+    simular();
+    renderizarApp('/inicio');
+
+    const titulo = screen.getByRole('heading', { level: 1, name: 'Hola, Nicolas. ¿Cómo quieres cuidarte hoy?' });
+    const banner = titulo.closest('section');
+    expect(banner).toHaveClass('inicio__hero');
+    expect(banner).toHaveAccessibleName('Hola, Nicolas. ¿Cómo quieres cuidarte hoy?');
+    expect(within(banner).getByText('Encuentra profesionales de la salud y el deporte, y da el siguiente paso hacia tu bienestar.')).toBeInTheDocument();
+    expect(within(banner).getByRole('search')).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.queryByText(/Tu próximo paso/)).not.toBeInTheDocument();
+  });
 });
 
 describe('Inicio sin datos', () => {

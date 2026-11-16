@@ -22,6 +22,11 @@ import Carrusel from '../components/Carrusel.jsx';
 import './Inicio.css';
 import './InicioRedisenado.css';
 
+// El nombre se muestra con mayúscula inicial aunque la cuenta se haya registrado en minúsculas («nicolas» → «Nicolas»).
+const nombreVisible = (nombre) => {
+  const primero = primerNombre(nombre);
+  return primero.charAt(0).toLocaleUpperCase('es-CL') + primero.slice(1);
+};
 const OBJETIVOS = Object.fromEntries(reglas.perfil.objetivoPrincipal.map(({ valor, etiqueta }) => [valor, etiqueta]));
 const Proximamente = () => <span className="etiqueta-proximamente">Próximamente</span>;
 
@@ -134,7 +139,6 @@ export default function Inicio() {
 
   return (
     <div className="inicio" ref={animaciones}>
-      <div data-revelar className="inicio__saludo"><h1><span className="inicio__saludo-nombre">Hola, {primerNombre(sesion.usuario.nombre)}.</span> <span>¿Cómo quieres cuidarte hoy?</span></h1><p>Encuentra profesionales de la salud y el deporte, y da el siguiente paso hacia tu bienestar.</p></div>
       {pendientes > 0 && (
         <div className="inicio__aviso">
           <Icono nombre="info" tamano={20} />
@@ -146,8 +150,12 @@ export default function Inicio() {
       <section className="inicio__hero" aria-labelledby="titulo-inicio">
         <img data-paralaje className="inicio__foto" src={fotoInicio} alt="" width={1280} height={853} fetchPriority="high" />
         <div data-revelar className="inicio__hero-texto">
-          <h2 id="titulo-inicio">Tu próximo paso<br /><span>empieza aquí.</span></h2>
-          <p>Conecta con profesionales y encuentra el apoyo que necesitas para una vida más saludable.</p>
+          {/* El saludo va dentro del banner (16-11-2026): antes era un bloque aparte sobre la foto y competía con su titular. */}
+          <h1 id="titulo-inicio">
+            <span className="inicio__hero-saludo">Hola, {nombreVisible(sesion.usuario.nombre)}.</span>{' '}
+            <span className="inicio__hero-pregunta">¿Cómo quieres <span>cuidarte hoy?</span></span>
+          </h1>
+          <p>Encuentra profesionales de la salud y el deporte, y da el siguiente paso hacia tu bienestar.</p>
           <BuscadorGeneral />
         </div>
       </section>

@@ -1,6 +1,7 @@
 const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
-const { comunasDeRegion } = require('../utils/regiones');
+const { formasDeComuna, formasDeRegion } = require('../utils/regiones');
+const { CON_FOTO } = require('../utils/fotos');
 
 // Directorio de centros de salud y gimnasios (FS-HU-25). Solo muestra establecimientos activos de una categoría, tal
 // como los registró el administrador (FS-HU-30). Igual que el buscador de profesionales, usa SQL parametrizado para
@@ -29,8 +30,8 @@ function construirConsulta({ categoria, comuna, region, ubicacion, distanciaKm }
   const condiciones = [Prisma.sql`e.activo = true`, Prisma.sql`e.categoria = ${categoria}`];
   // Con una comuna basta; con solo la región, cualquiera de sus comunas (14-11-2026). Se compara con los espacios
   // unidos para que también aparezca una comuna guardada antes como «San  Antonio» (15-11-2026).
-  if (comuna) condiciones.push(Prisma.sql`${COMUNA} = ${comuna}`);
-  else if (region) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(comunasDeRegion(region))})`);
+  if (comuna) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(formasDeComuna(comuna))})`);
+  else if (region) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(formasDeRegion(region))})`);
   if (ubicacion && distanciaKm) condiciones.push(Prisma.sql`${distancia} <= ${distanciaKm}`);
   return { desde: Prisma.sql`FROM establecimientos e WHERE ${Prisma.join(condiciones, ' AND ')}`, distancia };
 }
@@ -59,7 +60,8 @@ function buscarPorId(id) {
       id: true, nombre: true, categoria: true, comuna: true, direccion: true, instagram: true, ubicacionLat: true, ubicacionLng: true,
       profesionales: {
         where: DONDE_PROFESIONAL_VISIBLE,
-        select: { id: true, especialidad: true, modalidad: true, verificado: true, usuario: { select: { nombre: true } } },
+        // Con la foto de cada profesional (15-11-2026).
+        select: { id: true, especialidad: true, modalidad: true, verificado: true, usuario: { select: { id: true, nombre: true, ...CON_FOTO } } },
         orderBy: [{ verificado: 'desc' }, { id: 'asc' }],
       },
     },

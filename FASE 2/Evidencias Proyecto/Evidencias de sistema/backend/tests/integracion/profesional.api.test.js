@@ -13,20 +13,22 @@ const consulta = (ruta, token = firmar()) => request(app).get(ruta).set('Authori
 // Fila tal como la entrega MySQL: conteos BigInt, promedios y coordenadas como texto decimal y booleanos 0/1.
 // Incluye datos privados para comprobar que nunca llegan a la respuesta.
 const fila = {
-  id: 1, usuarioId: 10, nombre: 'Ana Demo', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla',
+  id: 1, usuarioId: 10, nombre: 'Ana Demo', especialidad: 'Nutrición', comuna: 'Melipilla',
   direccion: 'Av. Demo 123', modalidad: 'presencial', verificado: 0, ubicacionLat: '-33.6860000', ubicacionLng: '-71.2150000',
   establecimientoNombre: 'Consulta Demo', establecimientoDireccion: 'Melipilla', promedio: '4.5000', totalResenas: 2n,
   distanciaKm: null, esFavorito: 1n, correo: 'privado@example.test', passwordHash: 'privado',
 };
 const fichaEsperada = {
-  id: 1, nombre: 'Ana Demo', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla', direccion: 'Av. Demo 123',
+  // Sin foto de perfil (la fila no trae fotoClave): fotoUrl en null (15-11-2026).
+  id: 1, nombre: 'Ana Demo', fotoUrl: null, especialidad: 'Nutrición', comuna: 'Melipilla', direccion: 'Av. Demo 123',
   modalidad: 'presencial', verificado: false, ubicacionLat: -33.686, ubicacionLng: -71.215, establecimiento: { nombre: 'Consulta Demo', direccion: 'Melipilla' },
   calificacion: { promedio: 4.5, total: 2 }, distanciaKm: null, esFavorito: true,
   // Experiencia (FS-HU-29) y precio referencial, vacíos si el profesional no los completó (09-11-2026).
   aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null,
 };
-// En el buscador cada tarjeta trae además su próxima hora libre y hasta tres horas para elegir.
-const tarjetaEsperada = { ...fichaEsperada, proximaHora: null, proximasHoras: [] };
+// En el buscador cada tarjeta trae además su presentación resumida (16-11-2026), su próxima hora libre y hasta tres
+// horas para elegir.
+const tarjetaEsperada = { ...fichaEsperada, presentacion: null, proximaHora: null, proximasHoras: [] };
 const filtrosPorDefecto = {
   usuarioId: 1, q: '', especialidad: '', comuna: '', region: '', modalidad: '', calificacionMin: null, ubicacion: null,
   distanciaKm: null, orden: 'nombre', pagina: 1, limite: 12,
@@ -48,6 +50,17 @@ describe('GET /api/profesionales', () => {
     expect(res.body).toEqual({ profesionales: [tarjetaEsperada], pagina: 1, total: 1, totalPaginas: 1, hayMas: false });
     expect(JSON.stringify(res.body)).not.toMatch(/privado|usuarioId/);
     expect(modelo.listar).toHaveBeenCalledWith(filtrosPorDefecto);
+  });
+
+  // Pedido del PO del 16-11-2026: en el buscador la presentación va resumida; completa, solo en la ficha.
+  test('la tarjeta trae la presentación resumida, cortada en una palabra completa', async () => {
+    const presentacion = 'Soy Ana, nutricionista deportiva hace 8 años. Me dedico a acompañar a corredores y personas que empiezan a entrenar. Me encanta el trail running y cocinar recetas simples.';
+    modelo.listar.mockResolvedValue({ filas: [{ ...fila, presentacion }], total: 1 });
+    const { body } = await consulta('/api/profesionales');
+    const resumen = body.profesionales[0].presentacion;
+    expect(resumen).toBe('Soy Ana, nutricionista deportiva hace 8 años. Me dedico a acompañar a corredores y personas que empiezan a entrenar. Me encanta el trail running y cocinar…');
+    expect(resumen.length).toBeLessThanOrEqual(161);
+    expect(body.profesionales[0]).not.toHaveProperty('descripcion');
   });
 
   test('FS-HU-22: combina texto, especialidad, comuna, modalidad, calificación y orden, retirando espacios', async () => {
@@ -161,12 +174,22 @@ describe('GET /api/profesionales/:id (ficha)', () => {
     const res = await consulta('/api/profesionales/1');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
-      profesional: fichaEsperada,
+      // Sin presentación escrita; la región sale de la comuna (15-11-2026).
+      profesional: { ...fichaEsperada, presentacion: null, region: 'Región Metropolitana de Santiago' },
       resumenResenas: { promedio: 4.5, total: 2, distribucion: { 5: 1, 4: 1, 3: 0, 2: 0, 1: 0 } },
       miResena: null,
       puedeResenar: true,
     });
     expect(modelo.buscarPorId).toHaveBeenCalledWith(1, 1);
+  });
+
+  // Pedido del PO del 15-11-2026: la ficha pública abre con la presentación del profesional y muestra su región.
+  test('incluye la presentación del profesional y la región de su comuna, que no aplica si atiende solo online', async () => {
+    modelo.buscarPorId.mockResolvedValue({ ...fila, comuna: 'san antonio', presentacion: '  Soy Ana, nutricionista deportiva.  ' });
+    const { profesional } = (await consulta('/api/profesionales/1')).body;
+    expect(profesional).toMatchObject({ presentacion: 'Soy Ana, nutricionista deportiva.', comuna: 'San Antonio', region: 'Región de Valparaíso' });
+    modelo.buscarPorId.mockResolvedValue({ ...fila, modalidad: 'online', presentacion: '' });
+    expect((await consulta('/api/profesionales/1')).body.profesional).toMatchObject({ presentacion: null, comuna: null, region: null });
   });
 
   test('incluye la reseña propia con el nombre abreviado del autor', async () => {
@@ -177,8 +200,18 @@ describe('GET /api/profesionales/:id (ficha)', () => {
     });
     const res = await consulta('/api/profesionales/1');
     expect(res.body.miResena).toEqual({
-      id: 7, autor: 'rodrigo C.', puntaje: 4, comentario: 'Muy buena atención', fecha: '2026-10-02T12:00:00.000Z', propia: true, verificada: false,
+      id: 7, autor: 'rodrigo C.', fotoUrl: null, puntaje: 4, comentario: 'Muy buena atención', fecha: '2026-10-02T12:00:00.000Z', propia: true, verificada: false,
     });
+  });
+
+  // Fotos de perfil en todos los lugares (15-11-2026): la ficha y el buscador entregan la dirección de la foto, armada con
+  // la clave que calcula MySQL, nunca la foto ni el id de la cuenta.
+  test('entrega la dirección de la foto del profesional cuando tiene una', async () => {
+    modelo.buscarPorId.mockResolvedValue({ ...fila, fotoClave: '0123456789abcdef' });
+    const { profesional } = (await consulta('/api/profesionales/1')).body;
+    expect(profesional.fotoUrl).toBe('/api/fotos/10/0123456789abcdef');
+    expect(profesional).not.toHaveProperty('usuarioId');
+    expect(profesional).not.toHaveProperty('fotoClave');
   });
 
   test('un profesional no puede calificarse a sí mismo ni calificar a otros', async () => {

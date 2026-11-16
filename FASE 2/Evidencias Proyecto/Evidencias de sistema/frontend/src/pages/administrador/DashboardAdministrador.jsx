@@ -3,9 +3,10 @@ import Alerta from '../../components/Alerta.jsx';
 import Icono from '../../components/Icono.jsx';
 import { Cifra, ColumnasApiladas } from '../../components/graficos/Graficos.jsx';
 import { useSesion } from '../../context/SesionContext.jsx';
-import { formatearNumero, iniciales, primerNombre } from '../../services/formato.js';
+import { formatearNumero, primerNombre } from '../../services/formato.js';
 import { useDatosAdmin } from './useDatosAdmin.js';
 import './PanelesAdministrador.css';
+import Avatar from '../../components/Avatar.jsx';
 
 // Colores validados con el verificador de paletas (azul, naranjo y verde); el naranjo va con leyenda, ayuda y tabla.
 const SERIES_ACTIVIDAD = [
@@ -71,7 +72,7 @@ export default function DashboardAdministrador() {
                   {datos.cola.primeras.map((ficha) => (
                     <li key={ficha.id}>
                       <Link to={`/admin/verificaciones/${ficha.id}`} className="admin-cola__fila" aria-label={`Revisar a ${ficha.nombre}`}>
-                        <span className="avatar" aria-hidden="true">{iniciales(ficha.nombre)}</span>
+                        <Avatar nombre={ficha.nombre} fotoUrl={ficha.fotoUrl} />
                         <span className="admin-cola__datos">
                           <strong>{ficha.nombre}</strong>
                           <small>{[ficha.especialidad, ficha.comuna].filter(Boolean).join(' · ')}</small>
@@ -137,7 +138,7 @@ export default function DashboardAdministrador() {
               <ul className="admin-cuentas">
                 {datos.ultimasCuentas.map((cuenta) => (
                   <li key={cuenta.id}>
-                    <span className="avatar" aria-hidden="true">{iniciales(cuenta.nombre)}</span>
+                    <Avatar nombre={cuenta.nombre} fotoUrl={cuenta.fotoUrl} />
                     <span className="admin-cuentas__datos">
                       <strong>{cuenta.nombre}</strong>
                       <small>{ROLES[cuenta.rol] ?? cuenta.rol}{cuenta.activo ? '' : ' · desactivada'}</small>

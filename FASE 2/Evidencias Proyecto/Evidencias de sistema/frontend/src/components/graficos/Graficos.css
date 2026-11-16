@@ -95,11 +95,16 @@
 }
 .columna:first-child .columna__ayuda, .columna:nth-child(2) .columna__ayuda { left: 0; transform: translate(0, 4px); }
 .columna:last-child .columna__ayuda, .columna:nth-last-child(2) .columna__ayuda { left: auto; right: 0; transform: translate(0, 4px); }
-.columna:hover .columna__ayuda, .columna:focus-visible .columna__ayuda { opacity: 1; transform: translate(-50%, 0); }
-.columna:first-child:is(:hover, :focus-visible) .columna__ayuda,
-.columna:nth-child(2):is(:hover, :focus-visible) .columna__ayuda,
-.columna:last-child:is(:hover, :focus-visible) .columna__ayuda,
-.columna:nth-last-child(2):is(:hover, :focus-visible) .columna__ayuda { transform: translate(0, 0); }
+/* El detalle aparece al pasar el mouse, al enfocar con el teclado y también al tocar o hacer clic (:focus), para que en
+   el celular baste con tocar la columna (15-11-2026). El anillo de foco sigue solo para el teclado. */
+.columna:hover .columna__ayuda, .columna:focus .columna__ayuda { opacity: 1; transform: translate(-50%, 0); }
+.columna:first-child:is(:hover, :focus) .columna__ayuda,
+.columna:nth-child(2):is(:hover, :focus) .columna__ayuda,
+.columna:last-child:is(:hover, :focus) .columna__ayuda,
+.columna:nth-last-child(2):is(:hover, :focus) .columna__ayuda { transform: translate(0, 0); }
+.columna:focus { outline: none; }
+.columna__total { padding-top: 0.25rem; margin-top: 0.1rem; border-top: 1px solid var(--color-borde); font-weight: 600; }
+.columna__total i { width: 0.7rem; }
 .columna__ayuda strong { margin-bottom: 0.15rem; font-size: 0.8rem; }
 .columna__ayuda > span { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.45rem; }
 .columna__ayuda b { font-weight: 600; }
@@ -117,7 +122,7 @@
 .barras__valor small { font-weight: 500; color: var(--color-texto-secundario); }
 
 @container (max-width: 29.99rem) {
-  /* Con muchas columnas en poco ancho, se nombra una sí y otra no (el detalle sigue en la ayuda y la tabla). */
+  /* Con 8 columnas o más en poco ancho, se nombra una sí y otra no (el detalle sigue en la ayuda y la tabla). */
   .columnas--densas .columna:nth-child(even) .columna__etiqueta { visibility: hidden; }
   .barras__fila { grid-template-columns: 6.25rem minmax(0, 1fr) 1.75rem; }
 }

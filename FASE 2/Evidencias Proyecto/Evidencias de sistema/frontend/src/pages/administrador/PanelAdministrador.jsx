@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link, Outlet, useParams } from 'react-router-dom';
 import Icono from '../../components/Icono.jsx';
 import { solicitar } from '../../services/api.js';
-import { iniciales } from '../../services/formato.js';
+
 import { Documentos } from '../../components/profesional/Certificaciones.jsx';
 import './PanelAdministrador.css';
+import Avatar from '../../components/Avatar.jsx';
 
 // Lienzo de las pantallas del administrador (11-11-2026): el encabezado, el menú lateral y la barra inferior son los
 // mismos de la app (DisenoAplicacion con el espacio «administrador»); aquí solo se aplican los estilos de sus páginas.
@@ -209,9 +210,7 @@ export function ListadoAdministrador({ tipo }) {
           <ul className="admin__lista">
             {datos.resultados.map((fila) => (
               <li key={fila.id} className="admin__tarjeta admin__fila">
-                <span className="avatar" aria-hidden="true">
-                  {iniciales(fila.nombre)}
-                </span>
+                <Avatar nombre={fila.nombre} fotoUrl={fila.fotoUrl} />
                 <div>
                   <h2>{fila.nombre}</h2>
                   <p>{usuarios ? fila.correo : fila.especialidad}</p>

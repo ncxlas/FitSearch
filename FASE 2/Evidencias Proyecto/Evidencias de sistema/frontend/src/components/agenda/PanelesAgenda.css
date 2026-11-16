@@ -74,6 +74,10 @@
 .estado-agenda--libre { color: var(--color-primario); background: #f3f8fc; border-color: #c4d9e8; }
 .estado-agenda--pendiente { color: #833705; background: #fff4ea; border-color: #f0c39d; }
 .estado-agenda--confirmada { color: #145236; background: #e8f6ef; border-color: #a6dac1; }
+.estado-agenda--realizada { color: #fff; background: #2d7a55; border-color: #22603f; }
+.estado-agenda--noRealizada { color: #8f2424; background: #fdecec; border-color: #eeb1b1; }
+.estado-agenda--bloqueado { color: #4d5b68; background: #eef1f4; border-color: #c7d3de; }
+.estado-agenda--sinReservas { color: var(--color-texto-secundario); background: #f6f8fa; border-color: #dbe3ea; }
 
 /* ---------- Formularios (publicar y bloquear) ---------- */
 .formulario-agenda { display: grid; gap: 0.85rem; }
@@ -136,6 +140,54 @@
 
 /* ---------- Resumen del día ---------- */
 .resumen-agenda { display: grid; gap: 1rem; align-content: start; }
+/* Reservas del día elegido (15-11-2026): fecha, flechas y selector, cifras y la lista por hora. */
+.resumen-agenda__dia { gap: 0.7rem; }
+.resumen-agenda__dia-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.resumen-agenda__dia-cabecera .boton-texto { font-size: 0.85rem; }
+.resumen-agenda__fecha-texto { margin: -0.2rem 0 0; font-size: 1rem; font-weight: 600; color: var(--color-texto); }
+.resumen-agenda__fecha-texto::first-letter { text-transform: uppercase; }
+.resumen-agenda__dia-navegacion { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.4rem; }
+.resumen-agenda__dia-navegacion .boton-icono { width: 2.4rem; height: 2.4rem; border: 1px solid var(--color-borde); border-radius: var(--radio-control); background: var(--color-superficie); }
+.resumen-agenda__fecha {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.4rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-control);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--color-texto);
+  background: var(--color-superficie);
+}
+.resumen-agenda__reservas { display: grid; gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
+.resumen-agenda__reserva {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  font: inherit;
+  text-align: left;
+  color: var(--color-texto);
+  background: var(--color-superficie);
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.resumen-agenda__hora { display: grid; font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.resumen-agenda__hora small { font-size: 0.72rem; font-weight: 500; color: var(--color-texto-secundario); }
+.resumen-agenda__quien { display: grid; gap: 0.25rem; min-width: 0; }
+.resumen-agenda__quien strong { overflow: hidden; font-size: 0.9rem; white-space: nowrap; text-overflow: ellipsis; }
+.resumen-agenda__datos { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; }
+.resumen-agenda__datos small { font-size: 0.75rem; color: var(--color-texto-secundario); }
+.resumen-agenda__reserva .estado-agenda { padding: 0.1rem 0.5rem; font-size: 0.7rem; white-space: nowrap; }
+.resumen-agenda__flecha { color: var(--color-texto-secundario); }
+@media (hover: hover) and (pointer: fine) {
+  .resumen-agenda__reserva:hover { border-color: var(--color-primario); box-shadow: 0 2px 8px rgb(11 79 128 / 10%); }
+}
 .resumen-agenda__cifras { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 0; }
 /* La etiqueta arriba y la cifra abajo: si una etiqueta ocupa dos líneas, las cifras siguen a la misma altura. */
 .resumen-agenda__cifras div { display: grid; grid-template-rows: 1fr auto; gap: 0.15rem; padding: 0.7rem 0.8rem; border-radius: 12px; background: var(--color-superficie-suave); }
@@ -184,5 +236,5 @@
 }
 .resumen-agenda__espera .icono { flex: none; margin-top: 0.1rem; }
 @media (prefers-reduced-motion: reduce) {
-  .interruptor__pista, .interruptor__pista::after, .segmentos__opcion { transition: none; }
+  .interruptor__pista, .interruptor__pista::after, .segmentos__opcion, .resumen-agenda__reserva { transition: none; }
 }

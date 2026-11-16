@@ -4,10 +4,11 @@ import Alerta from '../Alerta.jsx';
 import Icono from '../Icono.jsx';
 import { solicitar } from '../../services/api.js';
 import { crearIcs, descargarIcs, fechaHorario, fechaLarga, futura, minutosEntre, textoDuracion } from '../../services/agenda.js';
-import { direccionDe, etiquetaModalidad, iniciales, primerNombre } from '../../services/formato.js';
+import { direccionDe, etiquetaModalidad, primerNombre } from '../../services/formato.js';
 import CalendarioMes from './CalendarioMes.jsx';
 import useAgenda from './useAgenda.js';
 import './ReservarHora.css';
+import Avatar from '../Avatar.jsx';
 
 function duracionDe(bloques) {
   const minutos = [...new Set(bloques.map((b) => minutosEntre(b.horaInicio, b.horaFin)))].sort((a, b) => a - b);
@@ -237,7 +238,7 @@ export default function ReservarHora({ profesional }) {
     contenido = (
       <div className="reserva">
         <aside className="reserva__resumen" aria-label="Resumen de la reserva">
-          <span className="avatar avatar--grande" aria-hidden="true">{iniciales(nombre)}</span>
+          <Avatar className="avatar avatar--grande" nombre={nombre} fotoUrl={profesional.fotoUrl} />
           <p className="reserva__profesional"><strong>{nombre}</strong><span>{especialidad}</span></p>
           <ul className="reserva__datos">
             <li><Icono nombre="reloj" tamano={18} /> {duracionDe(bloque ? [bloque] : bloquesDelDia)}</li>

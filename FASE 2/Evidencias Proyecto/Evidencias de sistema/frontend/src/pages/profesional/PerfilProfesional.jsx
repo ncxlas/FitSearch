@@ -10,8 +10,10 @@ import PerfilEditable from '../../components/perfil/PerfilEditable.jsx';
 import InformacionCuenta from '../../components/perfil/InformacionCuenta.jsx';
 import useCuentaPerfil from '../../components/perfil/useCuentaPerfil.js';
 import { useSesion } from '../../context/SesionContext.jsx';
+import { enMapa } from '../../components/profesionales/ubicacionMapa.js';
+import { useEspecialidades } from '../../services/especialidades.js';
 import { etiquetaModalidad } from '../../services/formato.js';
-import { obtenerMiFicha, obtenerProfesional } from '../../services/profesional.service.js';
+import { guardarMiFicha, obtenerMiFicha, obtenerProfesional } from '../../services/profesional.service.js';
 import './PerfilProfesional.css';
 
 function CompartirPerfil({ id }) {
@@ -64,38 +66,77 @@ export default function PerfilProfesional() {
   const [activa, setActiva] = useState('informacion');
   const [editor, setEditor] = useState(0);
   const [mensaje, setMensaje] = useState('');
+  // Sin ficha, la especialidad elegida en «Información personal» espera aquí hasta guardar el lugar de atención, donde
+  // se crea la ficha (la API no guarda una ficha sin su lugar de atención).
+  const [especialidadElegida, setEspecialidadElegida] = useState('');
   useEffect(() => {
     let vigente = true;
     obtenerMiFicha().then(async ({ ficha }) => {
       const publica = ficha ? await obtenerProfesional(ficha.id) : null;
-      if (vigente) setEstado({ ficha, profesional: publica?.profesional });
+      if (!vigente) return;
+      setEstado({ ficha, profesional: publica?.profesional });
     }).catch((e) => { if (vigente) setEstado({ error: e.message }); });
     return () => { vigente = false; };
   }, [intento]);
   const p = estado.profesional;
   function alGuardarFicha() {
-    setMensaje('Tu ficha profesional se guardó correctamente.');
+    setMensaje(!estado.ficha ? 'Tu ficha profesional se guardó correctamente.' : 'Tu lugar de atención se guardó correctamente.');
+    setEspecialidadElegida('');
     setIntento((v) => v + 1);
   }
-  const informacion = <>
-    {!estado.ficha && <p className="perfil-prof__aviso"><Icono nombre="info" tamano={20} /> Completa tu ficha para aparecer en el buscador de FitSearch.</p>}
-    <InformacionCuenta estado={cuentaEstado} profesional />
-    <details className="perfil-editor__subseccion" open>
-      <summary><Icono nombre="medico" tamano={20} /> Especialidad y lugar de atención</summary>
-      <div><FormularioFicha key={editor} ficha={estado.ficha} onGuardado={alGuardarFicha}
-        onCancelar={estado.ficha ? () => { setEditor((v) => v + 1); setMensaje(''); } : undefined} /></div>
-    </details>
-    {estado.ficha && <details className="perfil-editor__subseccion">
-      <summary><Icono nombre="birrete" tamano={20} /> Experiencia y formación</summary>
-      <div><p className="texto-secundario">Comparte tu trayectoria y a quiénes atiendes.</p><Experiencia /></div>
-    </details>}
-  </>;
-  const contenido = estado.cargando ? <p role="status">Cargando tu ficha profesional…</p> : estado.error ? <>
+  const irA = (seccion) => { setActiva(seccion); setMensaje(''); };
+
+  // Especialidad (pedido del PO del 16-11-2026): se elige en «Información personal». Con ficha, se guarda en ella y se
+  // reenvía el lugar de atención tal como está guardado; sin ficha, queda elegida hasta crearla en «Lugar de atención».
+  // FS-HU-30: las especialidades activas del catálogo; la que ya tenía la ficha se ofrece aunque esté desactivada.
+  const catalogo = useEspecialidades();
+  const especialidadActual = estado.ficha?.especialidad ?? especialidadElegida;
+  async function guardarEspecialidad(nueva) {
+    const ficha = estado.ficha;
+    if (!ficha) {
+      setEspecialidadElegida(nueva);
+      return `Elegiste ${nueva}. Se guardará en tu ficha cuando completes «Lugar de atención».`;
+    }
+    const online = ficha.modalidad === 'online';
+    if (!online && !enMapa(ficha)) {
+      throw new Error('Tu lugar de atención no tiene una ubicación válida en el mapa. Revísalo y guárdalo en «Lugar de atención» antes de cambiar tu especialidad.');
+    }
+    await guardarMiFicha({
+      especialidad: nueva, descripcion: ficha.descripcion ?? '', comuna: online ? null : ficha.comuna, direccion: online ? null : ficha.direccion,
+      modalidad: ficha.modalidad, ubicacionLat: online ? null : Number(ficha.ubicacionLat), ubicacionLng: online ? null : Number(ficha.ubicacionLng),
+    });
+    setIntento((v) => v + 1);
+    return 'Tu especialidad se guardó correctamente.';
+  }
+  const especialidad = {
+    valor: especialidadActual,
+    opciones: especialidadActual && !catalogo.includes(especialidadActual) ? [...catalogo, especialidadActual] : catalogo,
+    guardar: guardarEspecialidad,
+    // Cambiar la especialidad quita la verificación (la API pide documentos de la nueva especialidad).
+    avisoCambio: p?.verificado ? 'Si cambias tu especialidad, tu perfil dejará de estar verificado y tendrás que enviar documentos de la nueva especialidad.' : null,
+  };
+  // Mientras carga la ficha (o si falló), las secciones que dependen de ella lo indican.
+  const sinFicha = estado.cargando ? <p role="status">Cargando tu ficha profesional…</p> : estado.error ? <>
     <Alerta>{estado.error}</Alerta><button type="button" className="boton-texto" onClick={() => setIntento((v) => v + 1)}>Reintentar</button>
-  </> : informacion;
+  </> : null;
+  const completaFicha = (texto) => <p className="perfil-prof__aviso"><Icono nombre="info" tamano={20} /> {texto}</p>;
+  // Desde el 15-11-2026, el mismo flujo que el perfil del usuario: cada sección por separado y solo una abierta a la
+  // vez. El 16-11-2026 la especialidad pasó a «Información personal» (con la presentación, que reemplaza a la
+  // descripción de la ficha) y el lugar de atención quedó en su propia sección.
   const secciones = [
-    { id: 'informacion', titulo: 'Información y experiencia', icono: 'usuario', ayuda: 'Edita tus datos desde aquí.', contenido },
-    { id: 'certificaciones', titulo: 'Certificaciones', icono: 'escudo', ayuda: 'Tus documentos y el estado de tu verificación.', contenido: estado.ficha ? <Certificaciones /> : <p>Completa tu ficha profesional antes de solicitar la verificación.</p> },
+    { id: 'informacion', titulo: 'Información personal', icono: 'usuario', ayuda: 'Tus datos de contacto, tu especialidad y tu presentación.', contenido: <>
+      {!estado.cargando && !estado.error && !estado.ficha && completaFicha('Elige aquí tu especialidad y completa tu «Lugar de atención» para aparecer en el buscador de FitSearch.')}
+      <InformacionCuenta estado={cuentaEstado} profesional especialidad={estado.cargando || estado.error ? undefined : especialidad} />
+    </> },
+    { id: 'lugar', titulo: 'Lugar de atención', icono: 'pin', ayuda: 'Si atiendes presencial u online y dónde: se muestra en el mapa y en tu perfil público.',
+      contenido: sinFicha ?? (
+        <FormularioFicha key={editor} ficha={estado.ficha} especialidad={especialidadActual} onGuardado={alGuardarFicha} onIrA={irA}
+          onCancelar={estado.ficha ? () => { setEditor((v) => v + 1); setMensaje(''); } : undefined} />
+      ) },
+    { id: 'experiencia', titulo: 'Experiencia y formación', icono: 'birrete', ayuda: 'Comparte tu trayectoria y a quiénes atiendes.',
+      contenido: sinFicha ?? (estado.ficha ? <Experiencia /> : completaFicha('Completa tu ficha profesional para agregar tu experiencia y formación.')) },
+    { id: 'certificaciones', titulo: 'Certificaciones', icono: 'escudo', ayuda: 'Tus documentos y el estado de tu verificación.',
+      contenido: sinFicha ?? (estado.ficha ? <Certificaciones /> : completaFicha('Completa tu ficha profesional antes de solicitar la verificación.')) },
   ];
   return <PerfilEditable titulo="Mi perfil profesional" subtitulo="Tu información, lista para conectar con más personas."
     nombre={cuentaEstado.cuenta?.nombre || p?.nombre || sesion.usuario.nombre} rol={p?.especialidad || 'Profesional'} cuentaEstado={cuentaEstado}

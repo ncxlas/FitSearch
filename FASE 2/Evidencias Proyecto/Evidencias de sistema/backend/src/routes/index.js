@@ -5,6 +5,8 @@ const perfilRoutes = require('./perfil.routes');
 const router = Router();
 
 router.get('/salud', (req, res) => res.json({ estado: 'ok' }));
+// Fotos de perfil (15-11-2026): van antes de la agenda, que monta en '/' y exige sesión para todo lo que sigue.
+router.use('/fotos', require('./foto.routes'));
 router.use('/auth', authRoutes);
 router.use('/perfil', perfilRoutes);
 router.use('/profesionales', require('./profesional.routes'));

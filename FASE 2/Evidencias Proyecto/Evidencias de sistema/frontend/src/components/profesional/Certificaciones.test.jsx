@@ -18,7 +18,8 @@ async function adjuntarObligatorios() {
   }
 }
 
-test('el historial muestra los tres movimientos recientes y permite expandir y volver a reducir', async () => {
+// Pedido del PO del 16-11-2026: el historial va plegado (el estado y el motivo ya se ven arriba) y se abre con su botón.
+test('el historial empieza plegado; al abrirlo muestra los tres movimientos recientes y permite ver todos', async () => {
   sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
   const historial = [
     { accion: 'solicitud', fecha: '2026-10-10T10:00:00Z' },
@@ -29,6 +30,13 @@ test('el historial muestra los tres movimientos recientes y permite expandir y v
   simularApi({ '/api/verificaciones/mi-solicitud': { solicitud: { estado: 'sin_solicitud', rut: '', documentos: [], historial } } });
   render(<Certificaciones />);
   const region = within(await screen.findByRole('region', { name: 'Historial de verificación' }));
+  const plegable = region.getByRole('button', { name: /^Historial de verificación/ });
+  expect(plegable).toHaveAttribute('aria-expanded', 'false');
+  expect(plegable).toHaveTextContent('4');
+  expect(region.queryAllByRole('listitem')).toHaveLength(0);
+  await userEvent.click(plegable);
+  expect(plegable).toHaveAttribute('aria-expanded', 'true');
+  expect(region.getByText(/Lo que ha pasado con tu verificación/)).toBeInTheDocument();
   expect(region.getAllByRole('listitem')).toHaveLength(3);
   expect(region.getAllByRole('listitem')[0]).toHaveTextContent('Documento actualizado');
   expect(region.queryByText('Solicitud enviada')).not.toBeInTheDocument();

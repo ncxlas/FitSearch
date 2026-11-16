@@ -5,6 +5,7 @@ import { ahoraChile, fechaHorario, fechaLarga, futura, minutosEntre, moverMes, s
 import { useSesion } from '../context/SesionContext.jsx';
 import Icono from '../components/Icono.jsx';
 import CalendarioMes from '../components/reservas/CalendarioMes.jsx';
+import { ESTADOS, estadoVisible, lunesDe, sumarDias } from '../components/agenda/semana.js';
 import useAgenda from '../components/reservas/useAgenda.js';
 import './Agenda.css';
 
@@ -114,6 +115,32 @@ function DetallesCita({ r, profesional, compacto }) {
   );
 }
 
+// Buscador y filtros de la lista de reservas o citas (pedido del PO del 15-11-2026): por nombre, por estado y por la
+// fecha de la cita. En «Próximas» solo caben las por confirmar y las confirmadas, y no hay meses pasados.
+const ESTADOS_FILTRO = {
+  proximas: ['pendiente', 'confirmada'],
+  historial: ['pendiente', 'confirmada', 'realizada', 'noRealizada', 'cancelada'],
+};
+const PERIODOS = {
+  proximas: [['todas', 'Cualquiera'], ['hoy', 'Hoy'], ['semana', 'Esta semana'], ['mes', 'Este mes'], ['rango', 'Elegir fechas']],
+  historial: [['todas', 'Cualquiera'], ['hoy', 'Hoy'], ['semana', 'Esta semana'], ['mes', 'Este mes'], ['mesPasado', 'Mes pasado'], ['rango', 'Elegir fechas']],
+};
+const SIN_FILTROS = { texto: '', estado: 'todos', periodo: 'todas', desde: '', hasta: '' };
+const normalizar = (texto) => texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+const finDeMes = (mes) => sumarDias(`${moverMes(mes, 1)}-01`, -1);
+
+// Fechas (inclusive) del período elegido, o null si es cualquier fecha.
+function fechasDe({ periodo, desde, hasta }, hoy) {
+  const mes = hoy.slice(0, 7);
+  if (periodo === 'hoy') return [hoy, hoy];
+  if (periodo === 'semana') return [lunesDe(hoy), sumarDias(lunesDe(hoy), 6)];
+  if (periodo === 'mes') return [`${mes}-01`, finDeMes(mes)];
+  if (periodo === 'mesPasado') return [`${moverMes(mes, -1)}-01`, finDeMes(moverMes(mes, -1))];
+  if (periodo === 'rango' && (desde || hasta)) return [desde || '0000-01-01', hasta || '9999-12-31'];
+  return null;
+}
+const momento = (r) => `${r.horario.fecha}T${r.horario.horaInicio}`;
+
 export function MisCitas({ compacto = false, onCambio }) {
   const { sesion } = useSesion();
   const profesional = sesion.usuario.rol === 'profesional';
@@ -125,6 +152,17 @@ export function MisCitas({ compacto = false, onCambio }) {
   const foco = useVolverFoco(confirmacion);
   const [ocupado, setOcupado] = useState(false);
   const [filtro, setFiltro] = useState('proximas');
+  const [filtros, setFiltros] = useState(SIN_FILTROS);
+  const filtrar = (cambio) => setFiltros((antes) => ({ ...antes, ...cambio }));
+  // Al pasar a «Próximas», los filtros que ahí no caben vuelven a «todos».
+  const cambiarFiltro = (valor) => {
+    setFiltro(valor);
+    setFiltros((antes) => ({
+      ...antes,
+      estado: antes.estado === 'todos' || ESTADOS_FILTRO[valor].includes(antes.estado) ? antes.estado : 'todos',
+      periodo: PERIODOS[valor].some(([p]) => p === antes.periodo) ? antes.periodo : 'todas',
+    }));
+  };
   const preguntar = (e, id, estado) => {
     foco.recordar(e.currentTarget);
     setConfirmacion({ id, estado });
@@ -152,10 +190,24 @@ export function MisCitas({ compacto = false, onCambio }) {
       setOcupado(false);
     }
   }
+  const fechas = compacto ? null : fechasDe(filtros, ahoraChile().slice(0, 10));
+  const buscado = compacto ? '' : normalizar(filtros.texto);
+  const hayFiltros = !compacto && (buscado !== '' || filtros.estado !== 'todos' || fechas !== null);
   const visibles =
-    datos?.reservas.filter(
-      (r) => filtro === 'historial' || (r.estado !== 'cancelada' && futura(r)),
-    ) || [];
+    datos?.reservas.filter((r) => {
+      if (filtro !== 'historial' && (r.estado === 'cancelada' || !futura(r))) return false;
+      if (buscado && !normalizar(profesional ? r.usuario.nombre : r.profesional.nombre).includes(buscado)) return false;
+      if (!compacto && filtros.estado !== 'todos' && estadoVisible({ estado: r.estado, pasado: !futura(r) }) !== filtros.estado) return false;
+      return !fechas || (r.horario.fecha >= fechas[0] && r.horario.fecha <= fechas[1]);
+    }) || [];
+  if (filtro === 'historial') {
+    // El historial va de la cita más reciente a la más antigua (15-11-2026).
+    visibles.sort((a, b) => momento(b).localeCompare(momento(a)) || b.id - a.id);
+  } else if (profesional && !compacto) {
+    // Para el profesional, en «Próximas» van primero las que le falta confirmar; el resto sigue por fecha.
+    visibles.sort((a, b) => (a.estado === 'pendiente' ? 0 : 1) - (b.estado === 'pendiente' ? 0 : 1));
+  }
+  const unidad = profesional ? ['reserva', 'reservas'] : ['cita', 'citas'];
   return (
     <section
       className="agenda"
@@ -184,12 +236,54 @@ export function MisCitas({ compacto = false, onCambio }) {
               className="boton boton--secundario boton--compacto"
               key={v}
               aria-pressed={filtro === v}
-              onClick={() => setFiltro(v)}
+              onClick={() => cambiarFiltro(v)}
             >
               {n}
             </button>
           ))}
         </div>
+      )}
+      {!compacto && datos?.reservas.length > 0 && (
+        <div className="agenda__buscador" role="search" aria-label={profesional ? 'Buscar reservas' : 'Buscar citas'}>
+          <label className="agenda__campo agenda__campo--texto">
+            <span>Buscar</span>
+            <input type="search" className="campo__control" value={filtros.texto} onChange={(e) => filtrar({ texto: e.target.value })}
+              placeholder={profesional ? 'Nombre de la persona' : 'Nombre del profesional'} />
+          </label>
+          <label className="agenda__campo">
+            <span>Estado</span>
+            <select className="campo__control" value={filtros.estado} onChange={(e) => filtrar({ estado: e.target.value })}>
+              <option value="todos">Todos</option>
+              {ESTADOS_FILTRO[filtro].map((valor) => <option key={valor} value={valor}>{ESTADOS[valor]}</option>)}
+            </select>
+          </label>
+          <label className="agenda__campo">
+            <span>Fecha de la cita</span>
+            <select className="campo__control" value={filtros.periodo} onChange={(e) => filtrar({ periodo: e.target.value })}>
+              {PERIODOS[filtro].map(([valor, texto]) => <option key={valor} value={valor}>{texto}</option>)}
+            </select>
+          </label>
+          {filtros.periodo === 'rango' && (
+            <>
+              <label className="agenda__campo">
+                <span>Desde</span>
+                <input type="date" className="campo__control" value={filtros.desde} max={filtros.hasta || undefined}
+                  onChange={(e) => filtrar({ desde: e.target.value })} />
+              </label>
+              <label className="agenda__campo">
+                <span>Hasta</span>
+                <input type="date" className="campo__control" value={filtros.hasta} min={filtros.desde || undefined}
+                  onChange={(e) => filtrar({ hasta: e.target.value })} />
+              </label>
+            </>
+          )}
+        </div>
+      )}
+      {!compacto && datos?.reservas.length > 0 && (
+        <p className="agenda__conteo" aria-live="polite">
+          <span>{visibles.length} {visibles.length === 1 ? unidad[0] : unidad[1]}{filtro === 'historial' ? ', de la más reciente a la más antigua' : ''}</span>
+          {hayFiltros && <button type="button" className="boton-texto" onClick={() => setFiltros(SIN_FILTROS)}>Limpiar filtros</button>}
+        </p>
       )}
       <Avisos
         error={error || errorCarga}
@@ -200,7 +294,14 @@ export function MisCitas({ compacto = false, onCambio }) {
         }}
       />
       {!datos && !errorCarga && <p role="status">Cargando citas…</p>}
-      {datos && !visibles.length && (
+      {datos && !visibles.length && hayFiltros && (
+        <div className="agenda__vacio">
+          <h3>No hay {unidad[1]} con esos filtros</h3>
+          <p>Prueba con otro nombre, estado o fecha.</p>
+          <button type="button" className="boton boton--secundario boton--compacto" onClick={() => setFiltros(SIN_FILTROS)}>Limpiar filtros</button>
+        </div>
+      )}
+      {datos && !visibles.length && !hayFiltros && (
         <div className="agenda__vacio">
           <h3>Aún no tienes citas agendadas</h3>
           <p>
@@ -219,11 +320,14 @@ export function MisCitas({ compacto = false, onCambio }) {
         </div>
       )}
       <div className="agenda__lista">
-        {(compacto ? visibles.slice(0, 3) : visibles).map((r) => (
+        {(compacto ? visibles.slice(0, 3) : visibles).map((r) => {
+          // Las que ya pasaron se nombran como en la agenda: realizada si se confirmó y no realizada si no (15-11-2026).
+          const estado = estadoVisible({ estado: r.estado, pasado: !futura(r) });
+          return (
           <article key={r.id} className="agenda__tarjeta">
             <div>
-              <span className={`agenda__estado agenda__estado--${r.estado}`}>
-                {r.estado}
+              <span className={`agenda__estado agenda__estado--${estado}`}>
+                {ESTADOS[estado]}
               </span>
               <h3>{profesional ? r.usuario.nombre : r.profesional.nombre}</h3>
               <p>
@@ -273,7 +377,8 @@ export function MisCitas({ compacto = false, onCambio }) {
               />
             )}
           </article>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

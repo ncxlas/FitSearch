@@ -57,17 +57,18 @@
 .perfil-editor__acciones { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .7rem; padding-top: 1.1rem; margin-top: .25rem; border-top: 1px solid #e0eaf1; }
 .perfil-editor .boton--principal { background: linear-gradient(110deg, #f78d15, #e96908); border-color: transparent; color: white; box-shadow: 0 4px 12px #e777142a; }
 .perfil-editor .boton--secundario { background: white; border-color: #a9cde4; color: #075683; }
-.perfil-editor__completo { display: flex; align-items: center; gap: .75rem; padding: 1rem; border: 1px solid #cae4f6; border-radius: 1rem; background: linear-gradient(120deg, #e7f6ff, #f5fbff); }
-.perfil-editor__completo > .icono { padding: .4rem; box-sizing: content-box; border: 4px solid #2b91bc; border-radius: 50%; color: #0e6a94; }
-.perfil-editor__completo p { font-size: .75rem; color: #456681; margin: .2rem 0 0; }
+/* Solo aparece si al perfil le falta algo (15-11-2026). */
+.perfil-editor__pendiente { display: flex; align-items: flex-start; gap: .7rem; padding: 1rem; border: 1px solid #f6cf9f; border-radius: 1rem; background: linear-gradient(120deg, #fff4e6, #fffaf3); color: #7a4307; }
+.perfil-editor__pendiente > .icono { flex-shrink: 0; margin-top: .1rem; color: #d9690a; }
+.perfil-editor__pendiente p { font-size: .78rem; color: #7d5a33; margin: .2rem 0 .35rem; }
+.perfil-editor__pendiente ul { display: grid; gap: .2rem; margin: 0; padding: 0; list-style: none; }
+.perfil-editor__pendiente .boton-texto { font-size: .82rem; text-align: left; }
 .perfil-editor__privacidad { display: flex; align-items: center; gap: .45rem; color: #58728b; font-size: .8rem; margin-top: 1rem; }
 .perfil-editor__privacidad .icono { flex-shrink: 0; }
 .perfil-editor__contenido .perfil-prof__acciones { margin-top: 1.25rem; }
 .perfil-editor__contenido .perfil-prof__botones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .perfil-editor__contenido .perfil-prof__botones .boton { justify-content: center; }
 .perfil-editor__contenido .ficha-prof { max-width: none; margin: 0; padding: 0; box-shadow: none; border: none; }
-.perfil-editor__contenido .ficha-prof > header { display: none; }
-.perfil-editor__contenido .ficha-prof__ubicacion { grid-template-columns: 1fr; }
 .perfil-editor__contenido .experiencia__vacia { padding: 1.25rem; }
 .perfil-editor__contenido .experiencia__ilustracion { display: none; }
 .perfil-editor__contenido .resumen-tarjeta__datos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 1rem; gap: .75rem; background: #edf7ff; border-radius: .8rem; }
@@ -75,12 +76,25 @@
 .perfil-editor__contenido .resumen-tarjeta__datos dd { margin: .2rem 0 0; font-weight: 600; color: #075481; }
 .perfil-editor__mini-resumen { display: grid; gap: .4rem; padding: .9rem 0 0; }
 .perfil-editor__mini-resumen > a, .perfil-editor__mini-resumen > button { justify-content: center; }
-.perfil-editor__estimacion-movil { display: none; }
 .perfil-editor .estimacion { padding: 1.1rem; border: 1px solid #c7e3f5; border-radius: 1rem; background: linear-gradient(120deg, #e5f5ff, #f4faff); box-shadow: none; color: #075481; }
 .perfil-editor .estimacion__titulo, .perfil-editor .estimacion__nota { color: #42677f; }
 .perfil-editor .estimacion__titulo { font-size: .8rem; }
 .perfil-editor .estimacion__valor { color: #075481; font-size: 1.65rem; }
 .perfil-editor .estimacion__nota { font-size: .73rem; }
+/* Cuadro para aceptar la foto de perfil antes de guardarla (15-11-2026). Va sobre toda la aplicación. */
+.confirmar-foto { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 1rem; background: rgb(6 38 63 / 45%); animation: confirmar-foto-fondo 180ms ease-out both; }
+.confirmar-foto__tarjeta { width: min(100%, 23rem); max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 1.6rem 1.5rem 1.4rem; border-radius: 1.2rem; background: #fff; box-shadow: 0 24px 60px rgb(6 38 63 / 30%); text-align: center; animation: confirmar-foto-entrada 220ms var(--curva-salida) both; }
+.confirmar-foto__tarjeta h2 { margin: 0 0 1rem; font-size: 1.2rem; color: #064e7b; }
+.confirmar-foto__vista { display: block; width: 9.5rem; height: 9.5rem; margin: 0 auto; border-radius: 50%; object-fit: cover; border: 5px solid #f1f8ff; box-shadow: 0 4px 15px #1754821c; }
+.confirmar-foto__tarjeta > p { margin: 1rem 0 0; font-size: .88rem; line-height: 1.5; color: #466580; }
+.confirmar-foto__tarjeta .alerta { margin: 1rem 0 0; text-align: left; }
+.confirmar-foto__acciones { display: grid; gap: .6rem; margin-top: 1.25rem; }
+.confirmar-foto__acciones .boton { width: 100%; justify-content: center; min-height: 2.75rem; }
+.confirmar-foto .boton--principal { background: linear-gradient(110deg, #f78d15, #e96908); border-color: transparent; color: #fff; box-shadow: 0 4px 12px #e777142a; }
+.confirmar-foto .boton--secundario { background: #fff; border-color: #a9cde4; color: #075683; }
+@keyframes confirmar-foto-fondo { from { opacity: 0; } }
+@keyframes confirmar-foto-entrada { from { opacity: 0; transform: translateY(8px) scale(.97); } }
+@media (prefers-reduced-motion: reduce) { .confirmar-foto, .confirmar-foto__tarjeta { animation: none; } }
 @media (hover: hover) { .perfil-editor__navegacion button:hover { background: #eff7fd; } .perfil-editor__camara:hover { background: #eaf6ff; } }
 @media (max-width: 68rem) { .perfil-editor__grilla { grid-template-columns: 14.5rem minmax(0, 1fr); gap: 1rem; } .perfil-editor__contenido { padding: 1.15rem; } }
 @media (max-width: 48rem) {
@@ -89,15 +103,12 @@
   .perfil-editor__cabecera p { font-size: .8rem; }
   .perfil-editor__icono { display: none; }
   .perfil-editor__lateral { gap: .65rem; }
-  .perfil-editor__lateral > .estimacion { display: none; }
-  .perfil-editor__estimacion-movil { display: block; margin-bottom: 1rem; }
   .perfil-editor__identidad { padding: 1rem; background: transparent; border: none; box-shadow: none; }
   .perfil-editor__foto { width: 6.5rem; height: 6.5rem; }
   .perfil-editor__foto > span { font-size: 2rem; }
   .perfil-editor__identidad h2 { font-size: 1.15rem; }
   .perfil-editor__navegacion { display: none; }
-  .perfil-editor__completo { padding: .65rem .85rem; }
-  .perfil-editor__completo > .icono { width: 1.5rem; height: 1.5rem; }
+  .perfil-editor__pendiente { padding: .75rem .85rem; }
   .perfil-editor__contenido { padding: 0; background: transparent; border: 0; box-shadow: none; display: grid; gap: .65rem; }
   .perfil-editor__seccion, .perfil-editor__seccion:not([open]) { display: block; border: 1px solid #d4e6f3; border-radius: .85rem; background: white; overflow: hidden; }
   .perfil-editor__seccion > summary { display: flex; align-items: center; gap: .6rem; font-size: .86rem; font-weight: 600; padding: .85rem; cursor: pointer; color: #07537e; background: #f3f9ff; list-style: none; }
@@ -115,3 +126,5 @@
   .perfil-editor__contenido .resumen-tarjeta__datos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .perfil-editor__contenido .ficha-prof__acciones { display: grid; }
 }
+/* Especialidad del profesional en «Información personal» (16-11-2026) y el aviso si cambiarla le quita la verificación. */
+.perfil-editor__aviso-especialidad { margin-top: 0.35rem; padding: 0.45rem 0.65rem; border-radius: var(--radio-control); color: #724515; background: #fff5e9; }

@@ -3,7 +3,8 @@ import { Calificacion } from '../Calificacion.jsx';
 import Icono from '../Icono.jsx';
 import useAgenda from '../reservas/useAgenda.js';
 import { fechaLarga } from '../../services/agenda.js';
-import { direccionDe, etiquetaModalidad, formatearKm, iniciales } from '../../services/formato.js';
+import { direccionDe, etiquetaModalidad, formatearKm } from '../../services/formato.js';
+import Avatar from '../Avatar.jsx';
 
 // Detalle del profesional elegido en el mapa o con «Ver en el mapa» (FS-HU-06). Desde la SC-27 va bajo el mapa, junto
 // a la lista, en vez de una ventana sobre el marcador (SC-22): qué tipo de profesional es, si está verificado, dónde
@@ -11,7 +12,7 @@ import { direccionDe, etiquetaModalidad, formatearKm, iniciales } from '../../se
 // establecimiento; sin ninguna se muestra la comuna. "Cómo llegar" abre el punto exacto que el profesional marcó.
 export default function DetalleEnMapa({ profesional, desde, onCerrar }) {
   const {
-    id, nombre, especialidad, descripcion, modalidad, verificado, comuna, direccion, establecimiento, calificacion, distanciaKm,
+    id, nombre, especialidad, presentacion, modalidad, verificado, comuna, direccion, establecimiento, calificacion, distanciaKm,
     ubicacionLat, ubicacionLng,
   } = profesional;
   let lugar;
@@ -34,7 +35,7 @@ export default function DetalleEnMapa({ profesional, desde, onCerrar }) {
     <section className="detalle-mapa" aria-labelledby="detalle-mapa-nombre">
       <h2 className="solo-lector">Profesional seleccionado</h2>
       <div className="detalle-mapa__cabecera">
-        <span className="detalle-mapa__avatar" aria-hidden="true">{iniciales(nombre)}</span>
+        <Avatar className="detalle-mapa__avatar" nombre={nombre} fotoUrl={profesional.fotoUrl} />
         <div className="detalle-mapa__identidad">
           <h3 id="detalle-mapa-nombre" className="detalle-mapa__nombre">{nombre}</h3>
           <p className="detalle-mapa__tipo">{especialidad} · {etiquetaModalidad(modalidad)}</p>
@@ -59,7 +60,8 @@ export default function DetalleEnMapa({ profesional, desde, onCerrar }) {
           <Icono nombre="calendario" tamano={16} /> {disponibilidad}
         </li>
       </ul>
-      {descripcion && <p className="detalle-mapa__descripcion">{descripcion}</p>}
+      {/* Su presentación, resumida (16-11-2026). */}
+      {presentacion && <p className="detalle-mapa__descripcion">{presentacion}</p>}
       <p className="detalle-mapa__acciones">
         <Link className="boton boton--principal boton--compacto" to={`/profesionales/${id}`} state={{ desde }}>Ver ficha y reservar</Link>
         <a className="boton boton--secundario boton--compacto"
