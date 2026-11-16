@@ -50,13 +50,15 @@ Texto propuesto: «Como usuario, necesito elegir un plan de alimentación según
 
 Estado: propuesta pendiente de confirmación expresa. SC-39 queda reservada; no se altera la especificación aprobada ni se marca la historia aceptada por inferencia.
 
-## Retrospectiva para completar con el equipo
+## Retrospectiva: aportes recibidos y validación pendiente
 
 Hechos para conversar: las observaciones de revisión detectaron fallos de ubicación, privacidad, reloj y foco; la integración fue anterior al cierre de algunos registros; hubo colisión de un ID entre Docker y carga y diferencias entre Drive y GitHub.
 
 Acciones propuestas: un único responsable de edición de archivos Office; reservar IDs antes de usarlos; comprobar observaciones de todos los PR antes del cierre; mantener una matriz PR → corrección → prueba → documento; separar integración de código de aceptación del PO.
 
-Pendientes personales: Rodrigo Cárcamo Rojas, Luis Méndez y Nicolás Silva deben aportar o confirmar sus observaciones, acuerdos y horas. No se atribuyen opiniones ni asistencia a reuniones que no estén documentadas.
+16-11-2026: se incorporaron los comentarios íntegros de Luis Méndez y Nicolás Silva en Plantilla_Resumen_Reunion_Retrospectiva.docx de esta carpeta. Luis destaca el trabajo en Docker, base de datos y asistente y relata el problema de usuarios no visibles en Docker, que considera solucionado. Nicolás destaca las correcciones y señala las diferencias documentales y las dos pruebas de Google pendientes. Ambos proponen reforzar las pruebas; Nicolás añade organización, documentación y registro de horas.
+
+Pendiente: aporte de Rodrigo Cárcamo Rojas y confirmación de acuerdos, responsables, plazos y horas del equipo. Los comentarios recibidos no acreditan por sí mismos una reunión ni la aceptación del PO.
 
 ## Mejoras de seguimiento
 
