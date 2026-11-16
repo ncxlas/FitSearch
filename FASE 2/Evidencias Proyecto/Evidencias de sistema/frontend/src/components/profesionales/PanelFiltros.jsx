@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import reglas from '@shared/reglas.json';
 import Icono from '../Icono.jsx';
 import useBloquearScroll from '../diseno/useBloquearScroll.js';
@@ -22,6 +23,7 @@ function textoUbicacion({ buscando, estado }) {
 // y queda en la URL.
 export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo, ubicacion, onCambiar, onLimpiar, total, hayFiltros }) {
   const panel = useRef(null);
+  const capa = useRef(null);
   useBloquearScroll(abierto);
   useEffect(() => {
     if (!abierto) return undefined;
@@ -33,8 +35,27 @@ export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo,
   useEffect(() => {
     if (!abierto) return undefined;
     const anterior = document.activeElement;
+    const fondo = [...document.body.children].filter((elemento) => elemento !== capa.current && !elemento.hasAttribute('inert'));
+    fondo.forEach((elemento) => elemento.setAttribute('inert', ''));
     panel.current?.querySelector('.panel-filtros__cerrar')?.focus();
-    return () => anterior?.focus?.();
+    const alTabular = (evento) => {
+      if (evento.key !== 'Tab') return;
+      const controles = [...panel.current.querySelectorAll('button:not([disabled]), select:not([disabled]), a[href], input:not([disabled])')];
+      const primero = controles[0];
+      const ultimo = controles.at(-1);
+      const activo = document.activeElement;
+      if (!primero) return;
+      if (evento.shiftKey ? activo === primero || !panel.current.contains(activo) : activo === ultimo || !panel.current.contains(activo)) {
+        evento.preventDefault();
+        (evento.shiftKey ? ultimo : primero).focus();
+      }
+    };
+    document.addEventListener('keydown', alTabular);
+    return () => {
+      document.removeEventListener('keydown', alTabular);
+      fondo.forEach((elemento) => elemento.removeAttribute('inert'));
+      if (anterior?.isConnected) anterior.focus?.();
+    };
   }, [abierto]);
 
   const lista = (nombre, etiqueta, opciones, extra = {}, alCambiar = (valor) => onCambiar({ [nombre]: valor })) => (
@@ -58,11 +79,11 @@ export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo,
   const comunasDe = (region) => (region ? regiones.find(({ nombre }) => nombre === region)?.comunas ?? [] : catalogo.comunas);
   const cambiarRegion = (region) => onCambiar({ region, ...(filtros.comuna && !comunasDe(region).includes(filtros.comuna) && { comuna: '' }) });
 
-  return (
-    <>
+  return createPortal(
+    <div ref={capa}>
       {/* El fondo siempre está montado para fundirse junto con la hoja de filtros (al abrir y al cerrar). */}
       <div className={`panel-filtros__fondo${abierto ? ' panel-filtros__fondo--visible' : ''}`} onClick={onCerrar} aria-hidden="true" />
-      <aside ref={panel} id={id} className={`panel-filtros${abierto ? ' panel-filtros--abierto' : ''}`} aria-label="Filtros">
+      <aside ref={panel} id={id} className={`panel-filtros${abierto ? ' panel-filtros--abierto' : ''}`} role={abierto ? 'dialog' : undefined} aria-modal={abierto ? true : undefined} aria-label="Filtros">
         <div className="panel-filtros__cabecera">
           <h2>Filtros</h2>
           <button type="button" className="boton-icono panel-filtros__cerrar" aria-label="Cerrar filtros" onClick={onCerrar}><Icono nombre="cerrar" tamano={22} /></button>
@@ -82,6 +103,6 @@ export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo,
           </button>
         </div>
       </aside>
-    </>
+    </div>, document.body
   );
 }
