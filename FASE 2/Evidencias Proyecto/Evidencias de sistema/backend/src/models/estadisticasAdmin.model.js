@@ -1,7 +1,6 @@
 // Datos del dashboard y los reportes del administrador (11-11-2026). Se traen filas mínimas de un rango de fechas y el
 // servicio las agrupa por día de Chile (la base guarda las fechas y horas en UTC).
 const prisma = require('./prisma');
-const { CON_FOTO } = require('../utils/fotos');
 
 const rango = (desde, hasta) => ({ gte: desde, lt: hasta });
 // Columnas de tipo DATE (el día ya viene cortado): se comparan con fechas 'AAAA-MM-DD'.
@@ -12,15 +11,10 @@ const cuentas = (desde, hasta) => prisma.usuario.findMany({
   where: { fechaRegistro: rango(desde, hasta) }, select: { fechaRegistro: true, rol: { select: { nombre: true } } },
 });
 
-// Con la foto de cada cuenta (15-11-2026).
+// La foto de cada cuenta se pide aparte, solo su clave (revisión del PR 62; models/foto.model.js).
 const ultimasCuentas = (limite) => prisma.usuario.findMany({
-  select: { id: true, nombre: true, activo: true, fechaRegistro: true, rol: { select: { nombre: true } }, ...CON_FOTO },
+  select: { id: true, nombre: true, activo: true, fechaRegistro: true, rol: { select: { nombre: true } } },
   orderBy: [{ fechaRegistro: 'desc' }, { id: 'desc' }], take: limite,
-});
-
-// Fotos de unas pocas cuentas (las que muestra la cola de verificación), sin traer las de todos los profesionales.
-const fotosDe = (usuarioIds) => prisma.datosCuenta.findMany({
-  where: { usuarioId: { in: usuarioIds }, foto: { not: null } }, select: { usuarioId: true, foto: true },
 });
 
 const reservas = (desde, hasta) => prisma.reserva.findMany({
@@ -78,5 +72,5 @@ async function plataforma() {
 const verificacionesPendientes = () => prisma.profesional.count({ where: { ...profesionalVigente, estadoVerificacion: 'pendiente' } });
 
 module.exports = {
-  cuentas, ultimasCuentas, reservas, resenas, preguntasAsistente, profesionales, personasPorFuncion, plataforma, verificacionesPendientes, fotosDe,
+  cuentas, ultimasCuentas, reservas, resenas, preguntasAsistente, profesionales, personasPorFuncion, plataforma, verificacionesPendientes,
 };

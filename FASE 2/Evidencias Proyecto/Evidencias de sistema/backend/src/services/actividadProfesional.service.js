@@ -2,8 +2,9 @@
 // Una cita "pasada" es la que ya comenzó en hora de Chile: si estaba confirmada se cuenta como realizada y si seguía
 // pendiente, como no confirmada a tiempo. Las personas se muestran solo con su nombre, sin correo ni datos de salud.
 const modelo = require('../models/actividadProfesional.model');
+const fotos = require('../models/foto.model');
 const ErrorHttp = require('../utils/ErrorHttp');
-const { fotoUrlDe } = require('../utils/fotos');
+const { fotoUrlConClave } = require('../utils/fotos');
 const { fechaEnChile, horaEnChile, sumarDias, lunesDeLaSemana } = require('../utils/fechaChile');
 
 const ZONA = 'America/Santiago';
@@ -41,10 +42,16 @@ function agruparPorCliente(filas, ahora) {
   const clientes = new Map();
   for (const fila of filas) {
     const c = cita(fila, ahora);
-    if (!clientes.has(fila.usuario.id)) clientes.set(fila.usuario.id, { id: fila.usuario.id, nombre: fila.usuario.nombre, fotoUrl: fotoUrlDe(fila.usuario), citas: [] });
+    if (!clientes.has(fila.usuario.id)) clientes.set(fila.usuario.id, { id: fila.usuario.id, nombre: fila.usuario.nombre, citas: [] });
     clientes.get(fila.usuario.id).citas.push(c);
   }
   return [...clientes.values()];
+}
+
+// La foto de cada cliente (15-11-2026): solo su clave, calculada en MySQL, una vez por persona (revisión del PR 62).
+async function conFotos(clientes) {
+  const claves = await fotos.clavesDe(clientes.map(({ id }) => id));
+  return clientes.map((cliente) => ({ ...cliente, fotoUrl: fotoUrlConClave(cliente.id, claves.get(cliente.id)) }));
 }
 
 function resumenCliente({ id, nombre, fotoUrl, citas }) {
@@ -67,7 +74,7 @@ function resumenCliente({ id, nombre, fotoUrl, citas }) {
 // Lista de clientes: primero quienes tienen una cita próxima (la más cercana arriba) y luego el resto por su última cita.
 async function listarClientes(usuarioId, ahora = new Date()) {
   const { id: profesionalId } = await modelo.fichaDe(usuarioId);
-  const clientes = agruparPorCliente(await modelo.reservas(profesionalId), ahoraEnChile(ahora)).map(resumenCliente);
+  const clientes = (await conFotos(agruparPorCliente(await modelo.reservas(profesionalId), ahoraEnChile(ahora)))).map(resumenCliente);
   clientes.sort((a, b) => compararClientes(a, b) || a.nombre.localeCompare(b.nombre, 'es'));
   return { clientes, zonaHoraria: ZONA };
 }
@@ -84,7 +91,7 @@ async function historialCliente(usuarioId, clienteId, ahora = new Date()) {
   const { id: profesionalId } = await modelo.fichaDe(usuarioId);
   const filas = await modelo.reservas(profesionalId, clienteId);
   if (!filas.length) throw new ErrorHttp(404, 'No encontramos a esta persona entre tus clientes');
-  const [cliente] = agruparPorCliente(filas, ahoraEnChile(ahora));
+  const [cliente] = await conFotos(agruparPorCliente(filas, ahoraEnChile(ahora)));
   return { cliente: resumenCliente(cliente), citas: cliente.citas, zonaHoraria: ZONA };
 }
 

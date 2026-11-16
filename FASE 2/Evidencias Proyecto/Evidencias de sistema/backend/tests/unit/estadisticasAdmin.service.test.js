@@ -1,8 +1,13 @@
 // Dashboard y reportes del administrador (11-11-2026): agrupación por día de Chile, comparaciones con el período anterior,
 // cola de verificación, embudo, rankings, días para verificar y calidad. Datos simulados.
 jest.mock('../../src/models/estadisticasAdmin.model');
+// Las claves de las fotos se piden aparte, sin traer las imágenes (revisión del PR 62).
+jest.mock('../../src/models/foto.model');
 const modelo = require('../../src/models/estadisticasAdmin.model');
+const fotos = require('../../src/models/foto.model');
 const servicio = require('../../src/services/estadisticasAdmin.service');
+const { cifrarCuenta } = require('../../src/utils/fotos');
+
 
 // Miércoles 11-11-2026 a las 10:00 en Chile (UTC−3).
 const AHORA = new Date('2026-11-11T13:00:00Z');
@@ -18,6 +23,7 @@ const ficha = (id, cambios = {}) => ({
 
 beforeEach(() => {
   jest.resetAllMocks();
+  fotos.clavesDe.mockResolvedValue(new Map());
   modelo.cuentas.mockResolvedValue([]);
   modelo.reservas.mockResolvedValue([]);
   modelo.resenas.mockResolvedValue([]);
@@ -42,7 +48,11 @@ test('el dashboard compara los últimos 7 días con los 7 anteriores y agrupa po
   modelo.reservas.mockResolvedValue([reserva('2026-11-11'), reserva('2026-11-02', 'cancelada')]);
   modelo.ultimasCuentas.mockResolvedValue([{ id: 3, nombre: 'Ana', rol: { nombre: 'usuario' }, activo: true, fechaRegistro: new Date('2026-11-11T12:00:00Z') }]);
   modelo.profesionales.mockResolvedValue([ficha(1, { verificado: true, estadoVerificacion: 'verificado' }), ficha(2)]);
+  // Solo la clave de la foto, calculada en MySQL (revisión del PR 62): sin traer las imágenes.
+  fotos.clavesDe.mockResolvedValue(new Map([[3, 'abcdef0123456789']]));
   const d = await servicio.dashboard(AHORA);
+  expect(fotos.clavesDe).toHaveBeenCalledTimes(1);
+  expect(fotos.clavesDe.mock.calls[0][0]).toContain(3);
   expect(modelo.cuentas).toHaveBeenCalledWith(new Date('2026-10-29T03:00:00Z'), new Date('2026-11-12T03:00:00Z'));
   expect(d.hoy).toBe('2026-11-11');
   expect(d.cifras.cuentas).toEqual({ actual: 3, anterior: 1 });
@@ -50,7 +60,9 @@ test('el dashboard compara los últimos 7 días con los 7 anteriores y agrupa po
   expect(d.actividad).toHaveLength(14);
   expect(d.actividad.at(-1)).toEqual({ fecha: '2026-11-11', cuentas: 1, reservas: 1, resenas: 0 });
   expect(d.actividad.find((dia) => dia.fecha === '2026-11-10').cuentas).toBe(1);
-  expect(d.ultimasCuentas).toEqual([{ id: 3, nombre: 'Ana', fotoUrl: null, rol: 'usuario', activo: true, fechaRegistro: '2026-11-11T12:00:00.000Z' }]);
+  expect(d.ultimasCuentas).toEqual([{
+    id: 3, nombre: 'Ana', fotoUrl: `/api/fotos/${cifrarCuenta(3)}/abcdef0123456789`, rol: 'usuario', activo: true, fechaRegistro: '2026-11-11T12:00:00.000Z',
+  }]);
   expect(d.plataforma).toMatchObject({ profesionales: 2, verificados: 1, establecimientos: { gimnasio: 3 } });
 });
 

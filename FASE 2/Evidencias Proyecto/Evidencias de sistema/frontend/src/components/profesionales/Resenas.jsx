@@ -223,7 +223,8 @@ export default function Resenas({ profesionalId, nombre, resumen, miResena, pued
             {lista.resenas.map((resena) => (
               <li key={resena.id} className="resena">
                 <div className="resena__cabecera">
-                  <Avatar className="avatar avatar--pequeno" nombre={resena.autor} fotoUrl={resena.fotoUrl} texto={resena.autor[0].toUpperCase()} />
+                  {/* Solo la inicial: las reseñas no muestran la foto de quien las escribe (revisión del PR 62, 16-11-2026). */}
+                  <Avatar className="avatar avatar--pequeno" nombre={resena.autor} texto={resena.autor[0].toUpperCase()} />
                   <p>
                     <strong>{resena.autor}</strong>
                     {resena.propia && <span className="etiqueta-rol">Tu reseña</span>}

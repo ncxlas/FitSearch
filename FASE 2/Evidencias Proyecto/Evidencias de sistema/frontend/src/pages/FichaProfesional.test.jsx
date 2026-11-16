@@ -226,3 +226,12 @@ describe('Calificar (FS-HU-24)', () => {
     expect(screen.getByText('¡Sé la primera persona en dejar una reseña!')).toBeInTheDocument();
   });
 });
+
+// Revisión del PR 62 (16-11-2026): las reseñas muestran solo la inicial de quien las escribió, nunca su foto.
+test('las reseñas no muestran la foto de su autor, solo su inicial', async () => {
+  simular({ resenas: [resenaDe({ fotoUrl: '/api/fotos/abc/0123456789abcdef' })] });
+  renderizarApp('/profesionales/1');
+  const resena = (await screen.findByText('Valeria D.')).closest('li');
+  expect(resena.querySelector('img')).toBeNull();
+  expect(resena.querySelector('.avatar')).toHaveTextContent('V');
+});

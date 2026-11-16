@@ -1,11 +1,11 @@
 // Acceso a datos de la tabla resenas (FS-HU-24).
 const prisma = require('./prisma');
-const { CON_FOTO } = require('../utils/fotos');
 
-// La foto del autor se muestra junto a su reseña (15-11-2026).
+// Revisión del PR 62 (16-11-2026): las reseñas no llevan la foto de quien las escribió. Mostrarla dejaba ver la cara de
+// los pacientes de un profesional y permitía seguir a una misma persona entre fichas; queda el nombre público («Ana P.»).
 const seleccion = {
   id: true, usuarioId: true, puntaje: true, comentario: true, reservaId: true, fechaCreacion: true, fechaActualizacion: true,
-  usuario: { select: { id: true, nombre: true, ...CON_FOTO } },
+  usuario: { select: { nombre: true } },
 };
 
 // Filtro de la ficha (09-11-2026): positivas (4 y 5 estrellas) o negativas (1 y 2).

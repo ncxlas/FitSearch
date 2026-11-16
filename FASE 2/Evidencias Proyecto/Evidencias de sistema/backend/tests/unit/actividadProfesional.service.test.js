@@ -1,6 +1,11 @@
 jest.mock('../../src/models/actividadProfesional.model');
+// Las claves de las fotos de los clientes se piden aparte, sin traer las imágenes (revisión del PR 62).
+jest.mock('../../src/models/foto.model');
 const modelo = require('../../src/models/actividadProfesional.model');
+const fotos = require('../../src/models/foto.model');
 const servicio = require('../../src/services/actividadProfesional.service');
+const { cifrarCuenta } = require('../../src/utils/fotos');
+
 
 // Martes 10-11-2026, 12:00 en Santiago (UTC-3).
 const ahora = new Date('2026-11-10T15:00:00Z');
@@ -34,6 +39,7 @@ const filas = [
 
 beforeEach(() => {
   jest.resetAllMocks();
+  fotos.clavesDe.mockResolvedValue(new Map());
   modelo.fichaDe.mockResolvedValue({ id: 3 });
 });
 
@@ -112,4 +118,22 @@ test('sin ficha profesional no hay clientes ni reportes', async () => {
   modelo.fichaDe.mockRejectedValue(Object.assign(new Error('Completa tu ficha'), { estado: 409 }));
   await expect(servicio.listarClientes(7, ahora)).rejects.toMatchObject({ estado: 409 });
   await expect(servicio.reportes(7, {}, ahora)).rejects.toMatchObject({ estado: 409 });
+});
+
+// Revisión del PR 62 (16-11-2026): la foto de cada cliente llega como clave calculada en MySQL, pedida una vez por
+// persona; los reportes no la piden.
+test('cada cliente lleva la dirección de su foto, pidiendo las claves una sola vez por persona', async () => {
+  modelo.reservas.mockResolvedValue(filas);
+  fotos.clavesDe.mockResolvedValue(new Map([[camila.id, 'abcdef0123456789']]));
+  const { clientes } = await servicio.listarClientes(7, ahora);
+  const ids = fotos.clavesDe.mock.calls[0][0];
+  expect(new Set(ids).size).toBe(ids.length);
+  expect(ids.sort()).toEqual([...new Set(filas.map((f) => f.usuario.id))].sort());
+  expect(clientes.find((c) => c.id === camila.id).fotoUrl).toBe(`/api/fotos/${cifrarCuenta(camila.id)}/abcdef0123456789`);
+  expect(clientes.filter((c) => c.id !== camila.id).every((c) => c.fotoUrl === null)).toBe(true);
+
+  fotos.clavesDe.mockClear();
+  modelo.calificacion.mockResolvedValue({ promedio: null, cantidad: 0 });
+  await servicio.reportes(7, {}, ahora);
+  expect(fotos.clavesDe).not.toHaveBeenCalled();
 });
