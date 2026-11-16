@@ -91,7 +91,8 @@ export function DetalleHorario({ horario, onCambio, onCerrar }) {
             {reserva.primeraVisita !== null && <div><dt>Primera visita</dt><dd>{reserva.primeraVisita ? 'Sí' : 'No'}</dd></div>}
           </dl>
           <blockquote className="panel-agenda__mensaje">{reserva.mensaje}</blockquote>
-          {pregunta ? (
+          {/* Si la hora llega con la pregunta de cancelar abierta (revisión del PR 63), la pregunta se cierra sola. */}
+          {pregunta && !pasado ? (
             <Confirmar pregunta="¿Cancelar esta reserva? Le avisaremos a la persona por correo." accion="Sí, cancelar" ocupado={ocupado}
               onConfirmar={() => cambiarEstado('cancelada')} onVolver={() => setPregunta(null)} />
           ) : (
