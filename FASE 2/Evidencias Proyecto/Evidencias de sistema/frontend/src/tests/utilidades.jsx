@@ -110,7 +110,11 @@ export function listado(profesionales = [fichaProfesional()], { pagina = 1, tota
   return { profesionales, pagina, total, totalPaginas, hayMas: pagina < totalPaginas };
 }
 
-export const FILTROS = { especialidades: ['Kinesiología', 'Nutrición'], comunas: ['Melipilla', 'Ñuñoa'] };
+export const FILTROS = {
+  especialidades: ['Kinesiología', 'Nutrición'],
+  regiones: [{ nombre: 'Metropolitana', comunas: ['Melipilla', 'Ñuñoa'] }],
+  comunas: ['Melipilla', 'Ñuñoa'],
+};
 
 // Geolocalización del navegador simulada: concedida con una posición o rechazada con un código de error.
 export function simularUbicacion({ lat = -33.437123, lng = -70.650456, error = null, permiso = 'prompt' } = {}) {

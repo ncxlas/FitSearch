@@ -2,6 +2,7 @@ const { body } = require('express-validator');
 const { profesionales: reglas } = require('../../../shared/reglas.json');
 const especialidades = require('../models/especialidad.model');
 const profesionales = require('../models/profesional.model');
+const { unirEspacios } = require('../utils/regiones');
 
 const valores = (opciones) => opciones.map((opcion) => opcion.valor);
 const { latMin, latMax, lngMin, lngMax } = reglas.ubicacionChile;
@@ -30,7 +31,9 @@ module.exports = [
     .if((_valor, { req }) => req.body.modalidad !== 'online')
     .isString().withMessage('Ingresa la comuna donde atiendes').bail()
     .trim().notEmpty().withMessage('Ingresa la comuna donde atiendes').bail()
-    .isLength({ max: reglas.comuna.max }).withMessage(`La comuna admite hasta ${reglas.comuna.max} caracteres`),
+    .isLength({ max: reglas.comuna.max }).withMessage(`La comuna admite hasta ${reglas.comuna.max} caracteres`)
+    // «San  Antonio» se guarda como «San Antonio», para que el filtro por comuna y por región la encuentre (15-11-2026).
+    .customSanitizer(unirEspacios),
   body('modalidad')
     .isIn(valores(reglas.modalidades)).withMessage('Selecciona cómo atiendes'),
   body('direccion')

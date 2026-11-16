@@ -4,6 +4,7 @@ import { solicitar } from './api.js';
 // distancias y ordenar por cercanía; no se agrega a la URL de la página.
 export function buscarEstablecimientos(categoria, filtros = {}, ubicacion = null) {
   const parametros = new URLSearchParams({ categoria });
+  if (filtros.region) parametros.set('region', filtros.region);
   if (filtros.comuna) parametros.set('comuna', filtros.comuna);
   if (filtros.pagina) parametros.set('pagina', filtros.pagina);
   if (ubicacion) {

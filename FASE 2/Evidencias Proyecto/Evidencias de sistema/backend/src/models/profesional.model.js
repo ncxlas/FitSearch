@@ -1,5 +1,6 @@
 const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
+const { comunasDeRegion } = require('../utils/regiones');
 const ErrorHttp = require('../utils/ErrorHttp');
 const verificacion = require('./verificacion.model');
 
@@ -30,7 +31,10 @@ function horariosLibres({ hoy, segundos }) {
     AND NOT EXISTS (SELECT 1 FROM bloqueos_agenda b WHERE b.profesional_id = d.profesional_id AND d.fecha BETWEEN b.fecha_inicio AND b.fecha_fin)`;
 }
 
-function construirConsulta({ q, especialidad, comuna, modalidad, calificacionMin, ubicacion, distanciaKm, soloFavoritosDe, ahora, conHorasHasta }) {
+// La comuna guardada con sus espacios unidos, como unirEspacios de utils/regiones.js (15-11-2026).
+const COMUNA = Prisma.sql`TRIM(REGEXP_REPLACE(p.comuna, '[[:space:]]+', ' '))`;
+
+function construirConsulta({ q, especialidad, comuna, region, modalidad, calificacionMin, ubicacion, distanciaKm, soloFavoritosDe, ahora, conHorasHasta }) {
   const distancia = ubicacion
     ? Prisma.sql`CASE WHEN p.modalidad <> 'online' AND p.ubicacion_lng IS NOT NULL AND p.ubicacion_lat IS NOT NULL
       THEN ST_Distance_Sphere(POINT(p.ubicacion_lng, p.ubicacion_lat), POINT(${ubicacion.lng}, ${ubicacion.lat})) / 1000 END`
@@ -42,7 +46,11 @@ function construirConsulta({ q, especialidad, comuna, modalidad, calificacionMin
     condiciones.push(Prisma.sql`(u.nombre LIKE ${patron} OR p.especialidad LIKE ${patron} OR p.descripcion LIKE ${patron})`);
   }
   if (especialidad) condiciones.push(Prisma.sql`p.especialidad = ${especialidad}`);
-  if (comuna) condiciones.push(Prisma.sql`p.comuna = ${comuna}`);
+  // Con una comuna basta; con solo la región, cualquiera de sus comunas. La intercalación de la tabla no distingue
+  // mayúsculas ni tildes, así «san antonio» también es de Valparaíso (14-11-2026). Se compara con los espacios unidos
+  // para que también aparezca una comuna guardada antes como «San  Antonio» (15-11-2026).
+  if (comuna) condiciones.push(Prisma.sql`${COMUNA} = ${comuna}`);
+  else if (region) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(comunasDeRegion(region))})`);
   // Quien atiende de ambas formas aparece tanto en "presencial" como en "online".
   if (modalidad) condiciones.push(Prisma.sql`p.modalidad IN (${modalidad}, 'ambas')`);
   if (calificacionMin) condiciones.push(Prisma.sql`COALESCE(c.promedio, 0) >= ${calificacionMin}`);

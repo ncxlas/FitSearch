@@ -1,0 +1,57 @@
+{
+  "fecha": "2026-11-15",
+  "defecto": 46,
+  "caso": "CP-198",
+  "rama": "feat/filtro-region (PR #57), commit a61e2d9",
+  "detectadoPor": "Luis Méndez, en la revisión del PR #57 (14-11-2026), con MySQL real",
+  "problema": "Una comuna guardada con espacios repetidos («San  Antonio») se mostraba bien, pero no aparecía al filtrar por esa comuna ni por su región, en profesionales ni en centros de salud y gimnasios.",
+  "correccion": [
+    "La ficha del profesional y los establecimientos del administrador guardan la comuna con los espacios unidos (unirEspacios en backend/src/utils/regiones.js).",
+    "La comuna buscada en ?comuna= se une de la misma forma.",
+    "En SQL, la comuna guardada se compara con TRIM(REGEXP_REPLACE(comuna, '[[:space:]]+', ' ')): también aparecen los datos ya guardados, sin migración."
+  ],
+  "mysql": {
+    "version": "8.0.46",
+    "intercalacionColumnas": {
+      "establecimientos": "utf8mb4_unicode_ci",
+      "profesionales": "utf8mb4_unicode_ci"
+    },
+    "metodo": "Tabla temporal (solo existe en la sesión) con la misma intercalación de las columnas y estas filas: dos espacios = \"San  Antonio\"; espacio adelante = \" san antonio\"; tabulación = \"San\\tAntonio\"; sin tilde y espacios dobles = \"vina  del  mar\"; escrita igual = \"San Antonio\"; otra región = \"Providencia\"",
+    "resultados": {
+      "antes_comunaSanAntonio": [
+        "escrita igual"
+      ],
+      "antes_regionValparaiso": [
+        "escrita igual"
+      ],
+      "despues_comunaSanAntonio": [
+        "dos espacios",
+        "escrita igual",
+        "espacio adelante",
+        "tabulación"
+      ],
+      "despues_regionValparaiso": [
+        "dos espacios",
+        "escrita igual",
+        "espacio adelante",
+        "sin tilde y espacios dobles",
+        "tabulación"
+      ],
+      "despues_comunaVinaDelMar": [
+        "sin tilde y espacios dobles"
+      ]
+    },
+    "consultasDelPrSobreLaBaseLocal": {
+      "profesionalesRegionValparaiso": 1,
+      "profesionalesComunaSanAntonio": 1,
+      "profesionalesRegionMetropolitana": 14,
+      "gimnasiosRegionValparaiso": 11
+    }
+  },
+  "pruebasAutomatizadas": {
+    "nuevas": "6 (utils/regiones, SQL de los modelos de profesionales y establecimientos, API al guardar la ficha y el establecimiento y al buscar con espacios)",
+    "sinLaCorreccion": "8 pruebas fallan",
+    "ramaConMain": "backend 594/594 y frontend 436/436; lint y build correctos",
+    "conMainYPr58": "backend 603/603 y frontend 436/436"
+  }
+}

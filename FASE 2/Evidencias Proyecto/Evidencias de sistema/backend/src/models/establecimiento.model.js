@@ -1,5 +1,6 @@
 const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
+const { comunasDeRegion } = require('../utils/regiones');
 
 // Directorio de centros de salud y gimnasios (FS-HU-25). Solo muestra establecimientos activos de una categoría, tal
 // como los registró el administrador (FS-HU-30). Igual que el buscador de profesionales, usa SQL parametrizado para
@@ -18,12 +19,18 @@ const PROFESIONALES_VISIBLES = Prisma.sql`
   WHERE r.nombre = 'profesional' AND u.activo = true`;
 const DONDE_PROFESIONAL_VISIBLE = { usuario: { activo: true, rol: { nombre: 'profesional' } } };
 
-function construirConsulta({ categoria, comuna, ubicacion, distanciaKm }) {
+// La comuna guardada con sus espacios unidos, como unirEspacios de utils/regiones.js (15-11-2026).
+const COMUNA = Prisma.sql`TRIM(REGEXP_REPLACE(e.comuna, '[[:space:]]+', ' '))`;
+
+function construirConsulta({ categoria, comuna, region, ubicacion, distanciaKm }) {
   const distancia = ubicacion
     ? Prisma.sql`ST_Distance_Sphere(POINT(e.ubicacion_lng, e.ubicacion_lat), POINT(${ubicacion.lng}, ${ubicacion.lat})) / 1000`
     : Prisma.sql`NULL`;
   const condiciones = [Prisma.sql`e.activo = true`, Prisma.sql`e.categoria = ${categoria}`];
-  if (comuna) condiciones.push(Prisma.sql`e.comuna = ${comuna}`);
+  // Con una comuna basta; con solo la región, cualquiera de sus comunas (14-11-2026). Se compara con los espacios
+  // unidos para que también aparezca una comuna guardada antes como «San  Antonio» (15-11-2026).
+  if (comuna) condiciones.push(Prisma.sql`${COMUNA} = ${comuna}`);
+  else if (region) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(comunasDeRegion(region))})`);
   if (ubicacion && distanciaKm) condiciones.push(Prisma.sql`${distancia} <= ${distanciaKm}`);
   return { desde: Prisma.sql`FROM establecimientos e WHERE ${Prisma.join(condiciones, ' AND ')}`, distancia };
 }

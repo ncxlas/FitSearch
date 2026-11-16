@@ -91,6 +91,10 @@ test('un establecimiento necesita categoría del catálogo, comuna, dirección y
     comuna: 'Ingresa la comuna del establecimiento',
     ubicacionLat: 'La latitud debe estar en Chile (entre -56,5 y -17)',
   });
+  // La comuna se guarda con los espacios unidos, para que el filtro por comuna y región la encuentre (15-11-2026).
+  const conEspacios = await conSesion(request(app).post(`${RUTA}/establecimientos`)).send({ ...GIMNASIO, comuna: ' San   Antonio ' });
+  expect(conEspacios.status).toBe(201);
+  expect(modelo.crear.mock.calls.at(-1)[1].comuna).toBe('San Antonio');
 });
 
 // Instagram (11-11-2026): opcional; se guarda solo el usuario aunque se escriba con «@» o se pegue el enlace del perfil.

@@ -15,8 +15,8 @@ import { obtenerUbicacion, ubicacionSiHayPermiso } from '../services/ubicacion.j
 import './Profesionales.css';
 
 // Parámetros de la URL: la búsqueda se puede compartir y el buscador del Inicio llega con ?q=.
-const CLAVES = ['q', 'especialidad', 'comuna', 'distancia', 'calificacion', 'modalidad', 'disponible', 'orden', 'pagina'];
-const FILTROS = ['especialidad', 'comuna', 'distancia', 'calificacion', 'modalidad', 'disponible'];
+const CLAVES = ['q', 'especialidad', 'region', 'comuna', 'distancia', 'calificacion', 'modalidad', 'disponible', 'orden', 'pagina'];
+const FILTROS = ['especialidad', 'region', 'comuna', 'distancia', 'calificacion', 'modalidad', 'disponible'];
 const { ordenes, filtroModalidad, busqueda } = reglas.profesionales;
 const UBICACION_INICIAL = { estado: 'inactiva', coords: null, mensaje: '' };
 const SIN_RESULTADOS = [];
@@ -30,6 +30,7 @@ const ICONOS_ESPECIALIDAD = {
 const DOS_COLUMNAS = '(min-width: 75rem)';
 
 function etiquetaFiltro(clave, valor) {
+  if (clave === 'region') return `Región: ${valor}`;
   if (clave === 'distancia') return `Hasta ${valor} km`;
   if (clave === 'calificacion') return `${valor} estrellas o más`;
   if (clave === 'modalidad') return filtroModalidad.find((opcion) => opcion.valor === valor)?.etiqueta || valor;
@@ -50,7 +51,7 @@ export default function Profesionales() {
   const necesitaUbicacion = Boolean(filtros.distancia) || filtros.orden === 'cercania';
   // estado: inactiva | lista | denegada | no-disponible
   const [ubicacion, setUbicacion] = useState(UBICACION_INICIAL);
-  const [catalogo, setCatalogo] = useState({ especialidades: [], comunas: [] });
+  const [catalogo, setCatalogo] = useState({ especialidades: [], regiones: [], comunas: [] });
   // Objetivo del perfil (FS-HU-18): sugiere las especialidades que lo atienden (09-11-2026).
   const [objetivo, setObjetivo] = useState(null);
   const [panelAbierto, setPanelAbierto] = useState(false);

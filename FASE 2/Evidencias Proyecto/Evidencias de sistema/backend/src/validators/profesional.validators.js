@@ -1,5 +1,6 @@
 const { body, param, query } = require('express-validator');
 const { profesionales: reglas, resena, agenda } = require('../../../shared/reglas.json');
+const { NOMBRES: REGIONES } = require('../utils/regiones');
 
 const valores = (opciones) => opciones.map((opcion) => opcion.valor);
 // "destacados" no se ofrece en el selector de orden: lo usa el Inicio para elegir sus fichas.
@@ -16,6 +17,8 @@ const listar = [
     .withMessage(`La búsqueda admite hasta ${reglas.busqueda.max} caracteres`),
   texto('especialidad', reglas.especialidad.max, 'especialidad'),
   texto('comuna', reglas.comuna.max, 'comuna'),
+  // Región de Chile (14-11-2026): una de las 16 de shared/regiones.json.
+  unico('region', 'Indica una sola región').isIn(REGIONES).withMessage('Selecciona una región de Chile'),
   unico('modalidad', 'Indica una sola modalidad').isIn(valores(reglas.filtroModalidad)).withMessage('Selecciona una modalidad válida'),
   unico('calificacionMin', 'Indica una sola calificación mínima').isInt({ min: resena.puntaje.min, max: resena.puntaje.max })
     .withMessage(`La calificación mínima debe ser un entero entre ${resena.puntaje.min} y ${resena.puntaje.max}`),

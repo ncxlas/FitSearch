@@ -1,6 +1,7 @@
 // Validaciones del contenido del administrador (FS-HU-30). Los límites vienen de shared/reglas.json.
 const { body, param, query } = require('express-validator');
 const { contenido: reglas, profesionales: reglasProfesionales } = require('../../../shared/reglas.json');
+const { unirEspacios } = require('../utils/regiones');
 
 const CATALOGOS = ['especialidades', 'alimentos', 'establecimientos'];
 const { alimento: reglasAlimento, establecimiento: reglasEstablecimiento } = reglas;
@@ -50,7 +51,8 @@ const DATOS = {
   establecimientos: [
     texto('nombre', reglasEstablecimiento.nombre, 'Escribe el nombre del establecimiento'),
     body('categoria').isIn(reglasEstablecimiento.categorias.map(({ valor }) => valor)).withMessage('Elige si es un centro de salud o un gimnasio'),
-    texto('comuna', { max: reglasEstablecimiento.comuna.max }, 'Ingresa la comuna del establecimiento'),
+    // «San  Antonio» se guarda como «San Antonio», para que el filtro por comuna y por región la encuentre (15-11-2026).
+    texto('comuna', { max: reglasEstablecimiento.comuna.max }, 'Ingresa la comuna del establecimiento').customSanitizer(unirEspacios),
     texto('direccion', { max: reglasEstablecimiento.direccion.max }, 'Ingresa la dirección del establecimiento'),
     // Instagram (opcional): se acepta «@usuario», «usuario» o el enlace del perfil, y se guarda solo el usuario.
     body('instagram').optional({ values: 'falsy' }).isString().withMessage('Escribe el usuario de Instagram').bail()

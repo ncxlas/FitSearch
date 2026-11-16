@@ -148,6 +148,35 @@ describe('Filtros y orden', () => {
     await waitFor(() => expect(ultimaConsulta(fetch).comuna).toBeUndefined());
   });
 
+  test('la región limita las comunas y, al cambiarla, quita la comuna que no es de ella (14-11-2026)', async () => {
+    const catalogo = {
+      especialidades: ['Nutrición'],
+      regiones: [{ nombre: 'Valparaíso', comunas: ['San Antonio'] }, { nombre: 'Metropolitana', comunas: ['Melipilla', 'Ñuñoa'] }],
+      comunas: ['Melipilla', 'Ñuñoa', 'San Antonio'],
+    };
+    const fetch = simularApi({ '/api/profesionales/filtros': catalogo, '/api/profesionales': listado() });
+    renderizarApp('/profesionales');
+    await screen.findByRole('heading', { name: 'Ana Demo' });
+    const opciones = (etiqueta) => within(screen.getByLabelText(etiqueta)).getAllByRole('option').map((opcion) => opcion.textContent);
+    // Las regiones van de norte a sur, como las entrega la API; sin región se ofrecen todas las comunas.
+    await waitFor(() => expect(opciones('Región')).toEqual(['Todas', 'Valparaíso', 'Metropolitana']));
+    expect(opciones('Comuna')).toEqual(['Todas', 'Melipilla', 'Ñuñoa', 'San Antonio']);
+
+    await userEvent.selectOptions(screen.getByLabelText('Comuna'), 'Ñuñoa');
+    await esperarConsulta(fetch, { comuna: 'Ñuñoa' });
+    await userEvent.selectOptions(screen.getByLabelText('Región'), 'Valparaíso');
+    expect(opciones('Comuna')).toEqual(['Todas', 'San Antonio']);
+    expect(screen.getByLabelText('Comuna')).toHaveValue('');
+    await esperarConsulta(fetch, { region: 'Valparaíso' });
+    expect(ultimaConsulta(fetch).comuna).toBeUndefined();
+    const aplicados = screen.getByRole('group', { name: 'Filtros aplicados' });
+    expect(within(aplicados).getByRole('button', { name: 'Quitar filtro: Región: Valparaíso' })).toBeInTheDocument();
+
+    // Una comuna de la misma región se mantiene al volver a elegir esa región.
+    await userEvent.selectOptions(screen.getByLabelText('Comuna'), 'San Antonio');
+    await esperarConsulta(fetch, { region: 'Valparaíso', comuna: 'San Antonio' });
+  });
+
   test('los accesos por especialidad aplican el filtro y «+N más» muestra las demás (SC-27)', async () => {
     const catalogo = { ...FILTROS, especialidades: ['Entrenamiento personal', 'Kinesiología', 'Medicina deportiva', 'Nutrición', 'Psicología deportiva'] };
     const fetch = simularApi({ '/api/profesionales/filtros': catalogo, '/api/profesionales': listado() });

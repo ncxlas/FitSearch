@@ -96,15 +96,16 @@ function DetalleEstablecimiento({ establecimiento, datos, desde, onCerrar }) {
 
 // Directorio de centros de salud y gimnasios (FS-HU-25): lista y mapa de los establecimientos que registró el
 // administrador (FS-HU-30), filtrados por comuna o por distancia a la ubicación de la persona. Con ubicación, la lista
-// va del más cercano al más lejano. Los filtros quedan en la URL (?comuna=, ?distancia=, ?pagina=) para poder volver.
+// va del más cercano al más lejano. Los filtros quedan en la URL (?region=, ?comuna=, ?distancia=, ?pagina=) para poder
+// volver. La región (14-11-2026) limita la lista de comunas a las suyas.
 export default function Establecimientos({ categoria }) {
   const datos = CATEGORIAS[categoria];
   const [parametros, setParametros] = useSearchParams();
   const { pathname, search } = useLocation();
-  const filtros = { comuna: parametros.get('comuna') || '', distancia: parametros.get('distancia') || '', pagina: parametros.get('pagina') || '' };
+  const filtros = { region: parametros.get('region') || '', comuna: parametros.get('comuna') || '', distancia: parametros.get('distancia') || '', pagina: parametros.get('pagina') || '' };
   // estado: inactiva | lista | denegada | no-disponible
   const [ubicacion, setUbicacion] = useState(UBICACION_INICIAL);
-  const [comunas, setComunas] = useState([]);
+  const [catalogo, setCatalogo] = useState({ regiones: [], comunas: [] });
   const [intento, setIntento] = useState(0);
   const [resultado, setResultado] = useState(null);
   // Elegido y resaltado guardan la búsqueda a la que pertenecen: al cambiar de página o de filtros se descartan solos.
@@ -113,7 +114,7 @@ export default function Establecimientos({ categoria }) {
 
   useEffect(() => {
     let activo = true;
-    obtenerComunasEstablecimientos(categoria).then((respuesta) => activo && setComunas(respuesta.comunas)).catch(() => {});
+    obtenerComunasEstablecimientos(categoria).then((respuesta) => activo && setCatalogo({ regiones: respuesta.regiones ?? [], comunas: respuesta.comunas })).catch(() => {});
     return () => { activo = false; };
   }, [categoria]);
 
@@ -137,7 +138,7 @@ export default function Establecimientos({ categoria }) {
 
   // Sin ubicación, la distancia no se envía y se ofrece la comuna (el aviso explica por qué).
   const coords = ubicacion.estado === 'lista' ? ubicacion.coords : null;
-  const consulta = { comuna: filtros.comuna, distancia: coords ? filtros.distancia : '', pagina: filtros.pagina };
+  const consulta = { region: filtros.region, comuna: filtros.comuna, distancia: coords ? filtros.distancia : '', pagina: filtros.pagina };
   const clave = JSON.stringify([consulta, coords, intento]);
   const cargando = pidiendoUbicacion || resultado?.clave !== clave;
 
@@ -181,7 +182,7 @@ export default function Establecimientos({ categoria }) {
     document.getElementById('resultados')?.scrollIntoView?.({ behavior: movimientoSuave() ? 'smooth' : 'auto', block: 'start' });
   };
 
-  const hayFiltros = Boolean(filtros.comuna || filtros.distancia);
+  const hayFiltros = Boolean(filtros.region || filtros.comuna || filtros.distancia);
   // Mientras llega una búsqueda nueva se dejan los resultados anteriores, atenuados, para que la página no salte.
   const actualizando = cargando && Boolean(resultado?.establecimientos?.length);
   const vigente = cargando && !actualizando ? null : resultado;
@@ -197,8 +198,13 @@ export default function Establecimientos({ categoria }) {
   const seleccionar = (id, origen) => setSeleccion(id == null ? null : { id, origen, clave: vigente.clave });
   const resaltar = (id) => setResaltado(id == null ? null : { id, clave: vigente.clave });
   const verEnMapa = (id) => (id === seleccionadoId ? seleccionar(null) : seleccionar(id, 'lista'));
-  // Una comuna de la URL que ya no está en la lista se muestra igual, para que el filtro se vea elegido.
-  const opcionesComuna = filtros.comuna && !comunas.includes(filtros.comuna) ? [...comunas, filtros.comuna] : comunas;
+  // Con una región elegida, solo sus comunas. Una región o una comuna de la URL que ya no está en la lista se muestra
+  // igual, para que el filtro se vea elegido.
+  const conActual = (lista, actual) => (actual && !lista.includes(actual) ? [...lista, actual] : lista);
+  const comunasDe = (region) => (region ? catalogo.regiones.find(({ nombre }) => nombre === region)?.comunas ?? [] : catalogo.comunas);
+  const opcionesRegion = conActual(catalogo.regiones.map(({ nombre }) => nombre), filtros.region);
+  const opcionesComuna = conActual(comunasDe(filtros.region), filtros.comuna);
+  const cambiarRegion = (region) => actualizar({ region, ...(filtros.comuna && !comunasDe(region).includes(filtros.comuna) && { comuna: '' }) });
 
   let contenido;
   if (!vigente) {
@@ -263,6 +269,13 @@ export default function Establecimientos({ categoria }) {
 
       {/* Las etiquetas ya nombran cada filtro: las opciones van cortas para que quepan en dos columnas a 360 px. */}
       <div className="filtros-establecimientos" role="group" aria-label={`Filtrar ${datos.plural}`}>
+        <label className="campo">
+          <span className="campo__etiqueta">Región</span>
+          <select className="campo__control" value={filtros.region} onChange={(evento) => cambiarRegion(evento.target.value)}>
+            <option value="">Todas</option>
+            {opcionesRegion.map((region) => <option key={region}>{region}</option>)}
+          </select>
+        </label>
         <label className="campo">
           <span className="campo__etiqueta">Comuna</span>
           <select className="campo__control" value={filtros.comuna} onChange={(evento) => actualizar({ comuna: evento.target.value })}>

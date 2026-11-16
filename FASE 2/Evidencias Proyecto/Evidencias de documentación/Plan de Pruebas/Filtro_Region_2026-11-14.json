@@ -1,0 +1,33 @@
+{
+  "fecha": "2026-11-14",
+  "rama": "feat/filtro-region",
+  "pedido": "PO: filtro de región; al elegirla, la lista de comunas muestra solo las de esa región",
+  "alcance": [
+    "Buscador de profesionales: lista «Región» antes de «Comuna»; la barra de escritorio queda en filas de tres y, desde 1280 px, en dos filas de cuatro",
+    "Centros de salud y Gimnasios: lista «Región» junto a «Comuna» y «Distancia»",
+    "Si la comuna elegida no es de la región nueva, se quita; «Quitar filtros» y los filtros aplicados incluyen la región",
+    "Solo aparecen regiones y comunas con resultados, de norte a sur"
+  ],
+  "datos": "shared/regiones.json: 16 regiones y 346 comunas, agrupadas por las dos primeras cifras del Código Único Territorial (tabla de «Anexo:Comunas de Chile», es.wikipedia.org, consultada el 14-11-2026). Totales por región comprobados: Arica y Parinacota 4, Tarapacá 7, Antofagasta 9, Atacama 9, Coquimbo 15, Valparaíso 38, Metropolitana 52, O'Higgins 33, Maule 30, Ñuble 21, Biobío 33, La Araucanía 32, Los Ríos 12, Los Lagos 30, Aysén 10 y Magallanes 11",
+  "api": [
+    "GET /api/profesionales y GET /api/establecimientos aceptan region (una de las 16; otra responde 400 «Selecciona una región de Chile»)",
+    "GET /api/profesionales/filtros y GET /api/establecimientos/filtros entregan regiones con sus comunas y las comunas con su nombre oficial",
+    "Una comuna guardada sin tildes o en minúsculas («san antonio») se reconoce: la intercalación de MySQL no distingue mayúsculas ni tildes, y se muestra con su nombre oficial"
+  ],
+  "comprobacionMySQL": {
+    "filtrosProfesionales": "Valparaíso: San Antonio; Metropolitana: 9 comunas",
+    "regionValparaiso": "1 profesional, guardado como «san antonio», mostrado como San Antonio",
+    "regionMetropolitana": "14 profesionales",
+    "regionLosLagos": "0 profesionales",
+    "gimnasiosValparaiso": "11 gimnasios",
+    "regionInexistente": "400 con el mensaje «Selecciona una región de Chile»"
+  },
+  "pruebasAutomatizadas": {
+    "backendJest": "573/573 (5 nuevas: lista de regiones, agrupación y filtro en las dos API)",
+    "frontendVitest": "430/430 (2 nuevas: región en Profesionales y en Gimnasios)",
+    "lint": "sin errores en backend y frontend",
+    "build": "correcto"
+  },
+  "revisionVisual": "Filtro_Region_2026-11-14_*.png: Profesionales a 1024 y 1280 px y el panel de filtros en celular; Gimnasios a 1280 y 375 px. Sin textos cortados ni desborde horizontal",
+  "pendiente": ["Aceptación del PO"]
+}

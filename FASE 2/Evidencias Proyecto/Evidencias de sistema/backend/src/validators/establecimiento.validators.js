@@ -1,5 +1,6 @@
 const { param, query } = require('express-validator');
 const { profesionales: reglas, contenido } = require('../../../shared/reglas.json');
+const { NOMBRES: REGIONES } = require('../utils/regiones');
 
 // Directorio de centros de salud y gimnasios (FS-HU-25). Usa las mismas distancias y el mismo tamaño de página que el
 // buscador de profesionales, para que los filtros se vean y funcionen igual.
@@ -17,6 +18,7 @@ const listar = [
   categoria,
   unico('comuna', 'Indica una sola comuna').trim().isLength({ max: contenido.establecimiento.comuna.max })
     .withMessage(`La comuna admite hasta ${contenido.establecimiento.comuna.max} caracteres`),
+  unico('region', 'Indica una sola región').isIn(REGIONES).withMessage('Selecciona una región de Chile'),
   unico('lat', 'Indica una sola latitud').isFloat({ min: -90, max: 90 }).withMessage('La latitud no es válida'),
   unico('lng', 'Indica una sola longitud').isFloat({ min: -180, max: 180 }).withMessage('La longitud no es válida'),
   unico('distanciaKm', 'Indica una sola distancia').isIn(reglas.distanciasKm.map(String))

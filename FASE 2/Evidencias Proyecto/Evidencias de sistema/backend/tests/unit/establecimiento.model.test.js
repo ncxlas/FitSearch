@@ -3,6 +3,7 @@ jest.mock('../../src/models/prisma', () => ({ $queryRaw: jest.fn(), establecimie
 const { Prisma } = require('@prisma/client');
 const prisma = require('../../src/models/prisma');
 const modelo = require('../../src/models/establecimiento.model');
+const { comunasDeRegion } = require('../../src/utils/regiones');
 
 // $queryRaw se llama como plantilla: se rearma la consulta para revisar el SQL y sus valores.
 const consulta = (llamada) => Prisma.sql(...llamada);
@@ -31,9 +32,17 @@ test('con ubicación calcula la distancia en MySQL, filtra por comuna y radio y 
   });
   const { sql, values } = consulta(prisma.$queryRaw.mock.calls[0]);
   expect(sql).toMatch(/ST_Distance_Sphere\(POINT\(e\.ubicacion_lng, e\.ubicacion_lat\), POINT\(\?, \?\)\) \/ 1000 AS distanciaKm/);
-  expect(sql).toMatch(/AND e\.comuna = \? AND ST_Distance_Sphere\(.*\) \/ 1000 <= \?/);
+  // La comuna guardada se compara con sus espacios unidos (15-11-2026).
+  expect(sql).toMatch(/AND TRIM\(REGEXP_REPLACE\(e\.comuna, '\[\[:space:\]\]\+', ' '\)\) = \? AND ST_Distance_Sphere\(.*\) \/ 1000 <= \?/);
   expect(sql).toMatch(/ORDER BY distanciaKm ASC, e\.id ASC/);
   expect(values).toEqual([-70.6, -33.45, 'centro_salud', 'Ñuñoa', -70.6, -33.45, 5, 12, 0]);
+});
+
+test('con solo la región filtra por cualquiera de sus comunas, comparando la comuna guardada con sus espacios unidos', async () => {
+  await modelo.listar({ categoria: 'gimnasio', region: 'Valparaíso', pagina: 1, limite: 12 });
+  const { sql, values } = consulta(prisma.$queryRaw.mock.calls[0]);
+  expect(sql).toMatch(/AND TRIM\(REGEXP_REPLACE\(e\.comuna, '\[\[:space:\]\]\+', ' '\)\) IN \(\?(, ?\?)+\)/);
+  expect(values).toEqual(['gimnasio', ...comunasDeRegion('Valparaíso'), 12, 0]);
 });
 
 test('la ficha solo existe si el establecimiento está activo y trae a sus profesionales visibles', async () => {
