@@ -4,7 +4,7 @@ Plataforma web responsiva que conecta a personas que buscan mejorar su salud, co
 
 Proyecto Capstone (PTY4614) — Duoc UC, Escuela de Informática y Telecomunicaciones, sección 003D, sede Melipilla.
 
-> **Estado (12-10-2026):** Fase 2 — Sprints 1 y 2 cerrados (acceso a la cuenta, perfil completo, portada y listado de profesionales). Sprint 3 en curso, con el código en `main`: Inicio con sesión, búsqueda avanzada y por cercanía, favoritos y reseñas, elección de perfil y espacio del profesional, verificación y panel del administrador, y agenda, reservas y mapa. Las historias del Sprint 3 que siguen en revisión esperan la aceptación del Product Owner.
+> **Estado (16-11-2026):** Fase 2 — Sprint 5 en curso (02 al 22-11-2026). Las correcciones de las revisiones de ubicación, fotos, agenda y filtros están integradas en main (PR #67 y #70 a #72); la documentación técnica se consolidó en el PR #73. Verificación: 628 pruebas backend, 489 frontend y 223 comprobaciones MySQL reales aprobadas. Planilla: 248 casos, 246 aprobados y CP-024/025 pendientes de acceso real con Google; DAS 1.35 y Plan de Pruebas 1.0.2. El cierre formal requiere la aceptación del PO, los criterios finales de FS-HU-32, horas, retrospectiva, revisión QA residual y actualización manual del Drive.
 
 ## Equipo
 
