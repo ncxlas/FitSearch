@@ -6,7 +6,6 @@ import Icono from '../Icono.jsx';
 import MapaUbicacion from './MapaUbicacion.jsx';
 import { enMapa } from '../profesionales/ubicacionMapa.js';
 import { direccionDelPunto, guardarMiFicha, ubicarDireccion } from '../../services/profesional.service.js';
-import { useEspecialidades } from '../../services/especialidades.js';
 import { regionDeComuna } from '../../services/regiones.js';
 import './FormularioFicha.css';
 
@@ -14,25 +13,24 @@ import './FormularioFicha.css';
 // y solo interesa el punto final (además, la API consulta Nominatim una vez por segundo como máximo).
 const ESPERA_PUNTO_MS = 600;
 
-const {
-  modalidades, descripcion: { max: MAX_DESCRIPCION }, comuna: { max: MAX_COMUNA }, direccion: { max: MAX_DIRECCION },
-} = reglas.profesionales;
+const { modalidades, comuna: { max: MAX_COMUNA }, direccion: { max: MAX_DIRECCION } } = reglas.profesionales;
+
+// Campos de la ficha que se editan en «Información personal» (la especialidad, 16-11-2026): un error de la API en
+// ellos se señala con un botón para ir a esa sección.
+const CAMPOS_DE_INFORMACION = ['especialidad', 'descripcion'];
 
 // Los nombres de los campos coinciden con la API, así los errores del servidor caen en su campo. SC-24: la dirección es
 // obligatoria si atiende presencial o de ambas formas. SC-28: las coordenadas ya no se escriben, salen de la comuna y
 // la dirección (ver ubicar).
-function validar({ especialidad, comuna, direccion, modalidad }) {
+function validar({ comuna, direccion, modalidad }) {
   const errores = {};
-  if (!especialidad) errores.especialidad = 'Selecciona tu especialidad';
-  if (modalidad !== 'online' && !comuna.trim()) errores.comuna = 'Ingresa la comuna donde atiendes';
   if (!modalidad) errores.modalidad = 'Selecciona cómo atiendes';
+  if (modalidad !== 'online' && !comuna.trim()) errores.comuna = 'Ingresa la comuna donde atiendes';
   if (modalidad !== 'online' && !direccion.trim()) errores.direccion = 'Ingresa la dirección donde atiendes';
   return errores;
 }
 
 const desdeFicha = (ficha) => ({
-  especialidad: ficha?.especialidad ?? '',
-  descripcion: ficha?.descripcion ?? '',
   comuna: ficha?.comuna ?? '',
   direccion: ficha?.direccion ?? '',
   modalidad: ficha?.modalidad ?? '',
@@ -77,23 +75,25 @@ function explicarUbicacion(ubicacion, modalidad) {
   }
 }
 
-// Formulario de la ficha pública del profesional (FS-HU-04), dentro de "Perfil profesional": la primera vez
-// (`ficha` en null) y desde "Editar perfil". Sin `onCancelar` no se ofrece volver (la ficha aún no existe).
-export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
+// «Lugar de atención» de la ficha pública del profesional (FS-HU-04), dentro de «Perfil profesional»: la modalidad, la
+// comuna, la dirección y el mapa. La especialidad se elige en «Información personal» (16-11-2026) y la descripción ya no
+// se pide (la presentación cumple ese papel). Como la API recibe la ficha completa, se reenvían la especialidad y la
+// descripción guardadas. La primera vez (`ficha` en null) aquí se crea la ficha, con la `especialidad` elegida;
+// onIrA('informacion') lleva a elegirla. Sin `onCancelar` no se ofrece volver (la ficha aún no existe).
+export default function FormularioFicha({ ficha, especialidad, onGuardado, onCancelar, onIrA }) {
   const edicion = Boolean(ficha);
   const [datos, setDatos] = useState(() => desdeFicha(ficha));
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState('');
   const [tipoMensaje, setTipoMensaje] = useState('error');
+  // Un error que corresponde a «Información personal» (la especialidad que falta o que rechazó la API).
+  const [revisarInformacion, setRevisarInformacion] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [ubicacion, setUbicacion] = useState(() => ubicacionGuardada(ficha));
   const [buscando, setBuscando] = useState(false);
   const [errorUbicacion, setErrorUbicacion] = useState('');
   // La última ubicación y la búsqueda en curso, para leerlas sin esperar a que React vuelva a dibujar
   // (al guardar justo después de escribir la dirección, la búsqueda que empezó al salir del campo se reutiliza).
-  // FS-HU-30: las especialidades activas del catálogo; la que ya tenía la ficha se ofrece aunque esté desactivada.
-  const catalogo = useEspecialidades();
-  const especialidades = ficha?.especialidad && !catalogo.includes(ficha.especialidad) ? [...catalogo, ficha.especialidad] : catalogo;
   const ubicacionActual = useRef(ubicacion);
   const enCurso = useRef(null);
   const ultimaFicha = useRef(ficha);
@@ -209,10 +209,15 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
     buscarPunto(nueva);
   };
 
+  const avisar = (texto, enInformacion = false, tipo = 'error') => {
+    setTipoMensaje(tipo);
+    setMensaje(texto);
+    setRevisarInformacion(enInformacion);
+  };
+
   const guardar = async (evento) => {
     evento.preventDefault();
-    setMensaje('');
-    setTipoMensaje('error');
+    avisar('');
     // Si el marcador se acaba de mover, primero se espera su dirección, para guardar la comuna y la dirección de ese punto.
     if (puntoEnCurso.current) {
       setEnviando(true);
@@ -223,89 +228,85 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
     const nuevos = validar(datos);
     setErrores(nuevos);
     if (Object.keys(nuevos).length) return;
-    const online = datos.modalidad === 'online';
-    const anterior = desdeFicha(ultimaFicha.current);
-    const mismoLugar = online || (ubicacionActual.current
-      && ubicacionActual.current.lat === Number(ultimaFicha.current?.ubicacionLat)
-      && ubicacionActual.current.lng === Number(ultimaFicha.current?.ubicacionLng));
-    if (ultimaFicha.current && mismoLugar
-      && Object.keys(anterior).every((campo) => datos[campo].trim() === anterior[campo].trim())) {
-      setTipoMensaje('info');
-      setMensaje('No hay cambios pendientes.');
+    const guardada = ultimaFicha.current;
+    // La especialidad sale de la ficha guardada o, la primera vez, de la elegida en «Información personal».
+    const especialidadFicha = guardada?.especialidad ?? especialidad;
+    if (!especialidadFicha) {
+      avisar('Antes de guardar, elige tu especialidad en «Información personal».', true);
       return;
+    }
+    const online = datos.modalidad === 'online';
+    if (guardada) {
+      const anterior = desdeFicha(guardada);
+      const mismosCampos = Object.keys(anterior).every((campo) => datos[campo].trim() === anterior[campo].trim());
+      const mismoLugar = online || (ubicacionActual.current
+        && ubicacionActual.current.lat === Number(guardada.ubicacionLat) && ubicacionActual.current.lng === Number(guardada.ubicacionLng));
+      if (mismosCampos && mismoLugar) {
+        avisar('No hay cambios pendientes.', false, 'info');
+        return;
+      }
     }
     setEnviando(true);
     try {
       const lugar = online ? null : await ubicar();
       if (!online && !lugar) {
-        setMensaje('No pudimos ubicar tu lugar de atención en el mapa. Revisa tu comuna y tu dirección, o intenta de nuevo.');
+        avisar('No pudimos ubicar tu lugar de atención en el mapa. Revisa tu comuna y tu dirección, o intenta de nuevo.');
         return;
       }
       const respuesta = await guardarMiFicha({
-        especialidad: datos.especialidad, descripcion: datos.descripcion.trim(), comuna: online ? null : datos.comuna.trim(),
+        especialidad: especialidadFicha, descripcion: guardada?.descripcion ?? '', comuna: online ? null : datos.comuna.trim(),
         direccion: online ? null : datos.direccion.trim(), modalidad: datos.modalidad,
         ubicacionLat: lugar?.lat ?? null, ubicacionLng: lugar?.lng ?? null,
       });
       ultimaFicha.current = respuesta.ficha;
       onGuardado(respuesta.ficha);
     } catch (error) {
-      setErrores(error.detalles || {});
-      setMensaje(error.message);
+      const detalles = error.detalles || {};
+      setErrores(detalles);
+      avisar(error.message, Object.keys(detalles).some((campo) => CAMPOS_DE_INFORMACION.includes(campo)));
     } finally {
       setEnviando(false);
     }
   };
 
+  const online = datos.modalidad === 'online';
   const errorDelMapa = errorUbicacion || errorPunto || errores.ubicacionLat || errores.ubicacionLng;
   const region = regionDeComuna(datos.comuna);
+  const irAInformacion = <button type="button" className="boton-texto" onClick={() => onIrA?.('informacion')}>{especialidad ? 'Cambiar' : 'Elegir especialidad'}</button>;
 
   return (
-    <section className="ficha-prof">
-      <header className="ficha-prof__cabecera">
-        <h1>{edicion ? 'Editar perfil profesional' : 'Configura tu perfil profesional'}</h1>
-        <p>Completa estos datos para que los usuarios puedan encontrarte y agendar contigo.</p>
-      </header>
+    <form className="ficha-prof" onSubmit={guardar} noValidate aria-label="Lugar de atención">
+      {!edicion && (
+        <p className="ficha-prof__paso">
+          {especialidad
+            ? <><strong>Último paso.</strong> Indica cómo y dónde atiendes: al guardar se crea tu ficha. Especialidad: {especialidad}. {irAInformacion}</>
+            : <><strong>Primero elige tu especialidad</strong> en «Información personal»; luego vuelve aquí para crear tu ficha. {irAInformacion}</>}
+        </p>
+      )}
+      <Alerta tipo={tipoMensaje}>{mensaje}</Alerta>
+      {revisarInformacion && onIrA && (
+        <button type="button" className="boton boton--secundario boton--compacto ficha-prof__revisar" onClick={() => onIrA('informacion')}>
+          Ir a «Información personal»
+        </button>
+      )}
 
-      <form className="ficha-prof__tarjeta" onSubmit={guardar} noValidate>
-        <Alerta tipo={tipoMensaje}>{mensaje}</Alerta>
-
-        <fieldset className="ficha-prof__seccion">
-          <legend><Icono nombre="medico" /> Información básica</legend>
-
-          <CampoFormulario id="especialidad" etiqueta="Especialidad (obligatorio)" value={datos.especialidad}
-            onChange={cambiar('especialidad')} error={errores.especialidad}>
-            <option value="" disabled>Selecciona tu especialidad</option>
-            {especialidades.map((nombre) => <option key={nombre} value={nombre}>{nombre}</option>)}
-          </CampoFormulario>
-
-          <div className={`campo${errores.descripcion ? ' campo--error' : ''}`}>
-            <label htmlFor="descripcion" className="campo__etiqueta">Descripción sobre tu atención</label>
-            <textarea id="descripcion" name="descripcion" rows={5} maxLength={MAX_DESCRIPCION}
-              className="campo__control ficha-prof__texto" value={datos.descripcion} onChange={cambiar('descripcion')}
-              placeholder="Cuéntales a los usuarios sobre tu experiencia, tu enfoque y cómo puedes ayudarlos..." />
-            {errores.descripcion
-              ? <p className="campo__mensaje" role="alert">{errores.descripcion}</p>
-              : <p className="campo__ayuda ficha-prof__contador">{datos.descripcion.length}/{MAX_DESCRIPCION}</p>}
-          </div>
-
+      {/* En un panel ancho, los campos van a la izquierda y el mapa a la derecha (16-11-2026). */}
+      <div className={`ficha-prof__lugar${online ? ' ficha-prof__lugar--online' : ''}`}>
+        <div className="ficha-prof__campos">
           <CampoFormulario id="modalidad" etiqueta="Modalidad de atención (obligatorio)" value={datos.modalidad}
             onChange={cambiar('modalidad')} error={errores.modalidad}>
             <option value="" disabled>Selecciona cómo atiendes</option>
             {modalidades.map(({ valor, etiqueta }) => <option key={valor} value={valor}>{etiqueta}</option>)}
           </CampoFormulario>
-        </fieldset>
 
-        {datos.modalidad === 'online' ? (
-          <section className="ficha-prof__seccion" aria-label="Atención online">
-            <h2><Icono nombre="medico" /> Atención online</h2>
-            <p className="texto-secundario">Atiendes de forma online. Tu perfil no mostrará una dirección ni una ubicación en el mapa.</p>
-          </section>
-        ) : <fieldset className="ficha-prof__seccion">
-          <legend><Icono nombre="pin" /> Ubicación de atención</legend>
-          <p className="texto-secundario ficha-prof__intro">Indica tu comuna y tu dirección: te ubicamos en el mapa para que los usuarios te encuentren en el buscador.</p>
-
-          <div className="ficha-prof__ubicacion">
-            <div>
+          {online ? (
+            <section className="ficha-prof__online" aria-label="Atención online">
+              <h3><Icono nombre="video" /> Atención online</h3>
+              <p className="texto-secundario">Tu perfil no mostrará una dirección ni una ubicación en el mapa.</p>
+            </section>
+          ) : (
+            <fieldset className="ficha-prof__seccion">
+              <legend className="solo-lector">Ubicación de atención</legend>
               <CampoFormulario id="comuna" etiqueta="Comuna (obligatorio)" maxLength={MAX_COMUNA} autoComplete="address-level2"
                 placeholder="Ej.: Providencia" value={datos.comuna} onChange={cambiar('comuna')} onBlur={ubicar} error={errores.comuna}
                 ayuda={region ?? undefined} />
@@ -313,49 +314,51 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
                 etiqueta="Dirección de atención (obligatorio)"
                 placeholder="Ej.: Av. Providencia 1234, oficina 501" value={datos.direccion} onChange={cambiar('direccion')}
                 onBlur={ubicar} error={errores.direccion}
-                ayuda="Calle y número. Se muestra en tu ficha y te ubicamos en el mapa para que sepan dónde atiendes." />
-            </div>
-
-            <div className="ficha-prof__mapa-columna">
-              {ubicacion
-                ? <MapaUbicacion ubicacion={ubicacion} onMover={mover} />
-                : (
-                  <div className="ficha-prof__mapa">
-                    <Icono nombre="pin" tamano={34} />
-                    <p>{buscando ? 'Buscando tu dirección…' : 'Escribe tu comuna y tu dirección para ver tu lugar de atención en el mapa.'}</p>
-                    {!buscando && datos.comuna.trim() && (
-                      <button type="button" className="boton-texto" onClick={ubicar}>Ver en el mapa</button>
-                    )}
-                  </div>
-                )}
-              {errorDelMapa ? (
-                <p className="ficha-prof__estado-mapa ficha-prof__estado-mapa--error" role="alert">
-                  {errorDelMapa}{' '}
-                  {errorUbicacion && <button type="button" className="boton-texto" onClick={ubicar}>Buscar de nuevo</button>}
-                </p>
-              ) : (
-                <p className="ficha-prof__estado-mapa" role="status">
-                  {buscandoPunto && 'Buscando la dirección de ese punto…'}
-                  {!buscandoPunto && buscando && ubicacion && 'Buscando tu dirección…'}
-                  {!buscandoPunto && !buscando && ubicacion && explicarUbicacion(ubicacion, datos.modalidad)}
-                </p>
-              )}
-              {ubicacion && (
-                <p className="campo__ayuda ficha-prof__pista-mapa">
-                  ¿No quedó justo en tu lugar de atención? Arrastra el marcador o haz clic en el mapa.
-                </p>
-              )}
-            </div>
-          </div>
-        </fieldset>}
-
-        <div className="ficha-prof__acciones">
-          {onCancelar && <button type="button" className="boton-texto" onClick={onCancelar}>Cancelar</button>}
-          <button type="submit" className="boton boton--principal boton--compacto" disabled={enviando}>
-            {enviando ? 'Guardando…' : <>Guardar perfil <Icono nombre="check" tamano={18} /></>}
-          </button>
+                ayuda="Calle y número. Te ubicamos en el mapa para que los usuarios sepan dónde atiendes." />
+            </fieldset>
+          )}
         </div>
-      </form>
-    </section>
+
+        {!online && (
+          <div className="ficha-prof__mapa-columna">
+            {ubicacion
+              ? <MapaUbicacion ubicacion={ubicacion} onMover={mover} />
+              : (
+                <div className="ficha-prof__mapa">
+                  <Icono nombre="pin" tamano={34} />
+                  <p>{buscando ? 'Buscando tu dirección…' : 'Escribe tu comuna y tu dirección para ver tu lugar de atención en el mapa.'}</p>
+                  {!buscando && datos.comuna.trim() && (
+                    <button type="button" className="boton-texto" onClick={ubicar}>Ver en el mapa</button>
+                  )}
+                </div>
+              )}
+            {errorDelMapa ? (
+              <p className="ficha-prof__estado-mapa ficha-prof__estado-mapa--error" role="alert">
+                {errorDelMapa}{' '}
+                {errorUbicacion && <button type="button" className="boton-texto" onClick={ubicar}>Buscar de nuevo</button>}
+              </p>
+            ) : (
+              <p className="ficha-prof__estado-mapa" role="status">
+                {buscandoPunto && 'Buscando la dirección de ese punto…'}
+                {!buscandoPunto && buscando && ubicacion && 'Buscando tu dirección…'}
+                {!buscandoPunto && !buscando && ubicacion && explicarUbicacion(ubicacion, datos.modalidad)}
+              </p>
+            )}
+            {ubicacion && (
+              <p className="campo__ayuda ficha-prof__pista-mapa">
+                ¿No quedó justo en tu lugar de atención? Arrastra el marcador o haz clic en el mapa.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="ficha-prof__acciones">
+        {onCancelar && <button type="button" className="boton-texto" onClick={onCancelar}>Cancelar</button>}
+        <button type="submit" className="boton boton--principal boton--compacto" disabled={enviando}>
+          {enviando ? 'Guardando…' : <>{edicion ? 'Guardar cambios' : 'Guardar perfil'} <Icono nombre="check" tamano={18} /></>}
+        </button>
+      </div>
+    </form>
   );
 }

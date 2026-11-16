@@ -38,7 +38,8 @@ export default function TarjetaProfesional({
   profesional, variante = 'completa', nivelTitulo = 3, desde, onCambioFavorito, id: idElemento,
   seleccionado = false, resaltado = false, onResaltar, onVerEnMapa,
 }) {
-  const { id, nombre, especialidad, descripcion, comuna, modalidad, establecimiento, calificacion, distanciaKm, verificado } = profesional;
+  // La presentación llega resumida desde la API (16-11-2026); completa, solo en la ficha del profesional.
+  const { id, nombre, especialidad, presentacion, comuna, modalidad, establecimiento, calificacion, distanciaKm, verificado } = profesional;
   const Titulo = `h${nivelTitulo}`;
   const lugar = modalidad === 'online' ? 'Atención online' : [comuna || establecimiento?.direccion || 'Ubicación por confirmar', distanciaKm != null && formatearKm(distanciaKm)]
     .filter(Boolean).join(' · ');
@@ -73,7 +74,7 @@ export default function TarjetaProfesional({
               {profesional.aniosExperiencia ? <span>{profesional.aniosExperiencia} {profesional.aniosExperiencia === 1 ? 'año' : 'años'} de experiencia</span> : null}
             </p>
           ) : null}
-          <p className="tarjeta-profesional__descripcion">{descripcion || 'Este profesional todavía no ha añadido una descripción de sus servicios.'}</p>
+          <p className="tarjeta-profesional__descripcion">{presentacion || 'Este profesional todavía no ha escrito su presentación.'}</p>
           {'proximaHora' in profesional && <HorasDisponibles profesional={profesional} desde={desde} />}
           <div className="tarjeta-profesional__acciones">
             {onVerEnMapa && (
@@ -105,7 +106,7 @@ export default function TarjetaProfesional({
         {variante === 'completa' && (
           <>
             <span className="tarjeta-profesional__modalidad">{etiquetaModalidad(modalidad)}</span>
-            <p className="tarjeta-profesional__descripcion">{descripcion || 'Este profesional todavía no ha añadido una descripción de sus servicios.'}</p>
+            <p className="tarjeta-profesional__descripcion">{presentacion || 'Este profesional todavía no ha escrito su presentación.'}</p>
             <span className="tarjeta-profesional__ver" aria-hidden="true">Ver perfil y reseñas <Icono nombre="flecha" tamano={16} /></span>
           </>
         )}

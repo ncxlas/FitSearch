@@ -13,21 +13,22 @@ const consulta = (ruta, token = firmar()) => request(app).get(ruta).set('Authori
 // Fila tal como la entrega MySQL: conteos BigInt, promedios y coordenadas como texto decimal y booleanos 0/1.
 // Incluye datos privados para comprobar que nunca llegan a la respuesta.
 const fila = {
-  id: 1, usuarioId: 10, nombre: 'Ana Demo', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla',
+  id: 1, usuarioId: 10, nombre: 'Ana Demo', especialidad: 'Nutrición', comuna: 'Melipilla',
   direccion: 'Av. Demo 123', modalidad: 'presencial', verificado: 0, ubicacionLat: '-33.6860000', ubicacionLng: '-71.2150000',
   establecimientoNombre: 'Consulta Demo', establecimientoDireccion: 'Melipilla', promedio: '4.5000', totalResenas: 2n,
   distanciaKm: null, esFavorito: 1n, correo: 'privado@example.test', passwordHash: 'privado',
 };
 const fichaEsperada = {
   // Sin foto de perfil (la fila no trae fotoClave): fotoUrl en null (15-11-2026).
-  id: 1, nombre: 'Ana Demo', fotoUrl: null, especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla', direccion: 'Av. Demo 123',
+  id: 1, nombre: 'Ana Demo', fotoUrl: null, especialidad: 'Nutrición', comuna: 'Melipilla', direccion: 'Av. Demo 123',
   modalidad: 'presencial', verificado: false, ubicacionLat: -33.686, ubicacionLng: -71.215, establecimiento: { nombre: 'Consulta Demo', direccion: 'Melipilla' },
   calificacion: { promedio: 4.5, total: 2 }, distanciaKm: null, esFavorito: true,
   // Experiencia (FS-HU-29) y precio referencial, vacíos si el profesional no los completó (09-11-2026).
   aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null,
 };
-// En el buscador cada tarjeta trae además su próxima hora libre y hasta tres horas para elegir.
-const tarjetaEsperada = { ...fichaEsperada, proximaHora: null, proximasHoras: [] };
+// En el buscador cada tarjeta trae además su presentación resumida (16-11-2026), su próxima hora libre y hasta tres
+// horas para elegir.
+const tarjetaEsperada = { ...fichaEsperada, presentacion: null, proximaHora: null, proximasHoras: [] };
 const filtrosPorDefecto = {
   usuarioId: 1, q: '', especialidad: '', comuna: '', region: '', modalidad: '', calificacionMin: null, ubicacion: null,
   distanciaKm: null, orden: 'nombre', pagina: 1, limite: 12,
@@ -49,6 +50,17 @@ describe('GET /api/profesionales', () => {
     expect(res.body).toEqual({ profesionales: [tarjetaEsperada], pagina: 1, total: 1, totalPaginas: 1, hayMas: false });
     expect(JSON.stringify(res.body)).not.toMatch(/privado|usuarioId/);
     expect(modelo.listar).toHaveBeenCalledWith(filtrosPorDefecto);
+  });
+
+  // Pedido del PO del 16-11-2026: en el buscador la presentación va resumida; completa, solo en la ficha.
+  test('la tarjeta trae la presentación resumida, cortada en una palabra completa', async () => {
+    const presentacion = 'Soy Ana, nutricionista deportiva hace 8 años. Me dedico a acompañar a corredores y personas que empiezan a entrenar. Me encanta el trail running y cocinar recetas simples.';
+    modelo.listar.mockResolvedValue({ filas: [{ ...fila, presentacion }], total: 1 });
+    const { body } = await consulta('/api/profesionales');
+    const resumen = body.profesionales[0].presentacion;
+    expect(resumen).toBe('Soy Ana, nutricionista deportiva hace 8 años. Me dedico a acompañar a corredores y personas que empiezan a entrenar. Me encanta el trail running y cocinar…');
+    expect(resumen.length).toBeLessThanOrEqual(161);
+    expect(body.profesionales[0]).not.toHaveProperty('descripcion');
   });
 
   test('FS-HU-22: combina texto, especialidad, comuna, modalidad, calificación y orden, retirando espacios', async () => {

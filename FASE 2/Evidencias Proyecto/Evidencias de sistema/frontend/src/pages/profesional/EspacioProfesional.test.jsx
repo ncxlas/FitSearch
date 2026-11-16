@@ -7,8 +7,10 @@ import {
 } from '../../tests/utilidades.jsx';
 
 const SALUDO = { level: 1, name: '¡Hola, Matías!' };
-const simular = ({ ficha = MI_FICHA, clima = CLIMA } = {}) => simularApi({
+// La cuenta trae la presentación del profesional (16-11-2026): sin ella, Inicio sugiere agregarla.
+const simular = ({ ficha = MI_FICHA, clima = CLIMA, biografia = 'Entrenador funcional en Providencia.' } = {}) => simularApi({
   '/api/profesionales/mi-ficha': { ficha },
+  '/api/perfil/cuenta': { cuenta: { biografia } },
   '/api/clima': clima,
   '/api/disponibilidades': { horarios: [] },
   // Resumen semanal real (FS-HU-28, 09-11-2026).
@@ -124,7 +126,10 @@ describe('Inicio del profesional', () => {
   });
 
   test('sin tareas pendientes lo dice en vez de dejar el panel vacío', async () => {
-    simularApi({ '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA, '/api/disponibilidades': { horarios: [{ id: 1 }] } });
+    simularApi({
+      '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA, '/api/disponibilidades': { horarios: [{ id: 1 }] },
+      '/api/perfil/cuenta': { cuenta: { biografia: 'Entrenador funcional en Providencia.' } },
+    });
     renderizarApp('/profesional/inicio');
     expect(await screen.findByText('Estás al día: no tienes tareas pendientes.')).toBeInTheDocument();
   });
@@ -150,12 +155,19 @@ describe('Inicio del profesional', () => {
     expect(within(tarea).getByRole('link', { name: /Publicar horario/ })).toHaveAttribute('href', '/profesional/agenda');
   });
 
-  test('con ficha pero sin descripción, sugiere agregarla', async () => {
-    simular({ ficha: { ...MI_FICHA, descripcion: '' } });
+  test('con ficha pero sin presentación, sugiere agregarla', async () => {
+    simular({ biografia: '' });
     renderizarApp('/profesional/inicio');
 
-    expect(await screen.findByText('Agrega una descripción a tu ficha')).toBeInTheDocument();
+    expect(await screen.findByText('Agrega tu presentación')).toBeInTheDocument();
     expect(screen.queryByText('Completa tu ficha profesional')).not.toBeInTheDocument();
+  });
+
+  test('con presentación no sugiere agregarla', async () => {
+    simular();
+    renderizarApp('/profesional/inicio');
+    await screen.findByText('Define tu disponibilidad');
+    expect(screen.queryByText('Agrega tu presentación')).not.toBeInTheDocument();
   });
 
   test('los accesos rápidos llevan a las secciones del profesional', async () => {

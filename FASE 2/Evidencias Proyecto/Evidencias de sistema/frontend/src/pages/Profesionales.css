@@ -176,7 +176,6 @@
 .ficha__seccion { padding: 1.25rem 1.4rem; background: var(--color-superficie); border-radius: var(--radio); box-shadow: var(--sombra-tarjeta); }
 .ficha__seccion > h2 { margin: 0 0 0.75rem; }
 .ficha__seccion h3 { margin: 1.5rem 0 0.75rem; font-size: 1rem; color: var(--color-primario-oscuro); }
-.ficha__descripcion { margin: 0; white-space: pre-wrap; color: var(--color-texto-secundario); }
 .ficha__lugar { display: grid; gap: 0.2rem; margin: 0 0 1rem; }
 .ficha__lugar span { font-size: 0.9rem; color: var(--color-texto-secundario); }
 

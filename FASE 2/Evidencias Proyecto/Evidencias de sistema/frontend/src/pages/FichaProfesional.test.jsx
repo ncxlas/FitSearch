@@ -134,13 +134,15 @@ describe('Ficha', () => {
     renderizarApp('/profesionales/1');
     const informacion = await screen.findByRole('tab', { name: 'Información' });
     expect(informacion).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tabpanel', { name: 'Información' })).toHaveTextContent('Sobre su atención');
+    // Desde el 16-11-2026 no repite «Sobre su atención»: la presentación va en «Conoce a…».
+    expect(screen.getByRole('tabpanel', { name: 'Información' })).toHaveTextContent('EspecialidadNutrición');
+    expect(screen.queryByText('Sobre su atención')).not.toBeInTheDocument();
 
     informacion.focus();
     await userEvent.keyboard('{ArrowRight}');
     expect(screen.getByRole('tab', { name: 'Formación' })).toHaveFocus();
     expect(screen.getByRole('tabpanel', { name: 'Formación' })).toHaveTextContent('Universidad de Chile · 2016');
-    expect(screen.queryByText('Sobre su atención')).not.toBeInTheDocument();
+    expect(screen.queryByRole('tabpanel', { name: 'Información' })).not.toBeInTheDocument();
 
     await userEvent.keyboard('{ArrowRight}');
     const certificaciones = screen.getByRole('tabpanel', { name: 'Certificaciones' });
