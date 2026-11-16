@@ -55,7 +55,7 @@ Es un ajuste dentro de la **SC-36**, que aún no se fusiona. Agrega los casos **
 
 ## Resultados
 
-- **Frontend (Vitest):** 462/462 sobre la rama combinada con el #62 (457/457 antes de combinarla), con lint y compilación correctos.
+- **Frontend (Vitest):** 465/465 tras unir la corrección del #61 (guardado al mover el marcador), con lint y compilación correctos. Antes: 462/462 sobre la rama combinada con el #62 y 457/457 sin combinar.
 - **Backend (Jest):** 614/614 sobre la rama combinada (608/608 antes), con lint correcto. Las pruebas nuevas cubren la presentación resumida en el listado, el resumen en palabras completas y la búsqueda en la presentación (sin la descripción).
 - **Edge real** (sin interfaz, con la API, MySQL y Nominatim reales). Se usaron cuentas temporales que se borraron al terminar.
   - El menú mostró las cuatro secciones. «Información personal» trajo la especialidad guardada y no muestra la descripción.

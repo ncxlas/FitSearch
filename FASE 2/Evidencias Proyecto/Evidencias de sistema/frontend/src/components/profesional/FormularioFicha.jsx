@@ -49,9 +49,14 @@ function ubicacionGuardada(ficha) {
 }
 // La ficha guarda 7 decimales (DECIMAL(10,7)); al mover el marcador MapLibre entrega más.
 const redondear = (valor) => Math.round(valor * 1e7) / 1e7;
+// Revisión del PR 61 (16-11-2026): si tras mover el marcador falla la búsqueda de la dirección de ese punto, o el punto
+// no tiene calle, la dirección escrita puede ser de otro lugar (Providencia con el marcador en San Antonio). Esa
+// ubicación no se guarda hasta que el profesional corrija la dirección (se busca de nuevo) o confirme que es la correcta.
+const porConfirmar = (ubicacion, datos) => Boolean(ubicacion?.porConfirmar) && ubicacion.consulta === consultaDe(datos);
 
 // Qué encontró el buscador de direcciones, dicho para el profesional (sin coordenadas).
 function explicarUbicacion(ubicacion, modalidad) {
+  if (ubicacion.origen === 'manual' && ubicacion.confirmada) return 'Confirmaste tu dirección: guardaremos el marcador donde lo dejaste.';
   // Al mover el marcador, la comuna y la dirección se actualizan con las de ese punto (15-11-2026).
   if (ubicacion.origen === 'manual' && ubicacion.punto) {
     const { comuna, direccion, precision } = ubicacion.punto;
@@ -100,7 +105,8 @@ export default function FormularioFicha({ ficha, especialidad, onGuardado, onCan
   // Los datos vigentes, para leerlos después de esperar la dirección del marcador (15-11-2026).
   const datosActuales = useRef(datos);
   const [buscandoPunto, setBuscandoPunto] = useState(false);
-  const [errorPunto, setErrorPunto] = useState('');
+  // { mensaje, reintentable }: un 404 (el punto no está en una comuna de Chile) no mejora buscando de nuevo.
+  const [errorPunto, setErrorPunto] = useState(null);
   const esperaPunto = useRef(null);
   const puntoEnCurso = useRef(null);
   useEffect(() => () => clearTimeout(esperaPunto.current), []);
@@ -177,7 +183,7 @@ export default function FormularioFicha({ ficha, especialidad, onGuardado, onCan
   function buscarPunto({ lat, lng }) {
     clearTimeout(esperaPunto.current);
     puntoEnCurso.current?.resolver();
-    setErrorPunto('');
+    setErrorPunto(null);
     setBuscandoPunto(true);
     let resolver;
     const pedido = { promesa: new Promise((listo) => { resolver = listo; }), resolver: () => resolver() };
@@ -188,10 +194,13 @@ export default function FormularioFicha({ ficha, especialidad, onGuardado, onCan
           if (puntoEnCurso.current !== pedido || !punto?.comuna) return;
           const nuevos = { ...datosActuales.current, comuna: punto.comuna, ...(punto.direccion && { direccion: punto.direccion }) };
           fijarDatos(nuevos);
-          fijarUbicacion({ ...ubicacionActual.current, consulta: consultaDe(nuevos), punto });
+          // Sin calle en ese punto queda la dirección anterior: hay que corregirla o confirmarla antes de guardar.
+          fijarUbicacion({ ...ubicacionActual.current, consulta: consultaDe(nuevos), punto, porConfirmar: !punto.direccion });
           setErrores((previos) => ({ ...previos, comuna: undefined, direccion: undefined }));
         })
-        .catch((error) => { if (puntoEnCurso.current === pedido) setErrorPunto(error.message); })
+        .catch((error) => {
+          if (puntoEnCurso.current === pedido) setErrorPunto({ mensaje: error.message, reintentable: error.estado !== 404 });
+        })
         .finally(() => {
           if (puntoEnCurso.current === pedido) {
             puntoEnCurso.current = null;
@@ -202,8 +211,11 @@ export default function FormularioFicha({ ficha, especialidad, onGuardado, onCan
     }, ESPERA_PUNTO_MS);
   }
 
+  // Hasta que llegue la dirección del punto (con su calle), la ubicación queda por confirmar.
   const mover = ({ lat, lng }) => {
-    const nueva = { ...ubicacionActual.current, lat: redondear(lat), lng: redondear(lng), origen: 'manual', punto: null };
+    const nueva = {
+      ...ubicacionActual.current, lat: redondear(lat), lng: redondear(lng), origen: 'manual', punto: null, porConfirmar: true, confirmada: false,
+    };
     fijarUbicacion(nueva);
     setErrores((previos) => ({ ...previos, ubicacionLat: undefined, ubicacionLng: undefined }));
     buscarPunto(nueva);
@@ -213,6 +225,13 @@ export default function FormularioFicha({ ficha, especialidad, onGuardado, onCan
     setTipoMensaje(tipo);
     setMensaje(texto);
     setRevisarInformacion(enInformacion);
+  };
+
+  // El profesional confirma que la dirección escrita es la del marcador aunque no la hayamos podido comprobar.
+  const confirmarDireccion = () => {
+    fijarUbicacion({ ...ubicacionActual.current, porConfirmar: false, confirmada: true });
+    setErrorPunto(null);
+    avisar('');
   };
 
   const guardar = async (evento) => {
@@ -253,6 +272,10 @@ export default function FormularioFicha({ ficha, especialidad, onGuardado, onCan
         avisar('No pudimos ubicar tu lugar de atención en el mapa. Revisa tu comuna y tu dirección, o intenta de nuevo.');
         return;
       }
+      if (!online && lugar.porConfirmar) {
+        avisar('Antes de guardar, corrige tu dirección o confirma que corresponde al marcador.');
+        return;
+      }
       const respuesta = await guardarMiFicha({
         especialidad: especialidadFicha, descripcion: guardada?.descripcion ?? '', comuna: online ? null : datos.comuna.trim(),
         direccion: online ? null : datos.direccion.trim(), modalidad: datos.modalidad,
@@ -270,7 +293,8 @@ export default function FormularioFicha({ ficha, especialidad, onGuardado, onCan
   };
 
   const online = datos.modalidad === 'online';
-  const errorDelMapa = errorUbicacion || errorPunto || errores.ubicacionLat || errores.ubicacionLng;
+  const errorDelMapa = errorUbicacion || errorPunto?.mensaje || errores.ubicacionLat || errores.ubicacionLng;
+  const pendiente = !online && !buscandoPunto && porConfirmar(ubicacion, datos);
   const region = regionDeComuna(datos.comuna);
   const irAInformacion = <button type="button" className="boton-texto" onClick={() => onIrA?.('informacion')}>{especialidad ? 'Cambiar' : 'Elegir especialidad'}</button>;
 
@@ -336,12 +360,21 @@ export default function FormularioFicha({ ficha, especialidad, onGuardado, onCan
               <p className="ficha-prof__estado-mapa ficha-prof__estado-mapa--error" role="alert">
                 {errorDelMapa}{' '}
                 {errorUbicacion && <button type="button" className="boton-texto" onClick={ubicar}>Buscar de nuevo</button>}
+                {!errorUbicacion && errorPunto?.reintentable && (
+                  <button type="button" className="boton-texto" onClick={() => buscarPunto(ubicacionActual.current)}>Buscar de nuevo</button>
+                )}
               </p>
             ) : (
               <p className="ficha-prof__estado-mapa" role="status">
                 {buscandoPunto && 'Buscando la dirección de ese punto…'}
                 {!buscandoPunto && buscando && ubicacion && 'Buscando tu dirección…'}
                 {!buscandoPunto && !buscando && ubicacion && explicarUbicacion(ubicacion, datos.modalidad)}
+              </p>
+            )}
+            {pendiente && (
+              <p className="ficha-prof__estado-mapa">
+                Revisa que tu dirección corresponda al marcador: corrígela o confírmala.{' '}
+                <button type="button" className="boton-texto" onClick={confirmarDireccion}>Confirmar dirección</button>
               </p>
             )}
             {ubicacion && (

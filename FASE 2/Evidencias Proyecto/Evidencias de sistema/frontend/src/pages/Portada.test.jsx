@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { listado, llamadasA, parametrosDe, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi } from '../tests/utilidades.jsx';
 
 const TITULO = { level: 1, name: /Tu bienestar,\s*a tu ritmo\./ };
@@ -49,6 +49,8 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     await userEvent.type(screen.getByLabelText('Contraseña'), 'ClaveSegura123');
     await userEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Profesionales' })).toBeInTheDocument();
+    // La búsqueda sale en un efecto, después de dibujar el título: con el equipo cargado llega un poco más tarde.
+    await vi.waitFor(() => expect(llamadasA(fetch, '/api/profesionales?').length).toBeGreaterThan(0));
     expect(parametrosDe(llamadasA(fetch, '/api/profesionales?')[0][0])).toMatchObject({ especialidad: 'Nutrición', comuna: 'Ñuñoa' });
   });
 
