@@ -241,6 +241,27 @@ describe('Filtros y orden', () => {
     expect(boton).toHaveAttribute('aria-expanded', 'false');
     expect(boton).toHaveFocus();
   });
+
+  test('Tab y Shift+Tab permanecen en el panel y el fondo queda inerte hasta cerrar', async () => {
+    simular(); renderizarApp('/profesionales');
+    await screen.findByRole('heading', { name: 'Ana Demo' });
+    const boton = screen.getByRole('button', { name: /^Filtros/ });
+    const fondo = boton.closest('body > div');
+    await userEvent.click(boton);
+    expect(screen.getByRole('dialog', { name: 'Filtros' })).toHaveAttribute('aria-modal', 'true');
+    expect(fondo).toHaveAttribute('inert');
+    const primero = screen.getByRole('button', { name: 'Cerrar filtros' });
+    const ultimo = screen.getByRole('button', { name: 'Ver 2 resultados' });
+    await userEvent.tab({ shift: true });
+    expect(ultimo).toHaveFocus();
+    await userEvent.tab();
+    expect(primero).toHaveFocus();
+    await userEvent.tab();
+    expect(screen.getByLabelText('Región')).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    expect(fondo).not.toHaveAttribute('inert');
+    expect(boton).toHaveFocus();
+  });
 });
 
 describe('Cercanía con la ubicación del navegador (FS-HU-05)', () => {
