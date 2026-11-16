@@ -4,6 +4,7 @@ const { agruparPorRegion, nombreOficial, nombreCompletoRegion, ubicarComuna } = 
 const resenaModel = require('../models/resena.model');
 const especialidadModel = require('../models/especialidad.model');
 const ErrorHttp = require('../utils/ErrorHttp');
+const { fotoUrlConClave, fotoUrlDe } = require('../utils/fotos');
 const { profesionales: reglas, agenda: reglasAgenda } = require('../../../shared/reglas.json');
 const { fechaEnChile, horaEnChile, sumarDias } = require('../utils/fechaChile');
 
@@ -26,6 +27,8 @@ function formatearFicha(fila) {
   return {
     id: Number(fila.id),
     nombre: fila.nombre,
+    // Dirección de su foto de perfil, o null si no tiene (15-11-2026).
+    fotoUrl: fotoUrlConClave(fila.usuarioId, fila.fotoClave),
     especialidad: fila.especialidad,
     descripcion: fila.descripcion ?? null,
     // Con su nombre oficial («san antonio» se muestra San Antonio; 14-11-2026).
@@ -94,6 +97,7 @@ function formatearResena(fila, usuarioId) {
   return {
     id: fila.id,
     autor: nombrePublico(fila.usuario.nombre),
+    fotoUrl: fotoUrlDe(fila.usuario),
     puntaje: fila.puntaje,
     comentario: fila.comentario ?? null,
     // «Cita verificada»: la reseña está respaldada por una cita confirmada que ya ocurrió (09-11-2026).

@@ -223,6 +223,9 @@ a { color: var(--color-primario); }
 /* Botón de la cuenta con la foto propia en vez de las iniciales (15-11-2026). */
 .avatar--foto { overflow: hidden; background: #e6f1f8; box-shadow: 0 0 0 1.5px #fff, 0 0 0 3px #b9d9ec; }
 .avatar--foto > img { width: 100%; height: 100%; object-fit: cover; }
+/* Cualquier avatar con la foto de la persona (components/Avatar.jsx, 15-11-2026): la imagen llena su forma. */
+.con-foto { overflow: hidden; background: #e6f1f8; }
+.con-foto > img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 .avatar--grande { width: 3.5rem; height: 3.5rem; font-size: 1.2rem; }
 .avatar--pequeno { width: 2rem; height: 2rem; font-size: 0.8rem; }
 .icono--relleno { fill: currentColor; }

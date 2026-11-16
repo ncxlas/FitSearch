@@ -8,6 +8,7 @@ import { SECCIONES_PROFESIONAL as SECCIONES } from '../../components/diseno/secc
 import { normalizar } from '../../services/buscadorGeneral.js';
 import { estadoCita, fechaCorta, fechaEnChile, obtenerClientes, obtenerHistorialCliente } from '../../services/actividadProfesional.service.js';
 import './Clientes.css';
+import Avatar from '../../components/Avatar.jsx';
 
 const citasTexto = (n) => `${n} ${n === 1 ? 'cita' : 'citas'}`;
 
@@ -54,7 +55,7 @@ export default function Clientes() {
           <ul className="clientes__lista">
             {visibles.map((cliente) => (
               <li key={cliente.id} className="cliente">
-                <span className="cliente__inicial" aria-hidden="true">{cliente.nombre.charAt(0).toUpperCase()}</span>
+                <Avatar className="cliente__inicial" nombre={cliente.nombre} fotoUrl={cliente.fotoUrl} texto={cliente.nombre.charAt(0).toUpperCase()} />
                 <div className="cliente__datos">
                   <h2>{cliente.nombre}</h2>
                   <p>{citasTexto(cliente.totalCitas)}{cliente.estados.realizadas ? ` · ${cliente.estados.realizadas} realizadas` : ''}</p>
@@ -104,7 +105,7 @@ export function HistorialCliente() {
     <section className="clientes" aria-labelledby="titulo-historial">
       {volver}
       <header className="historial__cabecera">
-        <span className="cliente__inicial cliente__inicial--grande" aria-hidden="true">{cliente.nombre.charAt(0).toUpperCase()}</span>
+        <Avatar className="cliente__inicial cliente__inicial--grande" nombre={cliente.nombre} fotoUrl={cliente.fotoUrl} texto={cliente.nombre.charAt(0).toUpperCase()} />
         <div>
           <h1 id="titulo-historial">{cliente.nombre}</h1>
           <p className="texto-secundario">Cliente desde el {fechaCorta(fechaEnChile(cliente.primeraReserva))} · {citasTexto(cliente.totalCitas)}</p>

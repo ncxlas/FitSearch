@@ -1,6 +1,6 @@
 // Chat entre usuario y profesional (FS-HU-31; decisión del PO del 09-11-2026): uno por pareja con el historial de todas
 // sus reservas, abierto aunque una se cancele, con buscador por palabras y eliminación con confirmación.
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { llamadasA, renderizarApp, simularApi, SESION, SESION_PROFESIONAL } from '../tests/utilidades.jsx';
@@ -59,6 +59,22 @@ describe('buscador por palabras', () => {
 
 describe('usuario', () => {
   beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
+
+  // Pedido del PO del 15-11-2026: la foto de perfil se ve en la lista de chats y en la cabecera del chat.
+  test('muestra la foto de perfil de la otra persona en la lista y en la cabecera; sin foto, sus iniciales', async () => {
+    const FOTO = '/api/fotos/30/0123456789abcdef';
+    const conFoto = { ...CAMILA, fotoUrl: FOTO };
+    simularApi({
+      '/api/chats/no-leidos': { total: 0 },
+      '/api/chats': { chats: CHATS.chats.map((c) => (c.id === 5 ? { ...c, con: conFoto } : c)) },
+      '/api/chats/5': abierto(MENSAJES, conFoto),
+    });
+    renderizarApp('/mensajes/5');
+    const enlace = await screen.findByRole('link', { name: /^Camila Rojas,\s*Nutrición/ });
+    expect(enlace.querySelector('.conversacion__avatar img')).toHaveAttribute('src', FOTO);
+    expect(screen.getByRole('link', { name: /^Diego Soto/ }).querySelector('.conversacion__avatar')).toHaveTextContent('DS');
+    await waitFor(() => expect(document.querySelector('.mensajes__avatar img')).toHaveAttribute('src', FOTO));
+  });
 
   test('un chat por profesional con el historial de todas sus reservas; escribe aunque una esté cancelada', async () => {
     const fetch = simularChat();

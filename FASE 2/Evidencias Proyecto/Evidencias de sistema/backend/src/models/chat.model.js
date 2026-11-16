@@ -1,10 +1,12 @@
 // Chat entre un usuario y un profesional (FS-HU-31): uno por pareja, con los mensajes de todas sus reservas.
 const prisma = require('./prisma');
+const { CON_FOTO } = require('../utils/fotos');
 
-const persona = { select: { id: true, nombre: true } };
+// Con la foto de cada participante, para mostrarla en la lista y en la cabecera del chat (15-11-2026).
+const persona = { select: { id: true, nombre: true, ...CON_FOTO } };
 const conPartes = {
   usuario: persona,
-  profesional: { select: { id: true, usuarioId: true, especialidad: true, usuario: { select: { nombre: true } } } },
+  profesional: { select: { id: true, usuarioId: true, especialidad: true, usuario: persona } },
 };
 const seleccionMensaje = { id: true, autorId: true, texto: true, leido: true, fechaCreacion: true };
 

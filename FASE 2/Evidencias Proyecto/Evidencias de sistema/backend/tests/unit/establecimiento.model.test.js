@@ -51,8 +51,8 @@ test('la ficha solo existe si el establecimiento está activo y trae a sus profe
   const [{ where, select }] = prisma.establecimiento.findFirst.mock.calls[0];
   expect(where).toEqual({ id: 3, activo: true });
   expect(select.profesionales.where).toEqual({ usuario: { activo: true, rol: { nombre: 'profesional' } } });
-  // Nunca el correo ni otros datos de la cuenta: solo el nombre.
-  expect(select.profesionales.select.usuario).toEqual({ select: { nombre: true } });
+  // Nunca el correo ni otros datos de la cuenta: solo el nombre y la foto (15-11-2026), con su id para armar la dirección.
+  expect(select.profesionales.select.usuario).toEqual({ select: { id: true, nombre: true, datosCuenta: { select: { foto: true } } } });
 });
 
 test('las comunas del filtro son las de establecimientos activos de la categoría, sin repetir', async () => {

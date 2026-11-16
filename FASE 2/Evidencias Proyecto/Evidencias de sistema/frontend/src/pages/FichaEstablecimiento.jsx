@@ -6,9 +6,10 @@ import Icono from '../components/Icono.jsx';
 import MapaProfesionales from '../components/profesionales/MapaProfesionales.jsx';
 import { CATEGORIAS, direccionCompleta, enlaceInstagram } from '../components/establecimientos/categorias.js';
 import { obtenerEstablecimiento } from '../services/establecimiento.service.js';
-import { iniciales } from '../services/formato.js';
+
 import './Profesionales.css';
 import './Establecimientos.css';
+import Avatar from '../components/Avatar.jsx';
 
 // Ficha de un centro de salud o gimnasio (FS-HU-25): nombre, categoría, dirección, ubicación en el mapa y los
 // profesionales asociados. «Volver» regresa a la misma búsqueda desde la que se abrió.
@@ -95,7 +96,7 @@ export default function FichaEstablecimiento({ categoria }) {
                 <li key={profesional.id}>
                   <Link to={`/profesionales/${profesional.id}`} state={{ desde: pathname, origen: nombre, desdeOrigen: volverA }}
                     className="asociado">
-                    <span className="asociado__avatar" aria-hidden="true">{iniciales(profesional.nombre)}</span>
+                    <Avatar className="asociado__avatar" nombre={profesional.nombre} fotoUrl={profesional.fotoUrl} />
                     <span className="asociado__texto">
                       <span className="asociado__nombre">{profesional.nombre}</span>
                       <span className="asociado__especialidad">{profesional.especialidad}</span>

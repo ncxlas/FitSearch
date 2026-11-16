@@ -19,7 +19,8 @@ const fila = {
   distanciaKm: null, esFavorito: 1n, correo: 'privado@example.test', passwordHash: 'privado',
 };
 const fichaEsperada = {
-  id: 1, nombre: 'Ana Demo', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla', direccion: 'Av. Demo 123',
+  // Sin foto de perfil (la fila no trae fotoClave): fotoUrl en null (15-11-2026).
+  id: 1, nombre: 'Ana Demo', fotoUrl: null, especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla', direccion: 'Av. Demo 123',
   modalidad: 'presencial', verificado: false, ubicacionLat: -33.686, ubicacionLng: -71.215, establecimiento: { nombre: 'Consulta Demo', direccion: 'Melipilla' },
   calificacion: { promedio: 4.5, total: 2 }, distanciaKm: null, esFavorito: true,
   // Experiencia (FS-HU-29) y precio referencial, vacíos si el profesional no los completó (09-11-2026).
@@ -187,8 +188,18 @@ describe('GET /api/profesionales/:id (ficha)', () => {
     });
     const res = await consulta('/api/profesionales/1');
     expect(res.body.miResena).toEqual({
-      id: 7, autor: 'rodrigo C.', puntaje: 4, comentario: 'Muy buena atención', fecha: '2026-10-02T12:00:00.000Z', propia: true, verificada: false,
+      id: 7, autor: 'rodrigo C.', fotoUrl: null, puntaje: 4, comentario: 'Muy buena atención', fecha: '2026-10-02T12:00:00.000Z', propia: true, verificada: false,
     });
+  });
+
+  // Fotos de perfil en todos los lugares (15-11-2026): la ficha y el buscador entregan la dirección de la foto, armada con
+  // la clave que calcula MySQL, nunca la foto ni el id de la cuenta.
+  test('entrega la dirección de la foto del profesional cuando tiene una', async () => {
+    modelo.buscarPorId.mockResolvedValue({ ...fila, fotoClave: '0123456789abcdef' });
+    const { profesional } = (await consulta('/api/profesionales/1')).body;
+    expect(profesional.fotoUrl).toBe('/api/fotos/10/0123456789abcdef');
+    expect(profesional).not.toHaveProperty('usuarioId');
+    expect(profesional).not.toHaveProperty('fotoClave');
   });
 
   test('un profesional no puede calificarse a sí mismo ni calificar a otros', async () => {

@@ -40,9 +40,30 @@ test('muestra los indicadores del período, la calificación promedio y la tabla
   const tabla = screen.getByRole('table', { name: 'Reservas por semana y por estado' });
   const filas = within(tabla).getAllByRole('row').slice(1);
   expect(filas).toHaveLength(4);
-  expect(within(filas[3]).getAllByRole('cell').map((celda) => celda.textContent)).toEqual(['3', '1', '1', '0', '0', '1']);
+  // Realizadas, confirmadas, pendientes, sin confirmar, canceladas y el total (15-11-2026: el total va al final).
+  expect(within(filas[3]).getAllByRole('cell').map((celda) => celda.textContent)).toEqual(['1', '1', '0', '0', '1', '3']);
   // Por defecto se piden 8 semanas.
   expect(parametrosDe(llamadasA(fetch, '/api/profesional/reportes')[0][0])).toEqual({ semanas: '8' });
+});
+
+// Pedido del PO del 15-11-2026: los gráficos de Reportes dan detalle al pasar el mouse o tocarlos, como los demás.
+test('cada semana y cada estado muestran su detalle al pasar el mouse, tocarlos o enfocarlos', async () => {
+  simularApi({ '/api/profesional/reportes': reportes(CUATRO) });
+  renderizarApp('/profesional/reportes');
+  const semanaActual = await screen.findByRole('generic', { name: /^Semana del 9 nov – 15 nov: 3 reservas/ });
+  expect(semanaActual).toHaveAttribute('tabindex', '0');
+  expect(semanaActual).toHaveAccessibleName(/1 realizadas, 1 confirmadas, 0 pendientes, 0 sin confirmar, 1 canceladas/);
+  const detalle = semanaActual.querySelector('[role="tooltip"]');
+  expect(detalle).toHaveTextContent('Semana del 9 nov – 15 nov');
+  expect(detalle).toHaveTextContent('Realizadas1');
+  expect(detalle).toHaveTextContent('Total3');
+  await userEvent.click(semanaActual);
+  expect(semanaActual).toHaveFocus();
+
+  const realizadas = screen.getByRole('listitem', { name: 'Realizadas: 4 de 7 reservas (57 %)' });
+  expect(realizadas).toHaveAttribute('tabindex', '0');
+  expect(realizadas.querySelector('[role="tooltip"]')).toHaveTextContent('Realizadas4 de 7 reservas (57 %)');
+  expect(screen.getByRole('listitem', { name: 'Pendientes: 0 de 7 reservas (0 %)' })).toBeInTheDocument();
 });
 
 test('cambia el período del reporte', async () => {

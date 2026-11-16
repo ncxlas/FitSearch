@@ -50,7 +50,7 @@ test('el dashboard compara los últimos 7 días con los 7 anteriores y agrupa po
   expect(d.actividad).toHaveLength(14);
   expect(d.actividad.at(-1)).toEqual({ fecha: '2026-11-11', cuentas: 1, reservas: 1, resenas: 0 });
   expect(d.actividad.find((dia) => dia.fecha === '2026-11-10').cuentas).toBe(1);
-  expect(d.ultimasCuentas).toEqual([{ id: 3, nombre: 'Ana', rol: 'usuario', activo: true, fechaRegistro: '2026-11-11T12:00:00.000Z' }]);
+  expect(d.ultimasCuentas).toEqual([{ id: 3, nombre: 'Ana', fotoUrl: null, rol: 'usuario', activo: true, fechaRegistro: '2026-11-11T12:00:00.000Z' }]);
   expect(d.plataforma).toMatchObject({ profesionales: 2, verificados: 1, establecimientos: { gimnasio: 3 } });
 });
 

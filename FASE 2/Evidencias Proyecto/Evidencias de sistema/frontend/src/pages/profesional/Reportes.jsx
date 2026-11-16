@@ -6,67 +6,56 @@ import ErrorCarga from '../../components/profesional/ErrorCarga.jsx';
 import useConsulta from '../../components/profesional/useConsulta.js';
 import { SECCIONES_PROFESIONAL as SECCIONES } from '../../components/diseno/secciones.js';
 import { diaYMes, obtenerReportes } from '../../services/actividadProfesional.service.js';
+import { hoyEnChile } from '../../services/agua.service.js';
+import { ColumnasApiladas } from '../../components/graficos/Graficos.jsx';
 import './Reportes.css';
 
 const PERIODOS = [4, 8, 12];
-// Orden de las barras apiladas, de abajo hacia arriba. Cada estado tiene su color en Reportes.css.
+// Orden de las barras apiladas, de abajo hacia arriba, con el color de cada estado (los mismos de Reportes.css).
 const ESTADOS = [
-  { clave: 'realizadas', nombre: 'Realizadas' },
-  { clave: 'confirmadas', nombre: 'Confirmadas' },
-  { clave: 'pendientes', nombre: 'Pendientes' },
-  { clave: 'sinConfirmar', nombre: 'Sin confirmar' },
-  { clave: 'canceladas', nombre: 'Canceladas' },
+  { clave: 'realizadas', nombre: 'Realizadas', color: '#1b6b46' },
+  { clave: 'confirmadas', nombre: 'Confirmadas', color: '#3aa57b' },
+  { clave: 'pendientes', nombre: 'Pendientes', color: '#1c74c9' },
+  { clave: 'sinConfirmar', nombre: 'Sin confirmar', color: '#d39a1c' },
+  { clave: 'canceladas', nombre: 'Canceladas', color: '#c0473f' },
 ];
 
 const sumar = (semanas, clave) => semanas.reduce((total, semana) => total + semana[clave], 0);
 const rangoSemana = ({ inicio, fin }) => `${diaYMes(inicio)} – ${diaYMes(fin)}`;
+const porcentaje = (parte, total) => (total ? Math.round((parte / total) * 100) : 0);
 
-// Reservas de cada semana (por la fecha de la cita) apiladas por estado. Los valores también van en una tabla para
-// lectores de pantalla, porque las barras son solo visuales.
+// Reservas de cada semana (por la fecha de la cita) apiladas por estado. Desde el 15-11-2026 usa el mismo gráfico que
+// el administrador y Comidas: al pasar el mouse, tocar o enfocar una semana se ve su detalle (fechas, cada estado y el
+// total), con un eje de cantidades y la semana en curso marcada. Los valores también van en una tabla para lectores.
 function ReservasPorSemana({ semanas }) {
-  const maximo = Math.max(...semanas.map((s) => s.total), 1);
+  const hoy = hoyEnChile();
   return (
-    <>
-      <div className="reportes-barras" aria-hidden="true">
-        <ol className="reportes-barras__area" style={{ '--semanas': semanas.length }}>
-          {semanas.map((semana) => (
-            <li key={semana.inicio} className="reportes-barras__semana">
-              <span className="reportes-barras__total">{semana.total || ''}</span>
-              <span className="reportes-barras__pila" style={{ height: `${Math.round((semana.total / maximo) * 100)}%` }}>
-                {ESTADOS.map(({ clave }) => semana[clave] > 0 && (
-                  <span key={clave} className={`reportes-barras__tramo reportes-barras__tramo--${clave}`} style={{ flexGrow: semana[clave] }} />
-                ))}
-              </span>
-            </li>
-          ))}
-        </ol>
-        <ol className="reportes-barras__rotulos" style={{ '--semanas': semanas.length }}>
-          {semanas.map(({ inicio }) => <li key={inicio}>{diaYMes(inicio)}</li>)}
-        </ol>
-      </div>
-      <ul className="reportes-leyenda" aria-hidden="true">
-        {ESTADOS.map(({ clave, nombre }) => (
-          <li key={clave}><span className={`reportes-leyenda__color reportes-barras__tramo--${clave}`} />{nombre}</li>
-        ))}
-      </ul>
-      <div className="solo-lector">
-        <table>
-          <caption>Reservas por semana y por estado</caption>
-          <thead>
-            <tr><th scope="col">Semana</th><th scope="col">Total</th>{ESTADOS.map(({ clave, nombre }) => <th key={clave} scope="col">{nombre}</th>)}</tr>
-          </thead>
-          <tbody>
-            {semanas.map((semana) => (
-              <tr key={semana.inicio}>
-                <th scope="row">{rangoSemana(semana)}</th>
-                <td>{semana.total}</td>
-                {ESTADOS.map(({ clave }) => <td key={clave}>{semana[clave]}</td>)}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+    <ColumnasApiladas
+      grupos={semanas.map((semana) => ({ ...semana, clave: semana.inicio, actual: semana.inicio <= hoy && hoy <= semana.fin }))}
+      series={ESTADOS}
+      etiqueta={(semana) => diaYMes(semana.inicio)}
+      titulo={(semana) => `Semana del ${rangoSemana(semana)}`}
+      tituloTabla="Reservas por semana y por estado"
+      filaTabla={{ encabezado: 'Semana', texto: rangoSemana }}
+      unidad={['reserva', 'reservas']}
+      mostrarTotal
+    />
+  );
+}
+
+// Una barra de «Reservas por estado»: al pasar el mouse, tocarla o enfocarla dice cuántas son del total (15-11-2026).
+function EstadoReservas({ clave, nombre, cantidad, total }) {
+  const detalle = `${cantidad} de ${total} ${total === 1 ? 'reserva' : 'reservas'} (${porcentaje(cantidad, total)} %)`;
+  return (
+    <li className="reportes-estado" tabIndex={0} aria-label={`${nombre}: ${detalle}`}>
+      <span className={`reportes-leyenda__color reportes-barras__tramo--${clave}`} aria-hidden="true" />
+      <span aria-hidden="true">{nombre}</span>
+      <strong aria-hidden="true">{cantidad}</strong>
+      <span className="reportes-estados__barra" aria-hidden="true">
+        <span className={`reportes-barras__tramo--${clave}`} style={{ width: `${porcentaje(cantidad, total)}%` }} />
+      </span>
+      <span className="reportes-estado__ayuda" role="tooltip" aria-hidden="true"><strong>{nombre}</strong>{detalle}</span>
+    </li>
   );
 }
 
@@ -124,19 +113,9 @@ export default function Reportes() {
             <span className="panel-tarjeta__icono"><Icono nombre="check" tamano={20} /></span> Reservas por estado
           </h2>
           <ul className="reportes-estados">
-            {ESTADOS.map(({ clave, nombre }) => {
-              const cantidad = sumar(porSemana, clave);
-              return (
-                <li key={clave}>
-                  <span className={`reportes-leyenda__color reportes-barras__tramo--${clave}`} aria-hidden="true" />
-                  <span>{nombre}</span>
-                  <strong>{cantidad}</strong>
-                  <span className="reportes-estados__barra" aria-hidden="true">
-                    <span className={`reportes-barras__tramo--${clave}`} style={{ width: enPeriodo ? `${(cantidad / enPeriodo) * 100}%` : 0 }} />
-                  </span>
-                </li>
-              );
-            })}
+            {ESTADOS.map(({ clave, nombre }) => (
+              <EstadoReservas key={clave} clave={clave} nombre={nombre} cantidad={sumar(porSemana, clave)} total={enPeriodo} />
+            ))}
           </ul>
           <p className="texto-secundario reportes__nota">
             Una cita confirmada que ya comenzó se cuenta como realizada; una pendiente que no se confirmó a tiempo, como sin confirmar.

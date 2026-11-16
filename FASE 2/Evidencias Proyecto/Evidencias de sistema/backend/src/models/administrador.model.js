@@ -2,8 +2,10 @@ const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
 const ErrorHttp = require('../utils/ErrorHttp');
 const { documentoPublico } = require('./verificacion.model');
+const { CON_FOTO } = require('../utils/fotos');
 
-const seleccionUsuario = { id: true, nombre: true, correo: true, activo: true, fechaRegistro: true, rol: { select: { nombre: true } } };
+// Con la foto de cada cuenta, para el panel del administrador (15-11-2026).
+const seleccionUsuario = { id: true, nombre: true, correo: true, activo: true, fechaRegistro: true, rol: { select: { nombre: true } }, ...CON_FOTO };
 const seleccionProfesional = {
   id: true, especialidad: true, descripcion: true, comuna: true, modalidad: true, verificado: true,
   estadoVerificacion: true, motivoRechazo: true, revisionVerificacion: true, rut: true, telefono: true,
