@@ -69,8 +69,6 @@
 .perfil-editor__contenido .perfil-prof__botones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .perfil-editor__contenido .perfil-prof__botones .boton { justify-content: center; }
 .perfil-editor__contenido .ficha-prof { max-width: none; margin: 0; padding: 0; box-shadow: none; border: none; }
-.perfil-editor__contenido .ficha-prof > header { display: none; }
-.perfil-editor__contenido .ficha-prof__ubicacion { grid-template-columns: 1fr; }
 .perfil-editor__contenido .experiencia__vacia { padding: 1.25rem; }
 .perfil-editor__contenido .experiencia__ilustracion { display: none; }
 .perfil-editor__contenido .resumen-tarjeta__datos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 1rem; gap: .75rem; background: #edf7ff; border-radius: .8rem; }
@@ -128,3 +126,5 @@
   .perfil-editor__contenido .resumen-tarjeta__datos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .perfil-editor__contenido .ficha-prof__acciones { display: grid; }
 }
+/* Especialidad del profesional en «Información personal» (16-11-2026) y el aviso si cambiarla le quita la verificación. */
+.perfil-editor__aviso-especialidad { margin-top: 0.35rem; padding: 0.45rem 0.65rem; border-radius: var(--radio-control); color: #724515; background: #fff5e9; }

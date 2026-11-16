@@ -21,7 +21,20 @@ const lista = (valor) => {
 
 const redondear = (valor, decimales = 1) => Math.round(Number(valor) * 10 ** decimales) / 10 ** decimales;
 
-// MySQL entrega conteos como BigInt, promedios y coordenadas como Decimal y booleanos como 0/1.
+// Resumen de la presentación del profesional para el buscador y el mapa (pedido del PO del 16-11-2026): ahí se muestra
+// resumida; completa, solo en su perfil. Corta en una palabra completa y termina con «…».
+const LARGO_RESUMEN = 160;
+function resumir(texto, largo = LARGO_RESUMEN) {
+  const limpio = (texto ?? '').replace(/\s+/g, ' ').trim();
+  if (!limpio) return null;
+  if (limpio.length <= largo) return limpio;
+  const corte = limpio.slice(0, largo + 1);
+  const espacio = corte.lastIndexOf(' ');
+  return `${(espacio > largo * 0.6 ? corte.slice(0, espacio) : limpio.slice(0, largo)).replace(/[\s,.;:!?¡¿-]+$/u, '')}…`;
+}
+
+// MySQL entrega conteos como BigInt, promedios y coordenadas como Decimal y booleanos como 0/1. Desde el 16-11-2026 la
+// ficha pública no lleva la descripción de la ficha: en su lugar se muestra la presentación del profesional.
 function formatearFicha(fila) {
   const totalResenas = Number(fila.totalResenas);
   return {
@@ -30,7 +43,6 @@ function formatearFicha(fila) {
     // Dirección de su foto de perfil, o null si no tiene (15-11-2026).
     fotoUrl: fotoUrlConClave(fila.usuarioId, fila.fotoClave),
     especialidad: fila.especialidad,
-    descripcion: fila.descripcion ?? null,
     // Con su nombre oficial («san antonio» se muestra San Antonio; 14-11-2026).
     comuna: fila.modalidad === 'online' ? null : nombreOficial(fila.comuna),
     direccion: fila.modalidad === 'online' ? null : fila.direccion ?? null,
@@ -68,6 +80,7 @@ async function listar({ limite = reglas.porPagina, pagina = 1, disponible, ...fi
   return {
     profesionales: filas.map((fila) => ({
       ...formatearFicha(fila),
+      presentacion: resumir(fila.presentacion),
       proximaHora: fila.proximaHora ? { fecha: fila.proximaHora.slice(0, 10), horaInicio: fila.proximaHora.slice(11, 16) } : null,
       proximasHoras: porProfesional.get(Number(fila.id)) || [],
     })),
@@ -176,5 +189,5 @@ async function verificarPerfil(id, administradorId) {
 }
 
 module.exports = {
-  ahoraEnChile, listar, ficha, filtros, formatearFicha, resumirResenas, nombrePublico, formatearResena, obtenerMiFicha, guardarMiFicha, verificarPerfil,
+  ahoraEnChile, listar, ficha, filtros, formatearFicha, resumir, resumirResenas, nombrePublico, formatearResena, obtenerMiFicha, guardarMiFicha, verificarPerfil,
 };

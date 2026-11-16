@@ -156,13 +156,12 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
   );
 }
 
-// Pestaña «Información»: su atención, especialidad, modalidad, a quiénes atiende, experiencia y precio referencial.
+// Pestaña «Información»: especialidad, modalidad, a quiénes atiende, experiencia y precio referencial. Desde el
+// 16-11-2026 no repite «Sobre su atención»: el profesional se presenta en «Conoce a…», al inicio de la ficha.
 function InformacionFicha({ profesional }) {
-  const { descripcion, especialidad, modalidad, atiendeA = [], aniosExperiencia, precioDesde } = profesional;
+  const { especialidad, modalidad, atiendeA = [], aniosExperiencia, precioDesde } = profesional;
   return (
     <div className="ficha-pestanas__contenido">
-      <h3>Sobre su atención</h3>
-      <p className="ficha__descripcion">{descripcion || 'Este profesional todavía no ha añadido una descripción de sus servicios.'}</p>
       <dl className="ficha__datos-lista">
         <div><dt>Especialidad</dt><dd>{especialidad}</dd></div>
         <div><dt>Modalidad</dt><dd>{etiquetaModalidad(modalidad)}</dd></div>

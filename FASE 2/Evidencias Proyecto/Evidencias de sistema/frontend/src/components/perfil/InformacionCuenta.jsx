@@ -4,13 +4,24 @@ import Icono from '../Icono.jsx';
 import BotonGoogle from '../BotonGoogle.jsx';
 
 const CAMPOS = ['nombre', 'correo', 'telefono', 'biografia', 'instagram', 'linkedin', 'sitioWeb'];
-export default function InformacionCuenta({ estado, profesional = false }) {
+// especialidad (solo el profesional, 16-11-2026): { valor, opciones, guardar(nueva) → texto del aviso }. Se elige aquí
+// y se guarda con el mismo botón, aunque va en su ficha (la descripción de la ficha se dejó de pedir: la presentación
+// ya cumple ese papel).
+export default function InformacionCuenta({ estado, profesional = false, especialidad }) {
   if (estado.cargando) return <p role="status">Cargando tus datos de contacto…</p>;
   if (estado.error) return <><Alerta>{estado.error}</Alerta><button type="button" className="boton-texto" onClick={estado.reintentar}>Reintentar datos personales</button></>;
-  return <Formulario cuenta={estado.cuenta} guardar={estado.guardar} profesional={profesional} />;
+  return <Formulario cuenta={estado.cuenta} guardar={estado.guardar} profesional={profesional} especialidad={especialidad} />;
 }
-function Formulario({ cuenta, guardar, profesional }) {
+function Formulario({ cuenta, guardar, profesional, especialidad }) {
   const [datos, setDatos] = useState(() => Object.fromEntries(CAMPOS.map((c) => [c, cuenta[c] || ''])));
+  const [elegida, setElegida] = useState(especialidad?.valor ?? '');
+  // La ficha (y con ella la especialidad guardada) puede llegar después que la cuenta: al cambiar, se toma su valor.
+  const valorGuardado = especialidad?.valor ?? '';
+  const [ultimoGuardado, setUltimoGuardado] = useState(valorGuardado);
+  if (ultimoGuardado !== valorGuardado) {
+    setUltimoGuardado(valorGuardado);
+    setElegida(valorGuardado);
+  }
   const [correoEditable, setCorreoEditable] = useState(false);
   const [password, setPassword] = useState('');
   const [credencial, setCredencial] = useState('');
@@ -23,18 +34,28 @@ function Formulario({ cuenta, guardar, profesional }) {
     {errores[name] && <span className="campo__mensaje" role="alert">{errores[name]}</span>}</label>;
   async function enviar(e) {
     e.preventDefault(); setErrores({}); setAviso(null); setOcupado(true);
+    let cuentaGuardada = false;
     try {
       const cambios = Object.fromEntries(CAMPOS.filter((c) => datos[c] !== (cuenta[c] || '')).map((c) => [c, datos[c]]));
-      if (!Object.keys(cambios).length) { setAviso({ tipo: 'info', texto: 'No hay cambios pendientes.' }); return; }
-      await guardar({ ...cambios, ...(cambios.correo !== undefined && { password, credencial }) });
-      setPassword(''); setCredencial(''); setCorreoEditable(false);
-      setAviso({ tipo: 'exito', texto: 'Tus datos personales se guardaron correctamente.' });
-    } catch (error) { setErrores(error.detalles || {}); setAviso({ tipo: 'error', texto: error.message }); }
-    finally { setOcupado(false); }
+      const cambiaEspecialidad = Boolean(especialidad) && elegida !== (especialidad.valor ?? '');
+      if (!Object.keys(cambios).length && !cambiaEspecialidad) { setAviso({ tipo: 'info', texto: 'No hay cambios pendientes.' }); return; }
+      const textos = [];
+      if (Object.keys(cambios).length) {
+        await guardar({ ...cambios, ...(cambios.correo !== undefined && { password, credencial }) });
+        cuentaGuardada = true;
+        setPassword(''); setCredencial(''); setCorreoEditable(false);
+        textos.push('Tus datos personales se guardaron correctamente.');
+      }
+      if (cambiaEspecialidad) textos.push(await especialidad.guardar(elegida));
+      setAviso({ tipo: 'exito', texto: textos.join(' ') });
+    } catch (error) {
+      setErrores(error.detalles || {});
+      setAviso({ tipo: 'error', texto: cuentaGuardada ? `Tus datos personales se guardaron, pero tu especialidad no: ${error.message}` : error.message });
+    } finally { setOcupado(false); }
   }
   function cancelar() {
     setDatos(Object.fromEntries(CAMPOS.map((c) => [c, cuenta[c] || '']))); setPassword(''); setCredencial('');
-    setCorreoEditable(false); setErrores({}); setAviso(null);
+    setElegida(especialidad?.valor ?? ''); setCorreoEditable(false); setErrores({}); setAviso(null);
   }
   return (
     <form className="perfil-editor__formulario" onSubmit={enviar}>
@@ -45,6 +66,21 @@ function Formulario({ cuenta, guardar, profesional }) {
           {campo('nombre', 'Nombre completo', { required: true, maxLength: 100, autoComplete: 'name' })}
           {campo('telefono', 'Teléfono de contacto (opcional)', { type: 'tel', maxLength: 20, autoComplete: 'tel', placeholder: '+56 9 1234 5678' })}
         </div>
+        {especialidad && (
+          <div className="campo perfil-editor__especialidad">
+            <label htmlFor="especialidad-perfil" className="campo__etiqueta">Especialidad (obligatorio)</label>
+            <select id="especialidad-perfil" className="campo__control" name="especialidad" value={elegida} aria-invalid={Boolean(errores.especialidad)}
+              aria-describedby="ayuda-especialidad" onChange={(e) => { setAviso(null); setElegida(e.target.value); }}>
+              <option value="" disabled>Selecciona tu especialidad</option>
+              {especialidad.opciones.map((nombre) => <option key={nombre} value={nombre}>{nombre}</option>)}
+            </select>
+            <span id="ayuda-especialidad" className="campo__ayuda">Se muestra en el buscador y en tu perfil público.</span>
+            {especialidad.avisoCambio && elegida !== (especialidad.valor ?? '') && (
+              <span className="campo__ayuda perfil-editor__aviso-especialidad" role="note">{especialidad.avisoCambio}</span>
+            )}
+            {errores.especialidad && <span className="campo__mensaje" role="alert">{errores.especialidad}</span>}
+          </div>
+        )}
         <div className="perfil-editor__correo">
           {campo('correo', 'Correo electrónico', { type: 'email', required: true, readOnly: !correoEditable, maxLength: 150, autoComplete: 'email' })}
           {!correoEditable && <button type="button" className="boton-texto" onClick={() => setCorreoEditable(true)}>Cambiar correo</button>}

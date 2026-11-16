@@ -12,7 +12,7 @@ import Avatar from '../Avatar.jsx';
 // establecimiento; sin ninguna se muestra la comuna. "Cómo llegar" abre el punto exacto que el profesional marcó.
 export default function DetalleEnMapa({ profesional, desde, onCerrar }) {
   const {
-    id, nombre, especialidad, descripcion, modalidad, verificado, comuna, direccion, establecimiento, calificacion, distanciaKm,
+    id, nombre, especialidad, presentacion, modalidad, verificado, comuna, direccion, establecimiento, calificacion, distanciaKm,
     ubicacionLat, ubicacionLng,
   } = profesional;
   let lugar;
@@ -60,7 +60,8 @@ export default function DetalleEnMapa({ profesional, desde, onCerrar }) {
           <Icono nombre="calendario" tamano={16} /> {disponibilidad}
         </li>
       </ul>
-      {descripcion && <p className="detalle-mapa__descripcion">{descripcion}</p>}
+      {/* Su presentación, resumida (16-11-2026). */}
+      {presentacion && <p className="detalle-mapa__descripcion">{presentacion}</p>}
       <p className="detalle-mapa__acciones">
         <Link className="boton boton--principal boton--compacto" to={`/profesionales/${id}`} state={{ desde }}>Ver ficha y reservar</Link>
         <a className="boton boton--secundario boton--compacto"

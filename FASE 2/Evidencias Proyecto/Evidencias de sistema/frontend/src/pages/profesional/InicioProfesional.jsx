@@ -37,15 +37,16 @@ function TarjetaClima({ clima }) {
 }
 
 // Tareas que el profesional puede resolver desde su espacio. Las citas por confirmar vienen del resumen semanal (FS-HU-28).
-function tareasDe(ficha, tieneHorarios, porConfirmar) {
+// Desde el 16-11-2026 se sugiere la presentación (la descripción de la ficha ya no se edita).
+function tareasDe(ficha, tieneHorarios, porConfirmar, sinPresentacion) {
   const tareas = [];
   if (porConfirmar > 0) {
     tareas.push({ icono: 'calendario', titulo: `Tienes ${porConfirmar} ${porConfirmar === 1 ? 'cita' : 'citas'} por confirmar`, detalle: 'Confírmalas o cancélalas en tu agenda.', a: SECCIONES.agenda.ruta, accion: 'Revisar' });
   }
   if (!ficha) {
     tareas.push({ icono: 'medico', titulo: 'Completa tu ficha profesional', detalle: 'Sin ficha no apareces en el buscador de FitSearch.', a: SECCIONES.perfil.ruta, accion: 'Completar' });
-  } else if (!ficha.descripcion) {
-    tareas.push({ icono: 'lapiz', titulo: 'Agrega una descripción a tu ficha', detalle: 'Cuéntales a las personas cómo es tu atención.', a: SECCIONES.perfil.ruta, accion: 'Agregar' });
+  } else if (sinPresentacion) {
+    tareas.push({ icono: 'lapiz', titulo: 'Agrega tu presentación', detalle: 'Cuéntales a las personas quién eres y cómo es tu atención.', a: SECCIONES.perfil.ruta, accion: 'Agregar' });
   }
   if (tieneHorarios === false) tareas.push({ icono: 'calendario', titulo: 'Define tu disponibilidad', detalle: 'Publica tus horarios para que puedan reservar contigo.', a: SECCIONES.agenda.ruta, accion: 'Publicar horario' });
   return tareas;
@@ -84,6 +85,7 @@ export default function InicioProfesional() {
   const [clima, setClima] = useState(null);
   const [tieneHorarios, setTieneHorarios] = useState(null);
   const [resumen, setResumen] = useState(null);
+  const [sinPresentacion, setSinPresentacion] = useState(false);
 
   useEffect(() => {
     let activo = true;
@@ -95,6 +97,10 @@ export default function InicioProfesional() {
         // Sin ficha no hay reservas: el resumen se pide solo cuando existe. Si falla, se muestra sin datos.
         obtenerReportes(4)
           .then(({ resumenSemanal }) => activo && setResumen(resumenSemanal))
+          .catch(() => {});
+        // Si no se puede leer la cuenta, no se afirma que falte la presentación.
+        solicitar('/perfil/cuenta')
+          .then(({ cuenta } = {}) => activo && setSinPresentacion(Boolean(cuenta) && !cuenta.biografia?.trim()))
           .catch(() => {});
         try {
           const { horarios } = await solicitar('/disponibilidades');
@@ -108,7 +114,7 @@ export default function InicioProfesional() {
     return () => { activo = false; };
   }, []);
 
-  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos, tieneHorarios, resumen?.citasPendientes);
+  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos, tieneHorarios, resumen?.citasPendientes, sinPresentacion);
 
   return (
     <div className="inicio-prof">

@@ -99,7 +99,7 @@ export const parametrosDe = (url) => Object.fromEntries(new URL(url, 'http://loc
 // Ficha del directorio con la forma que devuelve GET /api/profesionales.
 export function fichaProfesional(sobrescribir = {}) {
   return {
-    id: 1, nombre: 'Ana Demo', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla', modalidad: 'ambas',
+    id: 1, nombre: 'Ana Demo', especialidad: 'Nutrición', comuna: 'Melipilla', modalidad: 'ambas',
     verificado: false, ubicacionLat: -33.686, ubicacionLng: -71.215, establecimiento: { nombre: 'Consulta Demo', direccion: 'Melipilla' },
     calificacion: { promedio: 4.5, total: 12 }, distanciaKm: null, esFavorito: false, ...sobrescribir,
   };
