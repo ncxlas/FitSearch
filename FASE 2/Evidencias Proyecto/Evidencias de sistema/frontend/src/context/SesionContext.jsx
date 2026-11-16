@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { actualizarSesionGuardada, guardarSesion, leerSesionGuardada, registrarManejadorSesionExpirada } from '../services/api.js';
 import * as authService from '../services/auth.service.js';
 import { primerNombre } from '../services/formato.js';
+import { olvidarFotoCuenta } from '../services/fotoCuenta.js';
 import { ELEGIR_PERFIL } from '../services/navegacion.js';
 import { olvidarUbicacion } from '../services/ubicacion.js';
 
@@ -21,6 +22,7 @@ export function SesionProvider({ children }) {
     registrarManejadorSesionExpirada(() => {
       establecer(null);
       olvidarUbicacion();
+      olvidarFotoCuenta();
       setAviso({ tipo: 'info', texto: 'Tu sesión expiró. Inicia sesión nuevamente.' });
     });
   }, [establecer]);
@@ -78,6 +80,7 @@ export function SesionProvider({ children }) {
       }
       establecer(null);
       olvidarUbicacion();
+      olvidarFotoCuenta();
       // "cierre" le indica a RutaProtegida que la salida fue voluntaria y debe volver a la portada.
       // "nombre" lo usa la despedida de la portada.
       setAviso({ tipo: 'exito', texto: 'Cerraste sesión correctamente.', origen: 'cierre', nombre });

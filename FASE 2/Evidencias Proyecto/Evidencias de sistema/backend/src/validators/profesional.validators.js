@@ -76,4 +76,11 @@ const ubicar = [
     .withMessage(`La dirección admite hasta ${reglas.direccion.max} caracteres`),
 ];
 
-module.exports = { listar, pagina, tipoResena, id, guardarResena, ubicar };
+// Dirección de un punto del mapa, al mover el marcador de la ficha (15-11-2026): debe estar dentro de Chile, el mismo
+// recuadro que limita el mapa.
+const { latMin, latMax, lngMin, lngMax } = reglas.ubicacionChile;
+const coordenada = (campo, nombre, min, max) => query(campo).custom((valor) => typeof valor === 'string').withMessage(`Indica la ${nombre}`).bail()
+  .isFloat({ min, max }).withMessage('El punto debe estar dentro de Chile');
+const punto = [coordenada('lat', 'latitud', latMin, latMax), coordenada('lng', 'longitud', lngMin, lngMax)];
+
+module.exports = { listar, pagina, tipoResena, id, guardarResena, ubicar, punto };

@@ -1,8 +1,15 @@
 {
-  "_fuente": "Comunas de Chile por región según el Código Único Territorial (Anexo:Comunas de Chile, es.wikipedia.org, consultado el 14-11-2026): 16 regiones y 346 comunas, de norte a sur.",
+  "_fuente": "Comunas de Chile por región según el Código Único Territorial (Anexo:Comunas de Chile, es.wikipedia.org, consultado el 14-11-2026): 16 regiones y 346 comunas, de norte a sur. El 15-11-2026 se ajustaron los nombres y se agregó el nombre completo de cada región según el listado entregado por el Product Owner.",
+  "_alias": "Otras formas de escribir una comuna, con su nombre en esta lista: se reconocen al leer datos guardados o el mapa.",
+  "alias": {
+    "Llay-Llay": "Llaillay",
+    "Til Til": "Tiltil",
+    "Marchigüe": "Marchihue"
+  },
   "regiones": [
     {
       "nombre": "Arica y Parinacota",
+      "nombreCompleto": "Región de Arica y Parinacota",
       "comunas": [
         "Arica",
         "Camarones",
@@ -12,6 +19,7 @@
     },
     {
       "nombre": "Tarapacá",
+      "nombreCompleto": "Región de Tarapacá",
       "comunas": [
         "Alto Hospicio",
         "Camiña",
@@ -24,6 +32,7 @@
     },
     {
       "nombre": "Antofagasta",
+      "nombreCompleto": "Región de Antofagasta",
       "comunas": [
         "Antofagasta",
         "Calama",
@@ -38,6 +47,7 @@
     },
     {
       "nombre": "Atacama",
+      "nombreCompleto": "Región de Atacama",
       "comunas": [
         "Alto del Carmen",
         "Caldera",
@@ -52,6 +62,7 @@
     },
     {
       "nombre": "Coquimbo",
+      "nombreCompleto": "Región de Coquimbo",
       "comunas": [
         "Andacollo",
         "Canela",
@@ -72,6 +83,7 @@
     },
     {
       "nombre": "Valparaíso",
+      "nombreCompleto": "Región de Valparaíso",
       "comunas": [
         "Algarrobo",
         "Cabildo",
@@ -89,7 +101,7 @@
         "La Cruz",
         "La Ligua",
         "Limache",
-        "Llay-Llay",
+        "Llaillay",
         "Los Andes",
         "Nogales",
         "Olmué",
@@ -115,6 +127,7 @@
     },
     {
       "nombre": "Metropolitana",
+      "nombreCompleto": "Región Metropolitana de Santiago",
       "comunas": [
         "Alhué",
         "Buin",
@@ -166,12 +179,13 @@
         "San Ramón",
         "Santiago",
         "Talagante",
-        "Til Til",
+        "Tiltil",
         "Vitacura"
       ]
     },
     {
       "nombre": "O'Higgins",
+      "nombreCompleto": "Región del Libertador General Bernardo O'Higgins",
       "comunas": [
         "Chépica",
         "Chimbarongo",
@@ -186,7 +200,7 @@
         "Lolol",
         "Machalí",
         "Malloa",
-        "Marchigüe",
+        "Marchihue",
         "Mostazal",
         "Nancagua",
         "Navidad",
@@ -210,6 +224,7 @@
     },
     {
       "nombre": "Maule",
+      "nombreCompleto": "Región del Maule",
       "comunas": [
         "Cauquenes",
         "Chanco",
@@ -245,6 +260,7 @@
     },
     {
       "nombre": "Ñuble",
+      "nombreCompleto": "Región de Ñuble",
       "comunas": [
         "Bulnes",
         "Chillán",
@@ -271,6 +287,7 @@
     },
     {
       "nombre": "Biobío",
+      "nombreCompleto": "Región del Biobío",
       "comunas": [
         "Alto Biobío",
         "Antuco",
@@ -296,7 +313,7 @@
         "Penco",
         "Quilaco",
         "Quilleco",
-        "San Pedro de La Paz",
+        "San Pedro de la Paz",
         "San Rosendo",
         "Santa Bárbara",
         "Santa Juana",
@@ -309,6 +326,7 @@
     },
     {
       "nombre": "La Araucanía",
+      "nombreCompleto": "Región de La Araucanía",
       "comunas": [
         "Angol",
         "Carahue",
@@ -346,6 +364,7 @@
     },
     {
       "nombre": "Los Ríos",
+      "nombreCompleto": "Región de Los Ríos",
       "comunas": [
         "Corral",
         "Futrono",
@@ -363,6 +382,7 @@
     },
     {
       "nombre": "Los Lagos",
+      "nombreCompleto": "Región de Los Lagos",
       "comunas": [
         "Ancud",
         "Calbuco",
@@ -398,6 +418,7 @@
     },
     {
       "nombre": "Aysén",
+      "nombreCompleto": "Región de Aysén del General Carlos Ibáñez del Campo",
       "comunas": [
         "Aysén",
         "Chile Chico",
@@ -413,6 +434,7 @@
     },
     {
       "nombre": "Magallanes",
+      "nombreCompleto": "Región de Magallanes y de la Antártica Chilena",
       "comunas": [
         "Antártica",
         "Cabo de Hornos",

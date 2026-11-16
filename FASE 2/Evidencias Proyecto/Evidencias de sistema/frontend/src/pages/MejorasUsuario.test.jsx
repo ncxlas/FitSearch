@@ -112,13 +112,17 @@ describe('ficha', () => {
   test('muestra la experiencia, el registro de la Superintendencia de Salud y el precio referencial', async () => {
     simularApi(fichaDe({ registroSis: '93952', atiendeA: ['adultos', 'deportistas'], formacion: [{ titulo: 'Nutricionista', institucion: 'Universidad de Chile', anio: 2016 }] }));
     renderizarApp('/profesionales/3');
-    const seccion = await screen.findByRole('region', { name: 'Experiencia y formación' });
-    expect(seccion).toHaveTextContent('8 años');
-    expect(seccion).toHaveTextContent('$30.000');
-    expect(seccion).toHaveTextContent('Adultos, Deportistas');
-    expect(seccion).toHaveTextContent('Registro N.º 93952');
-    expect(within(seccion).getByRole('link', { name: /Comprobar en el registro/ })).toHaveAttribute('href', 'https://rnpi.superdesalud.gob.cl/');
-    expect(seccion).toHaveTextContent('Universidad de Chile · 2016');
+    // Desde el 15-11-2026 la ficha reparte esta información en las pestañas Información, Formación y Certificaciones.
+    const informacion = await screen.findByRole('tabpanel', { name: 'Información' });
+    expect(informacion).toHaveTextContent('8 años');
+    expect(informacion).toHaveTextContent('$30.000');
+    expect(informacion).toHaveTextContent('Adultos, Deportistas');
+    await userEvent.click(screen.getByRole('tab', { name: 'Formación' }));
+    expect(screen.getByRole('tabpanel', { name: 'Formación' })).toHaveTextContent('Universidad de Chile · 2016');
+    await userEvent.click(screen.getByRole('tab', { name: 'Certificaciones' }));
+    const certificaciones = screen.getByRole('tabpanel', { name: 'Certificaciones' });
+    expect(certificaciones).toHaveTextContent('Registro N.º 93952');
+    expect(within(certificaciones).getByRole('link', { name: /Comprobar en el registro/ })).toHaveAttribute('href', 'https://rnpi.superdesalud.gob.cl/');
   });
 
   test('reseñas verificadas: sello, filtro positivas/negativas y aviso si aún no tuvo su cita', async () => {

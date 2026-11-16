@@ -1,6 +1,6 @@
 const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
-const { comunasDeRegion } = require('../utils/regiones');
+const { formasDeComuna, formasDeRegion } = require('../utils/regiones');
 const ErrorHttp = require('../utils/ErrorHttp');
 const verificacion = require('./verificacion.model');
 
@@ -49,8 +49,8 @@ function construirConsulta({ q, especialidad, comuna, region, modalidad, calific
   // Con una comuna basta; con solo la región, cualquiera de sus comunas. La intercalación de la tabla no distingue
   // mayúsculas ni tildes, así «san antonio» también es de Valparaíso (14-11-2026). Se compara con los espacios unidos
   // para que también aparezca una comuna guardada antes como «San  Antonio» (15-11-2026).
-  if (comuna) condiciones.push(Prisma.sql`${COMUNA} = ${comuna}`);
-  else if (region) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(comunasDeRegion(region))})`);
+  if (comuna) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(formasDeComuna(comuna))})`);
+  else if (region) condiciones.push(Prisma.sql`${COMUNA} IN (${Prisma.join(formasDeRegion(region))})`);
   // Quien atiende de ambas formas aparece tanto en "presencial" como en "online".
   if (modalidad) condiciones.push(Prisma.sql`p.modalidad IN (${modalidad}, 'ambas')`);
   if (calificacionMin) condiciones.push(Prisma.sql`COALESCE(c.promedio, 0) >= ${calificacionMin}`);
@@ -119,7 +119,8 @@ async function buscarPorId(id, usuarioId) {
       e.nombre AS establecimientoNombre, e.direccion AS establecimientoDireccion,
       COALESCE(c.promedio, 0) AS promedio, COALESCE(c.total, 0) AS totalResenas,
       ${distancia} AS distanciaKm, ${COLUMNAS_EXPERIENCIA},
-      EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito
+      EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito,
+      (SELECT dc.biografia FROM datos_cuenta dc WHERE dc.usuario_id = p.usuario_id) AS presentacion
     ${desde} AND p.id = ${id}`;
   return filas[0] || null;
 }

@@ -43,6 +43,11 @@ async function guardarMiFicha(req, res) {
 }
 
 // SC-28: la comuna y la dirección se convierten en coordenadas en el backend (DAS, D36).
+// Comuna, región y dirección del punto donde el profesional dejó el marcador (15-11-2026).
+async function direccionDelPunto(req, res) {
+  res.json(await geocodificacion.direccionDelPunto({ lat: Number(req.query.lat), lng: Number(req.query.lng) }));
+}
+
 async function ubicarDireccion(req, res) {
   res.json(await geocodificacion.ubicar({ comuna: texto(req.query.comuna), direccion: texto(req.query.direccion) }));
 }
@@ -53,5 +58,5 @@ async function verificarPerfil(req, res) {
 }
 
 module.exports = {
-  listar, ficha, filtros, filtrosDesdeConsulta, obtenerMiFicha, guardarMiFicha, ubicarDireccion, verificarPerfil,
+  listar, ficha, filtros, filtrosDesdeConsulta, obtenerMiFicha, guardarMiFicha, ubicarDireccion, direccionDelPunto, verificarPerfil,
 };

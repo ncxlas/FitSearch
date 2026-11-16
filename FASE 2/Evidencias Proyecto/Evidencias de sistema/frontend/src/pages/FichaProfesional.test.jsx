@@ -28,10 +28,13 @@ function simular({ ficha = fichaApi(), resenas = [resenaDe(), resenaDe({ id: 10,
 const cuerpo = (llamada) => JSON.parse(llamada[1].body);
 
 describe('Ficha', () => {
-  test('solo online muestra atención online sin dirección, comuna ni enlace a Maps aunque haya datos antiguos', async () => {
+  // Pedido del PO del 15-11-2026: si atiende solo online, la ficha no tiene «Lugar de atención» (ni mapa ni Google Maps).
+  test('solo online no ofrece lugar de atención, dirección, comuna ni enlace a Maps aunque haya datos antiguos', async () => {
     simular({ ficha: fichaApi({ profesional: fichaProfesional({ modalidad: 'online', comuna: 'Comuna antigua', direccion: 'Dirección antigua 123' }) }) });
     renderizarApp('/profesionales/1');
-    expect(await screen.findByRole('heading', { name: 'Atención online' })).toBeInTheDocument();
+    const pestanas = within(await screen.findByRole('tablist', { name: 'Información de Ana Demo' }));
+    expect(pestanas.getAllByRole('tab').map((pestana) => pestana.textContent.trim())).toEqual(['Información', 'Formación', 'Certificaciones']);
+    expect(screen.getByText('Atención online')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Google Maps/ })).not.toBeInTheDocument();
     expect(screen.queryByText(/Dirección antigua|Comuna antigua/)).not.toBeInTheDocument();
   });
@@ -39,10 +42,14 @@ describe('Ficha', () => {
     simular(); renderizarApp('/profesionales/1');
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Ana Demo' })).toBeInTheDocument();
-    expect(screen.getByText('Presencial y online')).toBeInTheDocument();
-    expect(screen.getByText('Consulta Demo')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Ver ubicación de Ana Demo en Google Maps/ }))
+    expect(screen.getAllByText('Presencial y online').length).toBeGreaterThan(0);
+    await userEvent.click(screen.getByRole('tab', { name: 'Lugar de atención' }));
+    const lugar = within(screen.getByRole('tabpanel', { name: 'Lugar de atención' }));
+    expect(lugar.getByText('Consulta Demo')).toBeInTheDocument();
+    // Google Maps queda como un enlace discreto bajo el mapa de FitSearch (15-11-2026).
+    expect(lugar.getByRole('link', { name: /Abrir la ubicación de Ana Demo en Google Maps/ }))
       .toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=-33.686%2C-71.215');
+    expect(lugar.getByText('Cargando mapa…')).toBeInTheDocument();
     expect(screen.getByText('2 reseñas')).toBeInTheDocument();
     expect(await screen.findByText('Muy clara al explicar el plan.')).toBeInTheDocument();
     expect(screen.getByText('Martín D.')).toBeInTheDocument();
@@ -79,20 +86,70 @@ describe('Ficha', () => {
     expect(screen.getByRole('link', { name: 'Ver profesionales' })).toHaveAttribute('href', '/profesionales');
   });
 
-  test('el lugar de atención muestra la dirección que el profesional indicó en su ficha, con su comuna (SC-24)', async () => {
-    simular({ ficha: fichaApi({ profesional: fichaProfesional({ direccion: 'Av. Ortúzar 120', establecimiento: null }) }) });
+  test('el lugar de atención muestra la dirección que el profesional indicó en su ficha, con su comuna y su región (SC-24)', async () => {
+    simular({ ficha: fichaApi({ profesional: fichaProfesional({ direccion: 'Av. Ortúzar 120', establecimiento: null, region: 'Región Metropolitana de Santiago' }) }) });
     renderizarApp('/profesionales/1');
-    const lugar = within(await screen.findByRole('region', { name: 'Lugar de atención' }));
-    expect(lugar.getByText('Atención en Melipilla')).toBeInTheDocument();
-    expect(lugar.getByText('Av. Ortúzar 120, Melipilla')).toBeInTheDocument();
+    expect(await screen.findByText('Melipilla, Región Metropolitana de Santiago', { selector: '.ficha__datos span' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('tab', { name: 'Lugar de atención' }));
+    const lugar = within(screen.getByRole('tabpanel', { name: 'Lugar de atención' }));
+    expect(lugar.getByText('Av. Ortúzar 120')).toBeInTheDocument();
+    expect(lugar.getByText('Melipilla, Región Metropolitana de Santiago')).toBeInTheDocument();
+    expect(lugar.getByText('También atiende online.')).toBeInTheDocument();
   });
 
-  test('si atiende solo online y no indicó dirección, la ficha lo dice en vez de pedir consultarla (SC-24)', async () => {
+  test('si atiende solo online y no indicó dirección, no pide consultarla (SC-24)', async () => {
     simular({ ficha: fichaApi({ profesional: fichaProfesional({ modalidad: 'online', direccion: null, establecimiento: null }) }) });
     renderizarApp('/profesionales/1');
-    const lugar = within(await screen.findByRole('region', { name: 'Atención online' }));
-    expect(lugar.getByText('Este profesional atiende de forma online.')).toBeInTheDocument();
-    expect(lugar.queryByText(/Consulta la dirección exacta/)).not.toBeInTheDocument();
+    expect(await screen.findByText('Atención online', { selector: '.ficha__datos span' })).toBeInTheDocument();
+    expect(screen.queryByText(/Consulta la dirección exacta/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Lugar de atención' })).not.toBeInTheDocument();
+  });
+
+  // Pedido del PO del 15-11-2026: presentación, menú con su información, horas destacadas y, al final, las reseñas.
+  test('abre con la presentación del profesional y sigue con el menú, las horas y las reseñas, en ese orden', async () => {
+    simular({ ficha: fichaApi({ profesional: fichaProfesional({ calificacion: { promedio: 4.5, total: 2 }, presentacion: 'Soy Ana, nutricionista deportiva. Me encanta correr.' }) }) });
+    renderizarApp('/profesionales/1');
+    const presentacion = await screen.findByRole('region', { name: 'Conoce a Ana Demo' });
+    expect(presentacion).toHaveTextContent('Soy Ana, nutricionista deportiva. Me encanta correr.');
+    const menu = screen.getByRole('tablist', { name: 'Información de Ana Demo' });
+    const horas = screen.getByRole('heading', { name: 'Reservar una hora' });
+    const resenas = screen.getByText('2 reseñas');
+    const despues = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(despues(presentacion, menu) && despues(menu, horas) && despues(horas, resenas)).toBe(true);
+    // «Reservar una hora», en la cabecera, lleva a las horas disponibles.
+    await userEvent.click(screen.getByRole('button', { name: 'Reservar una hora' }));
+    expect(document.getElementById('horas')).toHaveFocus();
+  });
+
+  test('sin presentación no muestra el recuadro vacío', async () => {
+    simular(); renderizarApp('/profesionales/1');
+    await screen.findByRole('heading', { level: 1, name: 'Ana Demo' });
+    expect(screen.queryByRole('region', { name: /^Conoce a/ })).not.toBeInTheDocument();
+  });
+
+  test('el menú se recorre con las flechas y muestra una pestaña a la vez', async () => {
+    simular({ ficha: fichaApi({ profesional: fichaProfesional({
+      verificado: true, registroSis: '93952', formacion: [{ titulo: 'Nutricionista', institucion: 'Universidad de Chile', anio: 2016 }],
+    }) }) });
+    renderizarApp('/profesionales/1');
+    const informacion = await screen.findByRole('tab', { name: 'Información' });
+    expect(informacion).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tabpanel', { name: 'Información' })).toHaveTextContent('Sobre su atención');
+
+    informacion.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(screen.getByRole('tab', { name: 'Formación' })).toHaveFocus();
+    expect(screen.getByRole('tabpanel', { name: 'Formación' })).toHaveTextContent('Universidad de Chile · 2016');
+    expect(screen.queryByText('Sobre su atención')).not.toBeInTheDocument();
+
+    await userEvent.keyboard('{ArrowRight}');
+    const certificaciones = screen.getByRole('tabpanel', { name: 'Certificaciones' });
+    expect(certificaciones).toHaveTextContent('Verificado por FitSearch');
+    expect(certificaciones).toHaveTextContent('Registro N.º 93952');
+    await userEvent.keyboard('{End}');
+    expect(screen.getByRole('tab', { name: 'Lugar de atención' })).toHaveAttribute('aria-selected', 'true');
+    await userEvent.keyboard('{ArrowRight}');
+    expect(informacion).toHaveFocus();
   });
 });
 

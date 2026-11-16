@@ -45,6 +45,11 @@ function simularServidor({ ficha = null, alGuardar } = {}) {
 }
 const cuerpoPut = (fetch) => JSON.parse(fetch.mock.calls.find(([url, o]) => url === '/api/profesionales/mi-ficha' && o.method === 'PUT')[1].body);
 const huboPut = (fetch) => fetch.mock.calls.some(([, opciones = {}]) => opciones.method === 'PUT');
+// Desde el 15-11-2026 la ficha está en su propia sección; con ficha, el perfil abre en «Información personal».
+const abrirSeccion = async (nombre) => userEvent.click(
+  within(await screen.findByRole('navigation', { name: 'Secciones del perfil' })).getByRole('button', { name: nombre }),
+);
+const abrirFicha = () => abrirSeccion('Especialidad y lugar de atención');
 
 async function completarFicha({ modalidad = 'ambas', direccion = 'Av. Irarrázaval 2401' } = {}) {
   // El catálogo de especialidades llega de la API (FS-HU-30).
@@ -127,6 +132,7 @@ describe('Perfil profesional editable', () => {
   test('online no ofrece la ubicación antigua y conserva la modalidad', async () => {
     simularServidor({ ficha: { ...MI_FICHA, modalidad: 'online', comuna: null, direccion: null } });
     renderizarApp('/profesional/perfil');
+    await abrirFicha();
     expect(await screen.findByLabelText('Modalidad de atención (obligatorio)')).toHaveValue('online');
     expect(screen.getAllByText('Atención online').length).toBeGreaterThan(0);
     expect(screen.queryByLabelText('Comuna (obligatorio)')).not.toBeInTheDocument();
@@ -135,17 +141,29 @@ describe('Perfil profesional editable', () => {
   test('la ficha presencial permite editar directamente su dirección', async () => {
     simularServidor({ ficha: { ...MI_FICHA, direccion: 'Av. Italia 850' } });
     renderizarApp('/profesional/perfil');
+    await abrirFicha();
     expect(await screen.findByLabelText('Dirección de atención (obligatorio)')).toHaveValue('Av. Italia 850');
     expect(screen.getByLabelText('Descripción sobre tu atención')).toHaveValue('Entrenamiento funcional y de fuerza.');
   });
-  test('información y experiencia siguen juntas y certificaciones se conserva aparte, sin Horarios', async () => {
+  // Pedido del PO del 15-11-2026: el mismo flujo que el perfil del usuario, una sección a la vez.
+  test('cada sección va por separado y al elegir una se desmarca la anterior, sin Horarios', async () => {
     simularServidor({ ficha: MI_FICHA });
     renderizarApp('/profesional/perfil');
     const nav = within(await screen.findByRole('navigation', { name: 'Secciones del perfil' }));
-    expect(nav.getAllByRole('button').map((b) => b.textContent)).toEqual(['Información y experiencia', 'Certificaciones']);
-    await screen.findByLabelText('Especialidad (obligatorio)');
-    await userEvent.click(screen.getByText('Experiencia y formación', { selector: 'summary' }));
+    expect(nav.getAllByRole('button').map((b) => b.textContent))
+      .toEqual(['Información personal', 'Especialidad y lugar de atención', 'Experiencia y formación', 'Certificaciones']);
+    expect(nav.getByRole('button', { name: 'Información personal' })).toHaveAttribute('aria-current', 'page');
+    expect(await screen.findByLabelText(/^Tu presentación \(opcional\)/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Especialidad (obligatorio)')).not.toBeInTheDocument();
+
+    await abrirFicha();
+    expect(nav.getByRole('button', { name: 'Información personal' })).not.toHaveAttribute('aria-current');
+    expect(await screen.findByLabelText('Especialidad (obligatorio)')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Tu presentación \(opcional\)/)).not.toBeInTheDocument();
+
+    await abrirSeccion('Experiencia y formación');
     expect(await screen.findByRole('button', { name: 'Agregar experiencia' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Especialidad (obligatorio)')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Horarios' })).not.toBeInTheDocument();
   });
   test('las secciones se recorren con el teclado y se activan con Enter', async () => {
@@ -159,6 +177,7 @@ describe('Perfil profesional editable', () => {
   test('Cancelar descarta cambios de la ficha sin guardar', async () => {
     const fetch = simularServidor({ ficha: { ...MI_FICHA, direccion: 'Av. Italia 850' } });
     renderizarApp('/profesional/perfil');
+    await abrirFicha();
     const comuna = await screen.findByLabelText('Comuna (obligatorio)');
     await userEvent.clear(comuna); await userEvent.type(comuna, 'Santiago');
     const form = within(comuna.closest('form'));

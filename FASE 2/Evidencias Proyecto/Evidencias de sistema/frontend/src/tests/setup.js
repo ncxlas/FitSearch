@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 import { olvidarUbicacion } from '../services/ubicacion.js';
+import { olvidarFotoCuenta } from '../services/fotoCuenta.js';
 
 // jsdom no implementa el scroll de la ventana: sin esto, cada cambio de pantalla (VolverArriba) ensucia la salida.
 window.scrollTo = () => {};
@@ -14,6 +15,8 @@ afterEach(() => {
   vi.unstubAllEnvs();
   // La ubicación se guarda en memoria del módulo: cada prueba parte sin ella y sin geolocalización simulada.
   olvidarUbicacion();
+  // La foto de la cuenta también vive en memoria del módulo (15-11-2026).
+  olvidarFotoCuenta();
   delete navigator.geolocation;
   delete navigator.permissions;
 });

@@ -54,9 +54,12 @@ function Formulario({ cuenta, guardar, profesional }) {
           {cuenta.tienePassword && <label className="campo"><span className="campo__etiqueta">Contraseña actual</span><input type="password" className="campo__control" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />{errores.password && <span className="campo__mensaje" role="alert">{errores.password}</span>}</label>}
           {cuenta.tieneGoogle && <BotonGoogle separador={cuenta.tienePassword ? 'o confirma con Google' : 'Confirma tu cuenta de Google'} onCredencial={(token) => { setCredencial(token); setAviso({ tipo: 'info', texto: 'Cuenta de Google seleccionada. Guarda los cambios para confirmar.' }); }} />}
         </div>}
-        {!profesional && <label className="campo"><span className="campo__etiqueta">Sobre mí (opcional)</span>
-          <textarea className="campo__control" name="biografia" value={datos.biografia} onChange={cambiar} maxLength={500} rows={3} placeholder="Cuéntanos un poco sobre ti" />
-          <span className="perfil-editor__contador">{datos.biografia.length} / 500</span></label>}
+        {/* Para el profesional es su presentación en el perfil público (15-11-2026): quién es, a qué se dedica y qué le gusta. */}
+        <label className="campo"><span className="campo__etiqueta">{profesional ? 'Tu presentación (opcional)' : 'Sobre mí (opcional)'}</span>
+          {profesional && <span className="campo__ayuda">Se muestra al inicio de tu perfil público, para que los usuarios te conozcan.</span>}
+          <textarea className="campo__control" name="biografia" value={datos.biografia} onChange={cambiar} maxLength={500} rows={profesional ? 5 : 3}
+            placeholder={profesional ? 'Ej.: Soy Juan, kinesiólogo deportivo hace 8 años. Me dedico a la recuperación de lesiones y me encanta el trail running.' : 'Cuéntanos un poco sobre ti'} />
+          <span className="perfil-editor__contador">{datos.biografia.length} / 500</span></label>
         <details className="perfil-editor__subseccion"><summary><Icono nombre="enlace" tamano={19} /> Redes sociales (opcional)</summary>
           <div className="perfil-editor__redes">
             {campo('instagram', 'Instagram', { type: 'url', maxLength: 200, placeholder: 'https://instagram.com/tu_usuario' })}

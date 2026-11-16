@@ -32,6 +32,11 @@ export const eliminarResena = (id) => solicitar(`/profesionales/${id}/resenas`, 
 export const obtenerMiFicha = () => solicitar('/profesionales/mi-ficha');
 export const guardarMiFicha = (ficha) => solicitar('/profesionales/mi-ficha', { metodo: 'PUT', cuerpo: ficha });
 // SC-28: coordenadas de la comuna y la dirección de atención; las busca el backend (DAS, D36).
+// Comuna, región y dirección del punto donde el profesional dejó el marcador de su ficha (15-11-2026).
+export function direccionDelPunto({ lat, lng }) {
+  return solicitar(`/profesionales/mi-ficha/ubicacion/punto?${new URLSearchParams({ lat, lng })}`);
+}
+
 export function ubicarDireccion({ comuna, direccion }) {
   const parametros = new URLSearchParams({ comuna });
   if (direccion) parametros.set('direccion', direccion);
