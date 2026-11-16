@@ -262,6 +262,80 @@ describe('Ajustar el marcador', () => {
     expect(screen.getByLabelText('Comuna (obligatorio)')).toHaveValue('Providencia');
   });
 
+  // Revisión del PR 61: no se guardan las coordenadas nuevas con la dirección anterior sin que el profesional la revise.
+  const AVISO_GUARDAR = 'Antes de guardar, corrige tu dirección o confirma que corresponde al marcador.';
+  const SIN_CALLE = { comuna: 'San Antonio', region: 'Valparaíso', regionCompleta: 'Región de Valparaíso', direccion: null, precision: 'comuna' };
+
+  test('si falla la búsqueda de la dirección del punto, no guarda hasta buscar de nuevo o confirmar la dirección', async () => {
+    const { fetch, marcador } = await conMapa({
+      punto: () => respuestaJson(503, { error: 'No pudimos buscar la dirección de ese punto en este momento. Intenta de nuevo en unos segundos.' }),
+    });
+    marcador.arrastrar(-71.6136, -33.5933);
+    expect(await screen.findByText(/^No pudimos buscar la dirección de ese punto/, {}, ESPERA)).toBeInTheDocument();
+    await guardar();
+
+    expect(await screen.findByText(AVISO_GUARDAR)).toBeInTheDocument();
+    expect(huboPut(fetch)).toBe(false);
+    expect(screen.getByRole('button', { name: /Guardar perfil/ })).toBeEnabled();
+    expect(consultas(fetch)).toEqual([COMUNA, CON_DIRECCION]);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Buscar de nuevo' }));
+    await waitFor(() => expect(puntos(fetch)).toHaveLength(2), ESPERA);
+    expect(await screen.findByText(/^No pudimos buscar la dirección de ese punto/, {}, ESPERA)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar dirección' }));
+    expect(screen.getByText('Confirmaste tu dirección: guardaremos el marcador donde lo dejaste.')).toBeInTheDocument();
+    await guardar();
+    await waitFor(() => expect(huboPut(fetch)).toBe(true));
+    expect(cuerpoPut(fetch)).toMatchObject({
+      comuna: 'Providencia', direccion: 'Av. Providencia 1234, oficina 501', ubicacionLat: -33.5933, ubicacionLng: -71.6136,
+    });
+  });
+
+  test('si el punto no tiene calle, cambia la comuna pero no guarda la dirección anterior hasta corregirla', async () => {
+    const BARROS_LUCO = { lat: -33.5921, lng: -71.6122, precision: 'exacta', encontrada: 'Avenida Barros Luco 1500, San Antonio' };
+    const { fetch, marcador } = await conMapa({
+      punto: () => respuestaJson(200, SIN_CALLE),
+      ubicar: ({ comuna }) => respuestaJson(200, comuna === 'San Antonio' ? BARROS_LUCO : PROVIDENCIA),
+    });
+    marcador.arrastrar(-71.6136, -33.5933);
+    expect(await screen.findByText(
+      'Ajustaste el marcador en San Antonio, pero no encontramos una calle en ese punto: revisa tu dirección.', {}, ESPERA,
+    )).toBeInTheDocument();
+    expect(screen.getByLabelText('Comuna (obligatorio)')).toHaveValue('San Antonio');
+    expect(screen.getByLabelText(/^Dirección de atención/)).toHaveValue('Av. Providencia 1234, oficina 501');
+    await guardar();
+
+    expect(await screen.findByText(AVISO_GUARDAR)).toBeInTheDocument();
+    expect(huboPut(fetch)).toBe(false);
+
+    // Al corregir la dirección se busca de nuevo y se guarda el lugar encontrado para esa dirección.
+    const direccion = screen.getByLabelText(/^Dirección de atención/);
+    await userEvent.clear(direccion);
+    await userEvent.type(direccion, 'Barros Luco 1500');
+    expect(screen.queryByRole('button', { name: 'Confirmar dirección' })).not.toBeInTheDocument();
+    await guardar();
+    await waitFor(() => expect(huboPut(fetch)).toBe(true));
+    expect(cuerpoPut(fetch)).toMatchObject({
+      comuna: 'San Antonio', direccion: 'Barros Luco 1500', ubicacionLat: -33.5921, ubicacionLng: -71.6122,
+    });
+  });
+
+  test('si el punto no tiene calle y la dirección es correcta, la confirma y guarda el marcador', async () => {
+    const { fetch, marcador } = await conMapa({ punto: () => respuestaJson(200, { ...SIN_CALLE, comuna: 'Providencia', region: 'Metropolitana' }) });
+    marcador.arrastrar(-70.6215, -33.4294);
+    await screen.findByRole('button', { name: 'Confirmar dirección' }, ESPERA);
+    expect(screen.queryByRole('button', { name: 'Buscar de nuevo' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar dirección' }));
+    await guardar();
+    await waitFor(() => expect(huboPut(fetch)).toBe(true));
+    expect(cuerpoPut(fetch)).toMatchObject({
+      comuna: 'Providencia', direccion: 'Av. Providencia 1234, oficina 501', ubicacionLat: -33.4294, ubicacionLng: -70.6215,
+    });
+    expect(screen.queryByText(AVISO_GUARDAR)).not.toBeInTheDocument();
+  });
+
   test('si escribe la dirección justo después de mover el marcador, gana lo escrito', async () => {
     const { fetch, marcador } = await conMapa();
     marcador.arrastrar(-70.7, -33.5);
