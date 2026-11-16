@@ -4,6 +4,6 @@ flowchart TB
   R --> S["cuentaPerfil.service<br/>Identidad para cambiar correo<br/>Transacción y versión de sesión"]
   S --> P["Prisma compartido"]
   P --> U[("usuarios<br/>Nombre y correo")]
-  P --> C[("datos_cuenta<br/>Contacto, enlaces y foto propia<br/>PR 59 en revisión")]
+  P --> C[("datos_cuenta<br/>Contacto, enlaces y foto propia<br/>Incorporada con el PR 59")]
   F --- E["Las rutas de salud, ficha, experiencia,<br/>verificación y agenda se conservan"]
-  C --- N["26 tablas fusionadas en main<br/>27 al aplicar la migración del PR 59"]
+  C --- N["27 tablas en main<br/>datos_cuenta llegó con la migración del PR 59"]

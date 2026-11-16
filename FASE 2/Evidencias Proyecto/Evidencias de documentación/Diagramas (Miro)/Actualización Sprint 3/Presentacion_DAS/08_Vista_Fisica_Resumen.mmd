@@ -4,4 +4,4 @@ flowchart TB
   T -->|"JSON /api y Bearer JWT"| B["Express y Node.js<br/>Valida la cuenta propia y los cambios"]
   B -->|"Prisma compartido"| D[("MySQL<br/>usuarios y datos_cuenta<br/>Foto comprimida hasta 48 KB")]
   B -->|"Al cambiar correo con Google"| G["Verifica identidad Google vinculada<br/>Orígenes autorizados requeridos"]
-  D --- N["DAS 1.32: PR 59 en revisión<br/>datos_cuenta requiere migración aditiva<br/>Los documentos de certificación siguen aparte"]
+  D --- N["DAS 1.33: PR 59 fusionado<br/>datos_cuenta se creó con una migración aditiva<br/>Los documentos de certificación siguen aparte"]
