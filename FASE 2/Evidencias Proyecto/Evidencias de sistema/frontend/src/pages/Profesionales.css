@@ -1,5 +1,6 @@
-/* Buscador de profesionales, ficha con reseñas y favoritos (mobile-first). Desde 64rem los filtros son una barra sobre
-   los resultados y desde 75rem la lista y el mapa van lado a lado (SC-27); antes, el mapa va arriba de la lista.
+/* Buscador de profesionales, ficha con reseñas y favoritos (mobile-first). Los filtros se abren con el botón «Filtros»
+   (hoja inferior en celular, panel lateral desde 64rem) y desde 75rem la lista y el mapa van lado a lado (SC-27); antes,
+   el mapa va arriba de la lista.
    Las reglas que cambian .boton o .boton-icono usan dos clases: index.css se carga después y, a igual especificidad, ganaría. */
 .buscador { display: grid; gap: 1.25rem; }
 .buscador__cabecera {
@@ -34,7 +35,7 @@
 .buscador__lista { display: grid; gap: 0.85rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
 .buscador__lista > .tarjeta-profesional { scroll-margin: 6rem 0 1rem; }
 
-/* Accesos rápidos por especialidad (SC-27): marcan la especialidad igual que el filtro de la barra. */
+/* Accesos rápidos por especialidad (SC-27): marcan la especialidad igual que el filtro del panel. */
 .accesos-especialidad { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .acceso-especialidad {
   display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.6rem; padding: 0.4rem 0.95rem; border: 1px solid var(--color-borde);
@@ -71,8 +72,8 @@
   .chip:hover { border-color: var(--color-primario); }
 }
 
-/* Panel de filtros: hoja inferior en celular, columna en escritorio. Como el menú lateral: sube en 300 ms con la curva
-   de los cajones de iOS, baja en 200 ms y el fondo oscuro se funde con ella. */
+/* Panel de filtros: hoja inferior en celular y panel lateral derecho en escritorio. Como el menú lateral: entra en
+   300 ms con la curva de los cajones de iOS, sale en 200 ms y el fondo oscuro se funde con él. */
 .panel-filtros {
   position: fixed; right: 0; bottom: 0; left: 0; z-index: 46; max-height: 85vh; max-height: 85dvh; overflow-y: auto; overscroll-behavior: contain;
   padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom)); background: var(--color-superficie);
@@ -231,32 +232,24 @@
 }
 
 @media (min-width: 64rem) {
-  .buscador .buscador__boton-filtros { display: none; }
-  /* Barra de filtros: siete listas (14-11-2026, con la región) en filas de tres; desde 80rem, dos filas de cuatro, con
-     «Limpiar filtros» en el último lugar (con cuatro columnas a 1024 px se cortaban «Cualquier día» y las regiones). */
+  /* Panel lateral derecho (15-11-2026, SC-35): reemplaza la franja fija de filtros, que con siete listas (con la región)
+     ocupaba dos o tres filas sobre la lista y el mapa. Ocupa todo el alto y los botones quedan abajo, como en la hoja
+     del celular. */
   .panel-filtros {
-    position: relative; z-index: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start;
-    gap: 0.75rem 1rem; max-height: none; overflow: visible; padding: 0.9rem 1.1rem;
-    border: 1px solid var(--color-borde); border-radius: var(--radio); box-shadow: none; transform: none; visibility: visible; transition: none;
+    top: 0; left: auto; display: flex; flex-direction: column; width: min(24rem, 90vw); max-height: none;
+    padding: 1.25rem 1.5rem calc(1rem + env(safe-area-inset-bottom));
+    border-radius: 20px 0 0 20px; box-shadow: -10px 0 30px rgb(6 38 63 / 20%); transform: translateX(105%);
   }
-  .panel-filtros__cabecera { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .panel-filtros .campo { margin: 0; }
-  .panel-filtros .campo__etiqueta { font-size: 0.875rem; }
-  .panel-filtros__ubicacion--previa { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .panel-filtros__fondo, .panel-filtros .panel-filtros__cerrar, .panel-filtros .panel-filtros__ver { display: none; }
-  .panel-filtros__pie { display: contents; }
-  .panel-filtros__pie .boton--secundario { align-self: end; width: auto; min-height: 2.75rem; }
-  /* Limpiar queda al final de la fila. */
-  .panel-filtros__pie .boton--secundario { grid-column: -2 / -1; justify-self: end; }
+  .panel-filtros--abierto { transform: none; }
+  .panel-filtros__pie { margin: auto -1.5rem 0; padding-inline: 1.5rem; }
 }
 
 /* Lista y mapa lado a lado. El mapa queda fijo mientras se recorre la lista y el detalle del elegido va debajo, con su
    propio desplazamiento si no cabe. */
-@media (min-width: 80rem) {
-  .panel-filtros { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
 @media (min-width: 75rem) {
   .buscador__vista--con-mapa { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  /* Con el mapa al lado, «Ocultar mapa», «Filtros» y el orden caben en una fila si los botones no usan el ancho mínimo. */
+  .buscador__vista--con-mapa .buscador__controles .boton { min-width: 0; padding-inline: 0.9rem; }
   .buscador__vista--con-mapa .buscador__lista { grid-template-columns: minmax(0, 1fr); }
   .buscador__vista--con-mapa .buscador__mapa {
     order: 0; position: sticky; top: 5.25rem; display: flex; flex-direction: column;
