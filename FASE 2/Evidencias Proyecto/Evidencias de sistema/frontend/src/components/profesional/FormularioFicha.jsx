@@ -195,7 +195,11 @@ export default function FormularioFicha({ ficha, especialidad, onGuardado, onCan
           const nuevos = { ...datosActuales.current, comuna: punto.comuna, ...(punto.direccion && { direccion: punto.direccion }) };
           fijarDatos(nuevos);
           // Sin calle en ese punto queda la dirección anterior: hay que corregirla o confirmarla antes de guardar.
-          fijarUbicacion({ ...ubicacionActual.current, consulta: consultaDe(nuevos), punto, porConfirmar: !punto.direccion });
+          // Revisión del PR 61: las coordenadas son las del punto consultado, no las vigentes, que pudo cambiar una
+          // búsqueda de la dirección escrita respondida entretanto (quedaba el texto de un lugar con el punto de otro).
+          fijarUbicacion({
+            ...ubicacionActual.current, lat, lng, origen: 'manual', consulta: consultaDe(nuevos), punto, porConfirmar: !punto.direccion,
+          });
           setErrores((previos) => ({ ...previos, comuna: undefined, direccion: undefined }));
         })
         .catch((error) => {
@@ -212,10 +216,13 @@ export default function FormularioFicha({ ficha, especialidad, onGuardado, onCan
   }
 
   // Hasta que llegue la dirección del punto (con su calle), la ubicación queda por confirmar.
+  // El marcador gana sobre una búsqueda de la dirección escrita que siga en curso: su respuesta ya no lo devuelve atrás.
   const mover = ({ lat, lng }) => {
     const nueva = {
       ...ubicacionActual.current, lat: redondear(lat), lng: redondear(lng), origen: 'manual', punto: null, porConfirmar: true, confirmada: false,
     };
+    enCurso.current = null;
+    setBuscando(false);
     fijarUbicacion(nueva);
     setErrores((previos) => ({ ...previos, ubicacionLat: undefined, ubicacionLng: undefined }));
     buscarPunto(nueva);

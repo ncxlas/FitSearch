@@ -111,12 +111,16 @@ async function ubicar({ comuna, direccion = '' }) {
 // la misma caché. En Chile la comuna viene como barrio en Santiago («suburb»: Providencia, Puente Alto) y como ciudad en
 // regiones («city»: San Antonio, cuyo «suburb» es el barrio Barrancas): se toma el primer campo que sea una comuna de la
 // lista oficial y de la región que indica el lugar («state»: «Región de Valparaíso»).
+// Revisión del PR 61 (16-11-2026): el punto tiene que estar en Chile y en una región reconocida. Antes, un marcador en
+// Maipú (Mendoza, Argentina) caía dentro del recuadro de Chile y se guardaba como Maipú de la Región Metropolitana.
 const CAMPOS_COMUNA = ['suburb', 'city_district', 'city', 'town', 'village', 'municipality', 'hamlet'];
 function comunaDelPunto(direccion) {
+  if (String(direccion.country_code ?? '').toLowerCase() !== 'cl') return null;
   const region = ubicarRegion(direccion.state);
+  if (!region) return null;
   for (const campo of CAMPOS_COMUNA) {
     const ubicada = ubicarComuna(direccion[campo]);
-    if (ubicada && (!region || ubicada.region === region)) return ubicada;
+    if (ubicada && ubicada.region === region) return ubicada;
   }
   return null;
 }

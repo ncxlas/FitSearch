@@ -170,10 +170,25 @@ describe('dirección de un punto del mapa', () => {
 
   test('no acepta una comuna de otra región que la del punto', async () => {
     // «Los Lagos» es una comuna de Los Ríos y también el nombre de una región: aquí el punto es de la Región de Los Lagos.
-    fetchSimulado.mockImplementation(() => inversa({ city: 'Los Lagos', state: 'Región de Los Lagos' }));
+    fetchSimulado.mockImplementation(() => inversa({ city: 'Los Lagos', state: 'Región de Los Lagos', country_code: 'cl' }));
     const res = await punto({ lat: '-41.47', lng: '-72.94' });
     expect(res.status).toBe(404);
     expect(res.body.error).toMatch(/No encontramos una comuna de Chile en ese punto/);
+  });
+
+  // Revisión del PR 61: Maipú (Mendoza) cae dentro del recuadro de Chile y antes se guardaba como Maipú de Santiago.
+  test('no acepta un punto fuera de Chile aunque su ciudad se llame como una comuna', async () => {
+    fetchSimulado.mockImplementation(() => inversa({ city: 'Maipú', county: 'Departamento Maipú', state: 'Mendoza', country_code: 'ar' }));
+    const res = await punto({ lat: '-32.98', lng: '-68.78' });
+    expect(res.status).toBe(404);
+    expect(res.body.error).toMatch(/No encontramos una comuna de Chile en ese punto/);
+  });
+
+  test('sin una región reconocida no entrega comuna', async () => {
+    fetchSimulado.mockImplementation(() => inversa({ suburb: 'Providencia', city: 'Providencia', country_code: 'cl' }));
+    expect((await punto({ lat: '-33.4263', lng: '-70.6116' })).status).toBe(404);
+    fetchSimulado.mockImplementation(() => inversa({ suburb: 'Providencia', state: 'Región Inventada', country_code: 'cl' }));
+    expect((await punto({ lat: '-33.4264', lng: '-70.6117' })).status).toBe(404);
   });
 
   test('recuerda el mismo punto y responde 503 si Nominatim falla', async () => {
