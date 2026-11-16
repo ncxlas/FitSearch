@@ -72,3 +72,19 @@ Se conservan como mejoras pendientes de decisión: límite de la cola y caché d
 4. Validar visualmente los documentos editados y subir a Drive los archivos de la entrega preparada, reemplazando los existentes para conservar sus IDs.
 
 No se marca el Sprint 5 como cerrado mientras estas condiciones sigan pendientes.
+
+## Seguimiento de QA y horas — comprobación adicional del 16-11-2026
+
+QA estándar: 21 OK, 11 NA y 24 pendientes. Se ejecutaron 33 comprobaciones nuevas de fechas, gramos, precio, texto y formatos reales, todas aprobadas. No se declara terminada la revisión visual del sistema. La carga histórica conserva la limitación del login a 50 conexiones.
+
+Se comprobó visualmente la retrospectiva en Word: sus cuatro páginas se abren, las tablas y aportes son visibles; el estado del registro queda en una cuarta página breve. Falta revisar los demás Word/Excel.
+
+Se corrigió el seguimiento del Sprint Backlog a DAS 1.35/Miro sincronizado. La asignación inicial de FS-HU-25 a Luis se conserva como línea base, pero se explicita que Rodrigo entregó el código y las pruebas de #47. Una propuesta de reconstrucción de horas se prepara fuera de los documentos oficiales; falta validación del equipo antes de volcar Cons./Rest. y el burndown.
+
+La lista breve de pendientes no sustituye las 34 tareas originales: se preparó Manual Técnico/Manual_Tecnico_General.md para revisión del equipo/PO, completando el contenido que no cubría el manual Docker. La revisión posterior #31/#32 sigue sin cierre acreditado y debe contrastarse antes de declarar todas las tareas terminadas. Las revisiones de #70–#75 no tienen aún aprobación independiente registrada en GitHub al corte consultado.
+
+Guía para ejecutar las 24 comprobaciones residuales, Google real y revisión independiente: Plan de Pruebas/QA_Revision_Manual_Pendiente.md. La guía es una preparación de pruebas, no una ejecución acreditada.
+
+### Cambios concurrentes posteriores
+
+Durante esta comprobación main avanzó de bf3a857 a 4c26358 con #76 (bienvenida al iniciar sesión) y #77 (informe final 2.6). Las verificaciones de 489 pruebas frontend aquí documentadas corresponden a la versión local anterior; #77 informa 494 sobre la nueva versión. El informe declara terminado el Sprint 5, mientras la aceptación del PO, horas, pruebas y cierre de los documentos de seguimiento continúan pendientes de evidencia expresa en esta revisión. Hace falta conciliar esa declaración antes de formalizar el cierre. Se preservan ambos PR y el informe del usuario; no se modifica ni se considera una autorización automática del PO por el solo texto de un commit.

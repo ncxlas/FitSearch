@@ -1,6 +1,6 @@
 {
   "fecha": "2026-11-16",
-  "alcance": "Solo se marcan los criterios con evidencia indicada; los demás requieren revisión específica.",
+  "alcance": "Validaciones y evidencias funcionales explícitas; quedan pendientes criterios globales de presentación, cobertura de formularios y revisión manual. Las pruebas de carga son históricas y conservan sus limitaciones.",
   "resultados": [
     {
       "id": "E-1.1",
@@ -53,14 +53,14 @@
     {
       "id": "E-1.9",
       "criterio": "Verificar la validación del botón “Aceptar” cuando no se han ingresado los datos.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "validaciones.test.js: inicio de sesión exige correo/contraseña; Comidas.test.jsx: editor vacío no guarda. Suite frontend 489 aprobadas; comprobación nueva: nombre vacío rechazado."
     },
     {
       "id": "E-1.10",
       "criterio": "Verificar que existe mensaje de \"Aceptar/Cancelar\" en botón “Salir de la Aplicación” ",
       "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "evidencia": "El cierre actual termina la sesión y muestra una despedida. La plantilla pide Aceptar/Cancelar antes de salir: pendiente validar aplicabilidad con el PO; no se lo marca aprobado por la despedida posterior."
     },
     {
       "id": "E-1.11",
@@ -101,8 +101,8 @@
     {
       "id": "E-2.1",
       "criterio": "Verificar correcta lectura de la información ingresada.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "PerfilEditable.test.jsx conserva nombre/teléfono y actualiza la sesión; ContenidoAdministrador.test.jsx comprueba lectura del catálogo. MySQL plan/agenda/mejoras aprobados."
     },
     {
       "id": "E-2.2",
@@ -113,8 +113,8 @@
     {
       "id": "E-2.3",
       "criterio": "Verificar la eliminación de la información.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "ContenidoAdministrador.test.jsx: eliminar sin uso tras confirmar y desactivar lo que está en uso. AguaDelDia.test.jsx y MySQL plan/mejoras: eliminación propia e historial; no se borran datos ajenos."
     },
     {
       "id": "E-2.4",
@@ -137,26 +137,26 @@
     {
       "id": "E-2.7",
       "criterio": "Verificar el ingreso de datos sólo numéricos donde corresponda.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "QA_Comprobaciones_2026-11-16.json: gramos no numéricos/signos y precios fuera de rango se rechazan; límites válidos aceptados. cuentaProfesional.service.test.js cubre registro SIS con letras y años decimales."
     },
     {
       "id": "E-2.8",
       "criterio": "Verificar el ingreso sólo de caracteres alfabéticos donde corresponda.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "NA",
+      "evidencia": "No se definieron campos de texto libre restringidos solo a letras. Los nombres admiten tildes, espacios, apóstrofos y guiones; especialidad/sexo son catálogos. No se aplica una restricción alfabética a nombres válidos."
     },
     {
       "id": "E-2.9",
       "criterio": "Verificar validación en el ingreso de los días correspondientes al mes.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "QA_Comprobaciones_2026-11-16.json: rechaza 31-abril, 29-febrero no bisiesto y días 00/32; acepta 29-febrero bisiesto, 28-febrero, 30-abril y 31-diciembre."
     },
     {
       "id": "E-2.10",
       "criterio": "Verificar validación en el ingreso de los meses correspondientes al año.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "QA_Comprobaciones_2026-11-16.json: meses 00 y 13 rechazados; fecha con mes sin dos dígitos rechazada. Agenda.test.jsx cubre diciembre al pedir Mes pasado desde enero."
     },
     {
       "id": "E-2.11",
@@ -167,20 +167,20 @@
     {
       "id": "E-2.12",
       "criterio": "Verificar la validación de decimales (con comas).",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "ContenidoAdministrador.test.jsx: introduce 130,5 kcal y envía 130.5; conserva 2,7 g de proteínas. Comprobación del formateador real: 1234.5 se presenta como 1.234,5."
     },
     {
       "id": "E-2.13",
       "criterio": "Verificar validación de puntos para la separación de miles.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "QA_Comprobaciones_2026-11-16.json: formatearNumero real presenta 1234567 como 1.234.567. El campo precio usa entrada numérica sin separadores y los puntos se aplican en la presentación."
     },
     {
       "id": "E-2.14",
       "criterio": "Verificar el tratamiento de decimales numéricos que utilizan decimales 0.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "QA_Comprobaciones_2026-11-16.json: gramos 100.0 se normalizan a 100 y el formateador real presenta 100.0 como 100; no agrega una fracción ficticia."
     },
     {
       "id": "E-2.15",
@@ -215,8 +215,8 @@
     {
       "id": "E-3.3",
       "criterio": "Verificar correcto acceso a sub módulos o Programas",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "Suite frontend 489: navegación por rol y catálogos; pruebas de Clientes/Reportes/Contenido. Suite backend 628: acceso autorizado, 401/403 y propiedad en agenda, chats, plan y contenido."
     },
     {
       "id": "E-3.4",
@@ -227,14 +227,14 @@
     {
       "id": "E-3.5",
       "criterio": "Detectar tiempos de respuesta frente a un gran número de registros procesados.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "Evidencia histórica de carga del 14-11: 515 profesionales, 5/20/50 conexiones; búsqueda p95 máximo 121 ms con 50. Login p95 2753 ms con 50, limitación explícita; no se afirma que toda operación cumpla <2 s bajo cualquier carga."
     },
     {
       "id": "E-3.6",
       "criterio": "Verificar comportamiento del Sistema o Módulo con gran volumen de datos (pruebas de estrés)",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "Se comprobó comportamiento bajo carga en Carga_QS1_QS5_2026-11-14_{5,20,50}conexiones.json: búsqueda sin errores, 1 reserva creada/49 conflictos y limpieza total. A 50 conexiones login supera 2 s; resultado NO CUMPLE/código 1 conservado. OK acredita ejecución y análisis del criterio, no ausencia de límites."
     },
     {
       "id": "E-3.7",
@@ -275,14 +275,14 @@
     {
       "id": "E-3.13",
       "criterio": "Ingresar Montos negativos, con el largo máximo permitido y dar aceptar.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "QA_Comprobaciones_2026-11-16.json: precio -1, 0, 999, 1000001 y 1e30 se rechazan; 1000 y 1000000 se aceptan como límites de precio referencial."
     },
     {
       "id": "E-3.14",
       "criterio": "Ingresar en campos puntos, comas y signos (¡”·$%&/()=?¿/*-+) y dar aceptar.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "OK",
+      "evidencia": "QA_Comprobaciones_2026-11-16.json: signos en campos numéricos se rechazan; en biografía se conservan como texto. Nombre con tildes/apóstrofo/guion aceptado. No equivale a una auditoría completa de seguridad."
     },
     {
       "id": "E-3.15",
@@ -299,8 +299,8 @@
     {
       "id": "E-4.2",
       "criterio": "Verificar que  se esté siguiendo una numeración secuencial lógica de acuerdo a un orden establecido.",
-      "estado": "Pendiente",
-      "evidencia": "Requiere comprobación específica; no se marca por inferencia."
+      "estado": "NA",
+      "evidencia": "Los reportes son paneles por períodos, sin emisión de documentos con folio o numeración correlativa. La numeración de CP no se usa como evidencia de este criterio de informes."
     },
     {
       "id": "E-4.3",
@@ -338,5 +338,10 @@
       "estado": "NA",
       "evidencia": "No hay salida impresa propia del producto."
     }
-  ]
+  ],
+  "resumen": {
+    "Pendiente": 24,
+    "NA": 11,
+    "OK": 21
+  }
 }
