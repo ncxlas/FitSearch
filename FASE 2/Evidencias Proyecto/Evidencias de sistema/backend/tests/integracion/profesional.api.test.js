@@ -2,6 +2,7 @@
 jest.mock('../../src/models/profesional.model');
 jest.mock('../../src/models/resena.model');
 const request = require('supertest');
+const { cifrarCuenta } = require('../../src/utils/fotos');
 const jwt = require('jsonwebtoken');
 const app = require('../../src/app');
 const modelo = require('../../src/models/profesional.model');
@@ -200,7 +201,7 @@ describe('GET /api/profesionales/:id (ficha)', () => {
     });
     const res = await consulta('/api/profesionales/1');
     expect(res.body.miResena).toEqual({
-      id: 7, autor: 'rodrigo C.', fotoUrl: null, puntaje: 4, comentario: 'Muy buena atención', fecha: '2026-10-02T12:00:00.000Z', propia: true, verificada: false,
+      id: 7, autor: 'rodrigo C.', puntaje: 4, comentario: 'Muy buena atención', fecha: '2026-10-02T12:00:00.000Z', propia: true, verificada: false,
     });
   });
 
@@ -209,7 +210,9 @@ describe('GET /api/profesionales/:id (ficha)', () => {
   test('entrega la dirección de la foto del profesional cuando tiene una', async () => {
     modelo.buscarPorId.mockResolvedValue({ ...fila, fotoClave: '0123456789abcdef' });
     const { profesional } = (await consulta('/api/profesionales/1')).body;
-    expect(profesional.fotoUrl).toBe('/api/fotos/10/0123456789abcdef');
+    // Enlace opaco (revisión del PR 62): la cuenta va cifrada, no su id.
+    expect(profesional.fotoUrl).toBe(`/api/fotos/${cifrarCuenta(10)}/0123456789abcdef`);
+    expect(profesional.fotoUrl).not.toMatch(/\/10\//);
     expect(profesional).not.toHaveProperty('usuarioId');
     expect(profesional).not.toHaveProperty('fotoClave');
   });

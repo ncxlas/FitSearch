@@ -1,6 +1,6 @@
 // Formato del directorio y de las reseñas (FS-HU-22, FS-HU-24), sin base de datos.
 const { escaparLike } = jest.requireActual('../../src/models/profesional.model');
-const { formatearFicha, nombrePublico, resumir, resumirResenas } = require('../../src/services/profesional.service');
+const { formatearFicha, formatearResena, nombrePublico, resumir, resumirResenas } = require('../../src/services/profesional.service');
 
 test('el nombre público del autor es el nombre y la inicial del apellido', () => {
   expect(nombrePublico('Rodrigo Cárcamo Rojas')).toBe('Rodrigo C.');
@@ -55,4 +55,14 @@ test('resume la presentación en una palabra completa, sin espacios de más y co
   expect(resumir('Atiendo en Ñuñoa, Providencia y alrededores', 30)).toBe('Atiendo en Ñuñoa, Providencia…');
   // Una palabra muy larga se corta igual, sin pasar del largo.
   expect(resumir('a'.repeat(50), 20)).toBe(`${'a'.repeat(20)}…`);
+});
+
+// Revisión del PR 62 (16-11-2026): las reseñas no muestran la foto de quien las escribió, aunque tenga una.
+test('una reseña no lleva la foto de su autor, solo su nombre público', () => {
+  const resena = formatearResena({
+    id: 1, usuarioId: 4, puntaje: 5, comentario: 'Excelente', reservaId: null, fechaActualizacion: new Date('2026-11-01T12:00:00Z'),
+    usuario: { id: 4, nombre: 'Ana Pérez', datosCuenta: { foto: 'data:image/jpeg;base64,AAAA' } },
+  }, 9);
+  expect(resena).toEqual({ id: 1, autor: 'Ana P.', puntaje: 5, comentario: 'Excelente', verificada: false, fecha: '2026-11-01T12:00:00.000Z', propia: false });
+  expect(JSON.stringify(resena)).not.toMatch(/fotos|data:image/);
 });

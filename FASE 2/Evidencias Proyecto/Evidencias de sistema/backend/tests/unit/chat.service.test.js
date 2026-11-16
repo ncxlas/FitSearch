@@ -40,7 +40,10 @@ test('cada participante ve la foto de perfil del otro', async () => {
   }));
   modelo.mensajes.mockResolvedValue([]);
   modelo.reservasDePareja.mockResolvedValue([]);
-  expect((await servicio.abrir(profesional, 3)).chat.con.fotoUrl).toMatch(/^\/api\/fotos\/7\/[0-9a-f]{16}$/);
+  // Enlace opaco (revisión del PR 62): la cuenta va cifrada, no su id.
+  const url = (await servicio.abrir(profesional, 3)).chat.con.fotoUrl;
+  expect(url).toMatch(/^\/api\/fotos\/[0-9a-f]{32}\/[0-9a-f]{16}$/);
+  expect(url).not.toMatch(/\/7\//);
   expect((await servicio.abrir(usuario, 3)).chat.con.fotoUrl).toBeNull();
 });
 
