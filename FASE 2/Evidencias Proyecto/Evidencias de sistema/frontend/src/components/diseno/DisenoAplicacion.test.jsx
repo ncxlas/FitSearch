@@ -1,7 +1,7 @@
 // Navegación con sesión: logo, enlace "Profesionales", menú de la cuenta, menú lateral, barra inferior y secciones próximas.
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import { listado, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi } from '../../tests/utilidades.jsx';
 
 const API = {
@@ -52,65 +52,66 @@ describe('Con sesión', () => {
     await userEvent.click(within(menu).getByRole('link', { name: 'Mi perfil' }));
     expect(await screen.findByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Mi perfil' })).toHaveAttribute('aria-current', 'page');
+    // La sección actual se reconoce por el ícono relleno (18-11-2026); las demás quedan con el ícono de línea.
+    expect(within(menu).getByRole('link', { name: 'Mi perfil' }).querySelector('.icono--activo')).not.toBeNull();
+    expect(within(menu).getByRole('link', { name: 'Inicio' }).querySelector('.icono--activo')).toBeNull();
 
     await userEvent.click(within(menu).getByRole('link', { name: 'Inicio' }));
     const barra = screen.getByRole('navigation', { name: 'Navegación inferior' });
     expect(within(barra).getAllByRole('link').map((enlace) => enlace.textContent)).toEqual(['Inicio', 'Profesionales', 'Chat IA', 'Comidas', 'Perfil']);
     await userEvent.click(within(barra).getByRole('link', { name: 'Perfil' }));
     expect(await screen.findByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
+    // Barra inferior solo con íconos (18-11-2026): el nombre queda para lectores de pantalla y la sección actual va rellena.
+    expect(within(barra).getByRole('link', { name: 'Perfil' }).querySelector('.icono--activo')).not.toBeNull();
+    expect(within(barra).getByRole('link', { name: 'Chat IA' }).querySelector('.icono--activo')).toBeNull();
+    expect(within(barra).getByText('Perfil')).toHaveClass('barra-inferior__texto');
   });
 
   test('el menú lateral tiene las secciones del mockup con "Profesionales" en vez de "Buscar profesionales"', () => {
     renderizarApp('/inicio');
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    const nombres = within(menu).getAllByRole('link').map((enlace) => enlace.textContent.replace('Próximamente', '').trim());
+    const nombres = within(menu).getAllByRole('link').map((enlace) => enlace.getAttribute('aria-label') ?? enlace.textContent.replace('Próximamente', '').trim());
     // Sin Farmacias ni Historial de chats (el historial vive dentro del asistente) y con Comidas (decisiones del PO del 05-10-2026).
-      expect(nombres).toEqual(['Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mi perfil', 'Favoritos', 'Mis citas', 'Mensajes', 'Abrir chat']);
+    // El chat aparece dos veces: el botón de la tarjeta y el acceso con ícono del menú contraído (el CSS muestra solo uno).
+    expect(nombres).toEqual(['Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mi perfil', 'Favoritos', 'Mis citas', 'Mensajes', 'Abrir chat', 'Abrir chat con el asistente IA']);
     expect(within(menu).queryByText('Buscar profesionales')).not.toBeInTheDocument();
     expect(within(menu).getByText('¿Necesitas una recomendación?')).toBeInTheDocument();
   });
 
-  // Menú compacto en escritorio (11-11-2026): solo íconos, a elección, y se recuerda en este navegador.
-  test('el menú se compacta a solo íconos, muestra el nombre al pasar el mouse y deja el chat como un ícono', async () => {
-    const { unmount } = renderizarApp('/inicio');
-    const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    expect(within(menu).queryByRole('link', { name: 'Abrir chat con el asistente IA' })).not.toBeInTheDocument();
-    await userEvent.click(within(menu).getByRole('button', { name: 'Contraer menú' }));
-    expect(menu).toHaveClass('menu-lateral--compacto');
-    expect(localStorage.getItem('fitsearch_menu_compacto')).toBe('1');
-    // Cada opción conserva su nombre para lectores de pantalla; la tarjeta del asistente queda como un acceso con ícono.
-    const profesionales = within(menu).getByRole('link', { name: 'Profesionales' });
-    expect(profesionales).toHaveAttribute('href', '/profesionales');
-    expect(within(menu).getByRole('link', { name: 'Abrir chat con el asistente IA' })).toHaveAttribute('href', '/asistente/nuevo?inicio=profesional');
-    await userEvent.hover(profesionales);
-    expect(document.querySelector('.etiqueta-flotante')).toHaveTextContent('Profesionales');
-    await userEvent.unhover(profesionales);
-    expect(document.querySelector('.etiqueta-flotante')).toBeNull();
-
-    // En la próxima visita sigue compacto hasta que se expande.
-    unmount();
+  // Menú lateral en escritorio (18-11-2026, pedido del PO): siempre contraído a solo íconos, se despliega al acercar el
+  // mouse o al recorrerlo con el teclado, y ya no tiene botón para contraerlo (reemplaza el menú compacto del 11-11-2026).
+  test('el menú queda contraído, se despliega al acercar el mouse a los íconos y se contrae al salir', async () => {
     renderizarApp('/inicio');
-    const otraVez = screen.getByRole('navigation', { name: 'Menú principal' });
-    expect(otraVez).toHaveClass('menu-lateral--compacto');
-    await userEvent.click(within(otraVez).getByRole('button', { name: 'Expandir menú' }));
-    expect(otraVez).not.toHaveClass('menu-lateral--compacto');
-    expect(localStorage.getItem('fitsearch_menu_compacto')).toBe('0');
-    expect(within(otraVez).getByText('¿Necesitas una recomendación?')).toBeInTheDocument();
-    expect(document.querySelector('.etiqueta-flotante')).toBeNull();
+    const menu = screen.getByRole('navigation', { name: 'Menú principal' });
+    expect(menu).not.toHaveClass('menu-lateral--desplegado');
+    expect(within(menu).queryByRole('button', { name: /Contraer menú|Expandir menú/ })).not.toBeInTheDocument();
+    // Cada opción conserva su nombre para lectores de pantalla y la tarjeta del asistente tiene su acceso con ícono.
+    expect(within(menu).getByRole('link', { name: 'Profesionales' })).toHaveAttribute('href', '/profesionales');
+    expect(within(menu).getByRole('link', { name: 'Abrir chat con el asistente IA' })).toHaveAttribute('href', '/asistente/nuevo?inicio=profesional');
+
+    const profesionales = within(menu).getByRole('link', { name: 'Profesionales' });
+    await userEvent.hover(profesionales);
+    await waitFor(() => expect(menu).toHaveClass('menu-lateral--desplegado'));
+    // Elegir una opción con el mouse deja el foco en ella, pero el menú se contrae igual cuando el mouse se va.
+    await userEvent.click(profesionales);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Profesionales' })).toBeInTheDocument();
+    await userEvent.unhover(menu);
+    await waitFor(() => expect(menu).not.toHaveClass('menu-lateral--desplegado'));
   });
 
-  test('con el menú expandido no aparece el nombre flotante, y sin almacenamiento el menú igual se compacta', async () => {
-    const guardar = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Almacenamiento bloqueado'); });
-    try {
-      renderizarApp('/inicio');
-      const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-      await userEvent.hover(within(menu).getByRole('link', { name: 'Favoritos' }));
-      expect(document.querySelector('.etiqueta-flotante')).toBeNull();
-      await userEvent.click(within(menu).getByRole('button', { name: 'Contraer menú' }));
-      expect(menu).toHaveClass('menu-lateral--compacto');
-    } finally {
-      guardar.mockRestore();
-    }
+  test('con el teclado el menú se despliega al entrar en él y se contrae al salir', async () => {
+    renderizarApp('/inicio');
+    const menu = screen.getByRole('navigation', { name: 'Menú principal' });
+    const dentro = () => menu.contains(document.activeElement);
+    // Antes del menú están el enlace para saltar al contenido y el encabezado.
+    for (let paso = 0; paso < 20 && !dentro(); paso += 1) await userEvent.tab();
+    expect(menu).toHaveClass('menu-lateral--desplegado');
+    // Moverse dentro del menú no lo cierra; salir de él, sí.
+    await userEvent.tab();
+    expect(dentro()).toBe(true);
+    expect(menu).toHaveClass('menu-lateral--desplegado');
+    for (let paso = 0; paso < 20 && dentro(); paso += 1) await userEvent.tab({ shift: true });
+    expect(menu).not.toHaveClass('menu-lateral--desplegado');
   });
 
   // FS-HU-25: Centros de salud y Gimnasios ya no son «Próximamente» (las secciones próximas del profesional se prueban
