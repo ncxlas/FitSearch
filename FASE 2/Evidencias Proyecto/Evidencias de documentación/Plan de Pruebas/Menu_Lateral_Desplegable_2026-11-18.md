@@ -116,3 +116,16 @@ Comprobado en Edge con cuentas temporales, que se borraron al terminar:
 - `Menu_Lateral_Desplegable_2026-11-18_profesional_contraido_1440.png`
 - `Menu_Lateral_Desplegable_2026-11-18_profesional_desplegado_1440.png`
 - `Menu_Lateral_Desplegable_2026-11-18_celular_menu_abierto_390.png`
+
+## Corrección de la revisión del PR #81 — 19-11-2026
+
+Luis Méndez detectó que, al regresar desde el contenido con Shift+Tab, el acceso compacto al asistente recibía el foco y se ocultaba al desplegarse el menú. El teclado quedaba sobre un enlace oculto.
+
+`MenuLateral.jsx` transfiere ese foco al enlace «Abrir chat» de la tarjeta mediante un efecto de disposición, después de mostrar la tarjeta y antes de pintar la pantalla. Se conserva la posición de desplazamiento. El recorrido normal del resto de las opciones no cambia.
+
+Se agregó una prueba que sale del menú hacia el contenido, regresa con Shift+Tab, comprueba el foco en «Abrir chat», retrocede a «Mensajes», avanza de nuevo y activa el chat con Enter. La visibilidad de los dos accesos se reproduce en JSDOM; se simula `:focus-visible` para el acceso compacto porque ese entorno no lo reconoce al tabular hacia atrás.
+
+- La prueba reproduce el fallo sobre el commit anterior `cfad2e6` y pasa con la corrección.
+- Frontend: **495/495 pruebas**, 51 archivos aprobados; ESLint y compilación correctos.
+- Esta ejecución no sustituye la revisión visual en navegador ni cierra globalmente E-1.14. Las capturas y verificaciones con API/MySQL de las secciones anteriores corresponden al 18-11-2026.
+- SC-40 y CP-249/250 conservan su reserva: se actualizarán en las planillas después de integrar el PR #80.

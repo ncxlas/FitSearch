@@ -1,7 +1,7 @@
 // Navegación con sesión: logo, enlace "Profesionales", menú de la cuenta, menú lateral, barra inferior y secciones próximas.
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { listado, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi } from '../../tests/utilidades.jsx';
 
 const API = {
@@ -112,6 +112,44 @@ describe('Con sesión', () => {
     expect(menu).toHaveClass('menu-lateral--desplegado');
     for (let paso = 0; paso < 20 && dentro(); paso += 1) await userEvent.tab({ shift: true });
     expect(menu).not.toHaveClass('menu-lateral--desplegado');
+  });
+
+  test('Shift+Tab desde el contenido entra al chat y conserva el foco al desplegar el menú', async () => {
+    // JSDOM no aplica las media queries: reproducimos la visibilidad de los dos accesos en escritorio.
+    const estilo = document.createElement('style');
+    estilo.textContent = `
+      .menu-lateral__chat { display: block; }
+      .menu-lateral:not(.menu-lateral--desplegado) .tarjeta-recomendacion { display: none; }
+      .menu-lateral--desplegado .tarjeta-recomendacion { display: grid; }
+      .menu-lateral--desplegado .menu-lateral__chat { display: none; }
+    `;
+    document.head.append(estilo);
+    try {
+      renderizarApp('/inicio');
+      const menu = screen.getByRole('navigation', { name: 'Menú principal' });
+      // JSDOM no reconoce :focus-visible en este enlace al tabular hacia atrás.
+      const compacto = within(menu).getByRole('link', { name: 'Abrir chat con el asistente IA' });
+      const matches = compacto.matches.bind(compacto);
+      vi.spyOn(compacto, 'matches').mockImplementation((selector) => selector === ':focus-visible' || matches(selector));
+      const contenido = document.querySelector('main');
+      for (let paso = 0; paso < 30 && !contenido.contains(document.activeElement); paso += 1) await userEvent.tab();
+      expect(contenido.contains(document.activeElement)).toBe(true);
+      expect(menu).not.toHaveClass('menu-lateral--desplegado');
+      await userEvent.tab({ shift: true });
+      expect(menu.contains(document.activeElement), document.activeElement.outerHTML).toBe(true);
+      expect(menu).toHaveClass('menu-lateral--desplegado');
+      const abrirChat = within(menu).getByRole('link', { name: 'Abrir chat', exact: true });
+      expect(abrirChat).toHaveFocus();
+      // Desde el acceso transferido se puede seguir recorriendo las opciones en ambos sentidos.
+      await userEvent.tab({ shift: true });
+      expect(within(menu).getByRole('link', { name: 'Mensajes', exact: true })).toHaveFocus();
+      await userEvent.tab();
+      expect(abrirChat).toHaveFocus();
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() => expect(within(menu).getByRole('link', { name: 'Asistente IA', exact: true })).toHaveAttribute('aria-current', 'page'));
+    } finally {
+      estilo.remove();
+    }
   });
 
   // FS-HU-25: Centros de salud y Gimnasios ya no son «Próximamente» (las secciones próximas del profesional se prueban

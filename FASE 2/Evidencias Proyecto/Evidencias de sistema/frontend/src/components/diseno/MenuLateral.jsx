@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import Icono from '../Icono.jsx';
 import iconoLogo from '../../assets/logo-fitsearch-icono.png';
@@ -14,6 +14,16 @@ import useMenuDesplegable from './useMenuDesplegable.js';
 export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario' }) {
   const { secciones, menu } = ESPACIOS[espacio];
   const { desplegado, propiedades } = useMenuDesplegable();
+  const botonChat = useRef(null);
+  const transferirFocoChat = useRef(false);
+  useLayoutEffect(() => {
+    // Shift+Tab puede entrar por el acceso compacto. Al desplegar el menú, ese enlace se oculta;
+    // transferimos el foco al acceso visible antes de que el navegador lo pierda.
+    if (desplegado && transferirFocoChat.current) {
+      transferirFocoChat.current = false;
+      botonChat.current?.focus({ preventScroll: true });
+    }
+  }, [desplegado]);
   useBloquearScroll(abierto);
   useEffect(() => {
     if (!abierto) return undefined;
@@ -63,11 +73,12 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario' }) 
               <span className="tarjeta-recomendacion__icono"><Icono nombre="chispa" tamano={22} /></span>
               <p className="tarjeta-recomendacion__titulo">¿Necesitas una recomendación?</p>
               <p className="tarjeta-recomendacion__texto">Pregunta a nuestro asistente IA y encuentra el profesional ideal para ti.</p>
-              <Link to={rutaChat} className="tarjeta-recomendacion__boton">Abrir chat <Icono nombre="flecha" tamano={16} /></Link>
+              <Link ref={botonChat} to={rutaChat} className="tarjeta-recomendacion__boton">Abrir chat <Icono nombre="flecha" tamano={16} /></Link>
             </div>
             {/* Con el menú contraído, la tarjeta se reduce a este acceso al chat. El CSS muestra uno u otro: en celular
                 y al desplegarse, la tarjeta. */}
-            <Link to={rutaChat} className="menu-lateral__chat" aria-label="Abrir chat con el asistente IA">
+            <Link to={rutaChat} className="menu-lateral__chat" aria-label="Abrir chat con el asistente IA"
+              onFocus={() => { transferirFocoChat.current = true; }}>
               <Icono nombre="chispa" tamano={20} />
             </Link>
           </>
