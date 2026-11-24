@@ -2,6 +2,8 @@
 jest.mock('../../src/models/comida.model');
 jest.mock('../../src/models/usuario.model');
 jest.mock('../../src/models/planAlimentacion.model');
+// Historial de peso (SC-43): sin pesajes, salvo en las pruebas que los definen.
+jest.mock('../../src/models/registroPeso.model', () => ({ listar: async () => [], registrar: jest.fn(), eliminar: jest.fn() }));
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const app = require('../../src/app');

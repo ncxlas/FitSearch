@@ -9,3 +9,14 @@ export const MACROS = [
 ];
 export const decimal = (valor) => valor.toLocaleString('es-CL', { maximumFractionDigits: 2 });
 export const gramos = (kcal, porcentaje, macro) => Math.round((kcal * porcentaje) / 100 / kcalPorGramo[macro]);
+
+// Historial de peso (SC-43).
+// Peso que marca la meta en un día: desde el peso inicial, al ritmo semanal, sin pasarse del objetivo.
+export function pesoDeLaMeta(meta, dia) {
+  if (!meta) return null;
+  const dias = (Date.parse(`${dia}T00:00:00Z`) - Date.parse(`${meta.fechaInicio}T00:00:00Z`)) / 86400000;
+  if (dias < 0) return null;
+  const bajar = meta.objetivo === 'bajar_peso';
+  const avance = (meta.ritmoSemanalKg / 7) * dias;
+  return bajar ? Math.max(meta.pesoObjetivoKg, meta.pesoInicialKg - avance) : Math.min(meta.pesoObjetivoKg, meta.pesoInicialKg + avance);
+}

@@ -566,6 +566,22 @@ describe('Plan de alimentación', () => {
     expect(screen.getByText('Usas el plan según tu meta.')).toBeInTheDocument();
   });
 
+  // Historial de peso (SC-43): anotar un peso responde el plan completo, con el pesaje nuevo y las calorías recalculadas.
+  test('CP-267: anota un peso desde la pestaña del plan y la tarjeta muestra el pesaje', async () => {
+    const usuario = userEvent.setup();
+    const historial = (pesos) => ({ pesos, ritmoRealSemanalKg: null, dias: 180, hoy: HOY });
+    const sinPesos = { ...respuestaPlan(), historialPeso: historial([]) };
+    const conPeso = { ...respuestaPlan({ kcal: 2500 }), historialPeso: historial([{ id: 9, fecha: HOY, pesoKg: 67.5 }]) };
+    const fetch = await abrirPlan(usuario, sinPesos, () => [201, conPeso]);
+    const tarjeta = screen.getByRole('heading', { name: 'Tu peso' }).closest('section');
+    await usuario.type(within(tarjeta).getByLabelText('Peso (kg)'), '67,5');
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Anotar peso' }));
+    expect(await screen.findByText('Anotaste tu peso; tu plan ya usa el peso nuevo.')).toBeInTheDocument();
+    expect(JSON.parse(llamada(fetch, 'POST', '/api/comidas/plan/pesos')[1].body)).toEqual({ pesoKg: 67.5, fecha: HOY });
+    expect(within(tarjeta).getByText('Ver tus pesajes (1)')).toBeInTheDocument();
+    expect(tarjetaPlan()).toHaveTextContent('2.500 kcal al día');
+  });
+
   test('fija una meta de peso con su ritmo, muestra el avance y se puede quitar', async () => {
     const usuario = userEvent.setup();
     const base = { objetivo: 'bajar_peso', etiqueta: 'Bajar de peso', opciones: OPCIONES_BAJAR, kcal: 2146, ajusteKcal: -379 };

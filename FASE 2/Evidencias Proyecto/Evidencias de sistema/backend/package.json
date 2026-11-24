@@ -16,6 +16,7 @@
     "test:mysql:agenda": "node scripts/probar-agenda-mysql.js",
     "test:mysql:cuenta": "node scripts/probar-cuenta-mysql.js",
     "test:mysql:asistente": "node scripts/probar-asistente-mysql.js",
+    "test:mysql:peso": "node scripts/probar-peso-mysql.js",
     "test:mysql:mejoras": "node scripts/probar-mejoras-mysql.js",
     "test:mysql:plan": "node scripts/probar-plan-alimentacion-mysql.js",
     "test:mysql:comidas": "node scripts/probar-comidas-asistente-mysql.js",

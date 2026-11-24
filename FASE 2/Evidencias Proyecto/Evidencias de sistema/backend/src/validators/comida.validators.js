@@ -1,6 +1,6 @@
 // Validaciones del gestor de alimentación (FS-HU-09 y FS-HU-10). Los límites vienen de shared/reglas.json.
 const { body, param, query } = require('express-validator');
-const { comidas: reglas } = require('../../../shared/reglas.json');
+const { comidas: reglas, perfil: reglasPerfil } = require('../../../shared/reglas.json');
 
 const MOMENTOS = reglas.momentos.map(({ valor }) => valor);
 const esFecha = (valor) => /^\d{4}-\d{2}-\d{2}$/.test(valor) && new Date(`${valor}T00:00:00Z`).toISOString().slice(0, 10) === valor;
@@ -49,5 +49,12 @@ const metaPeso = [
   body('pesoObjetivoKg').isFloat({ min: 30, max: 300 }).withMessage('Escribe un peso entre 30 y 300 kg').toFloat(),
   body('ritmoSemanalKg').isFloat({ gt: 0 }).withMessage('Elige a qué ritmo quieres avanzar').toFloat(),
 ];
+// Historial de peso (SC-43): el peso del día, en los mismos límites que el perfil, y la fecha (hoy si no se indica).
+const { min: PESO_MIN, max: PESO_MAX } = reglasPerfil.pesoKg;
+const peso = [
+  body('pesoKg').isFloat({ min: PESO_MIN, max: PESO_MAX }).withMessage(`Escribe un peso entre ${PESO_MIN} y ${PESO_MAX} kg`).toFloat(),
+  body('fecha').optional().custom(esFecha).withMessage(mensajeFecha),
+];
+const idPeso = param('id').isInt({ min: 1 }).withMessage('El pesaje indicado no es válido').toInt();
 
-module.exports = { plan, personalizado, idPersonalizado, metaPeso, id, fechaConsulta, fecha, busqueda, periodo, momento, momentoOpcional, alimentoId, gramos, gramosOpcional, algunCambio };
+module.exports = { peso, idPeso, plan, personalizado, idPersonalizado, metaPeso, id, fechaConsulta, fecha, busqueda, periodo, momento, momentoOpcional, alimentoId, gramos, gramosOpcional, algunCambio };

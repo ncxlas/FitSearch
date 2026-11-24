@@ -5,9 +5,10 @@ import Alerta from '../Alerta.jsx';
 import Icono from '../Icono.jsx';
 import { formatearNumero } from '../../services/formato.js';
 import {
-  actualizarPersonalizado, crearPersonalizado, elegirPlan, eliminarPersonalizado, guardarMetaPeso, obtenerPlan, quitarMetaPeso,
+  actualizarPersonalizado, crearPersonalizado, elegirPlan, eliminarPersonalizado, guardarMetaPeso, obtenerPlan, quitarMetaPeso, anotarPeso, borrarPeso,
 } from '../../services/comidas.service.js';
 import MetaPeso from './MetaPeso.jsx';
+import HistorialPeso from './HistorialPeso.jsx';
 import PlanesPersonalizados from './PlanesPersonalizados.jsx';
 import { Reparto } from './RepartoMacros.jsx';
 import { decimal } from './planComun.js';
@@ -130,6 +131,8 @@ export default function PlanAlimentacion({ alGuardar }) {
       `Eliminaste «${propio.nombre}».${propio.enUso ? ' Desde hoy usas el plan según tu meta.' : ''}`),
     guardarMetaPeso: (valores) => ejecutar('peso', () => guardarMetaPeso(valores), 'Guardaste tu meta de peso; tus calorías ya siguen el ritmo que elegiste.'),
     quitarMetaPeso: () => ejecutar('peso', quitarMetaPeso, 'Quitaste tu meta de peso.'),
+    anotarPeso: (valores) => ejecutar('historial', () => anotarPeso(valores), 'Anotaste tu peso; tu plan ya usa el peso nuevo.'),
+    borrarPeso: (pesaje) => ejecutar('historial', () => borrarPeso(pesaje.id), 'Borraste ese pesaje.'),
   };
   const elegirModo = (valor) => {
     setModo(valor);
@@ -191,6 +194,7 @@ export default function PlanAlimentacion({ alGuardar }) {
         </section>
 
         <MetaPeso datos={datos} guardando={guardando} acciones={acciones} mensaje={mensajeDe('peso')} />
+        <HistorialPeso datos={datos} guardando={guardando} acciones={acciones} mensaje={mensajeDe('historial')} />
       </div>
 
       <aside className="plan__lateral">

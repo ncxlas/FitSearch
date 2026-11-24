@@ -49,6 +49,7 @@ async function cuenta(nombre, rol) {
     await db.informacionSalud.create({ data: { usuarioId: ana.id, condicionesMedicas: ['asma'], tomaMedicamentos: false, medicamentos: [], alergias: [] } });
     await db.datosCuenta.create({ data: { usuarioId: ana.id, telefono: '+56 9 3333 4444', biografia: 'Biografía temporal' } });
     await db.registroAgua.create({ data: { usuarioId: ana.id, fecha: dia(0), ml: 500 } });
+    await db.registroPeso.create({ data: { usuarioId: ana.id, fecha: dia(0), pesoKg: 69.5 } });
     await db.favorito.create({ data: { usuarioId: ana.id, profesionalId: ficha.id } });
     const citaPasada = await db.reserva.create({ data: { usuarioId: ana.id, disponibilidadId: pasada.id, mensaje: 'Cita pasada de prueba', estado: 'confirmada' } });
     const citaFutura = await db.reserva.create({ data: { usuarioId: ana.id, disponibilidadId: futura.id, mensaje: 'Cita futura de prueba', estado: 'pendiente' } });
@@ -72,6 +73,7 @@ async function cuenta(nombre, rol) {
     igual('Trae las dos citas con su profesional', datos.citas.map((c) => c.profesional.nombre), ['Matías Prueba', 'Matías Prueba']);
     igual('Trae el chat diciendo quién escribió', datos.chats[0].mensajes.map((m) => m.autor), ['Tú', 'Matías Prueba']);
     igual('Trae la reseña escrita', datos.resenasEscritas.map((r) => r.puntaje), [5]);
+    igual('Trae los pesajes', datos.pesajes.map((p) => p.pesoKg), [69.5]);
     igual('Trae la conversación con el asistente', datos.asistente.conversaciones[0].mensajes[0].contenido, '¿Qué ceno hoy?');
     ok('No trae contraseñas ni identificadores internos', !/passwordHash|googleId|usuarioId|tokenHash/.test(JSON.stringify(datos)));
 
@@ -90,9 +92,9 @@ async function cuenta(nombre, rol) {
       db.perfilUsuario.count({ where: { usuarioId: ana.id } }), db.informacionSalud.count({ where: { usuarioId: ana.id } }),
       db.datosCuenta.count({ where: { usuarioId: ana.id } }), db.registroAgua.count({ where: { usuarioId: ana.id } }),
       db.favorito.count({ where: { usuarioId: ana.id } }), db.chatCita.count({ where: { usuarioId: ana.id } }),
-      db.conversacion.count({ where: { usuarioId: ana.id } }),
+      db.conversacion.count({ where: { usuarioId: ana.id } }), db.registroPeso.count({ where: { usuarioId: ana.id } }),
     ]);
-    igual('Se borran perfil, salud, contacto, agua, favoritos, chats y asistente', quedan, [0, 0, 0, 0, 0, 0, 0]);
+    igual('Se borran perfil, salud, contacto, agua, favoritos, chats, asistente y pesajes', quedan, [0, 0, 0, 0, 0, 0, 0, 0]);
     igual('La cita futura queda cancelada por la persona', await db.reserva.findUnique({ where: { id: citaFutura.id }, select: { estado: true, canceladaPor: true } }), { estado: 'cancelada', canceladaPor: 'usuario' });
     igual('La cita pasada se conserva', (await db.reserva.findUnique({ where: { id: citaPasada.id } })).estado, 'confirmada');
     igual('La reseña se conserva, ahora anónima', (await db.resena.findFirst({ where: { reservaId: citaPasada.id }, include: { usuario: { select: { nombre: true } } } })).usuario.nombre, 'Usuario eliminado');

@@ -67,6 +67,7 @@ async function exportar(usuarioId) {
       planesAlimentacion: { orderBy: { desde: 'asc' } },
       planesPersonalizados: { orderBy: { id: 'asc' } },
       metasPeso: { orderBy: { desde: 'asc' } },
+      registrosPeso: { orderBy: { fecha: 'asc' } },
       profesional: {
         include: {
           documentos: { select: { tipo: true, nombre: true, mime: true, tamano: true, fechaCreacion: true } },
@@ -96,6 +97,7 @@ async function exportar(usuarioId) {
     planDeMacronutrientes: u.planesAlimentacion,
     planesPersonalizados: u.planesPersonalizados,
     metasDePeso: u.metasPeso,
+    pesajes: u.registrosPeso,
     asistente: {
       usoDeHoy: u.usoAsistente,
       conversaciones: u.conversaciones.map((c) => ({
@@ -179,6 +181,7 @@ async function eliminar(usuarioId, datos, reloj = new Date()) {
     await tx.planAlimentacion.deleteMany(donde);
     await tx.planPersonalizado.deleteMany(donde);
     await tx.metaPeso.deleteMany(donde);
+    await tx.registroPeso.deleteMany(donde);
     await tx.registroComida.deleteMany(donde);
     await tx.registroAgua.deleteMany(donde);
     await tx.conversacion.deleteMany(donde);

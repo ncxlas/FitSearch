@@ -58,6 +58,7 @@ model Usuario {
   planesAlimentacion   PlanAlimentacion[]
   planesPersonalizados PlanPersonalizado[]
   metasPeso            MetaPeso[]
+  registrosPeso        RegistroPeso[]
 
   @@index([rolId])
   @@map("usuarios")
@@ -319,6 +320,20 @@ model MetaPeso {
 
   @@unique([usuarioId, desde])
   @@map("metas_peso")
+}
+
+// Pesajes del usuario (SC-43, 24-11-2026): uno por día. El más reciente actualiza perfiles_usuario.peso_kg, así el plan
+// de macronutrientes y el avance de la meta de peso usan siempre el último peso anotado.
+model RegistroPeso {
+  id            Int      @id @default(autoincrement())
+  usuarioId     Int      @map("usuario_id")
+  fecha         DateTime @db.Date
+  pesoKg        Decimal  @map("peso_kg") @db.Decimal(5, 2)
+  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, fecha])
+  @@map("registros_peso")
 }
 
 // Agua que registra cada usuario por día (FS-HU-33). Cada suma es una fila, para poder deshacer la última; el total del
