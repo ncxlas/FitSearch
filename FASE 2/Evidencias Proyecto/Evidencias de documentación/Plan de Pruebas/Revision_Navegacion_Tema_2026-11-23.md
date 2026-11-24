@@ -38,7 +38,7 @@ Esta evidencia complementa SC-40 sin asignar nuevos identificadores a las planil
 
 ## Ajustes posteriores de la misma revisión
 
-El nav y la barra móvil comparten ahora el fondo del cuerpo sin separadores. Las opciones se centran verticalmente en escritorio y Más permanece al pie. El recuadro al pasar el mouse usa un fondo más marcado y un borde interior suave.
+El nav y la barra móvil comparten ahora el fondo del cuerpo sin separadores. Las opciones se centran verticalmente en escritorio y Más permanece al pie. El recuadro al pasar el mouse usa el mismo tono que la opción marcada, tanto en claro como en oscuro.
 
 El panel de notificaciones se ancla al rectángulo real de la campana: abre a su lado si hay espacio, o debajo/encima en móvil. Se mantiene dentro de la pantalla y recalcula al desplegar el menú, desplazarlo, cambiar el tamaño de ventana o variar el tamaño del panel. Los íconos laterales son de 26px, la barra móvil y Más de 28px, y la foto de acceso al perfil de 28px.
 
