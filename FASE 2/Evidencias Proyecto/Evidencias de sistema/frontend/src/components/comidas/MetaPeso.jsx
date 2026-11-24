@@ -143,7 +143,7 @@ export default function MetaPeso({ datos, guardando, acciones, mensaje }) {
             <button type="button" className="boton-texto" onClick={() => setConfirmando(true)}>Quitar meta</button>
           </div>
         )}
-        <p className="texto-secundario plan__nota">Tu avance usa el peso de tu perfil: actualízalo en <Link to="/perfil">Mi perfil</Link> cuando te peses.</p>
+        <p className="texto-secundario plan__nota">Tu avance usa tu último pesaje: anótalo en «Tu peso» cada vez que te peses.</p>
       </>
     );
   }

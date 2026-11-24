@@ -42,8 +42,13 @@ async function guardarMetaPeso(req, res) {
   res.json(await planes.guardarMetaPeso(req.usuario.id, { pesoObjetivoKg, ritmoSemanalKg }));
 }
 async function eliminarMetaPeso(req, res) { res.json(await planes.eliminarMetaPeso(req.usuario.id)); }
+async function registrarPeso(req, res) {
+  const { pesoKg, fecha } = req.body;
+  res.status(201).json(await planes.registrarPeso(req.usuario.id, { pesoKg, fecha }));
+}
+async function eliminarPeso(req, res) { res.json(await planes.eliminarPeso(req.usuario.id, req.params.id)); }
 
 module.exports = {
   alimentos, delDia, semana, estadisticas, agregar, actualizar, eliminar, plan, guardarPlan, crearPersonalizado, actualizarPersonalizado,
-  eliminarPersonalizado, guardarMetaPeso, eliminarMetaPeso,
+  eliminarPersonalizado, guardarMetaPeso, eliminarMetaPeso, registrarPeso, eliminarPeso,
 };

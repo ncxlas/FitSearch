@@ -17,6 +17,9 @@ router.put('/plan/personalizados/:id', v.idPersonalizado, v.personalizado, valid
 router.delete('/plan/personalizados/:id', v.idPersonalizado, validar, controlador.eliminarPersonalizado);
 router.put('/plan/meta-peso', v.metaPeso, validar, controlador.guardarMetaPeso);
 router.delete('/plan/meta-peso', controlador.eliminarMetaPeso);
+// Historial de peso (SC-43): anotar o borrar un pesaje; responden el plan completo.
+router.post('/plan/pesos', v.peso, validar, controlador.registrarPeso);
+router.delete('/plan/pesos/:id', v.idPeso, validar, controlador.eliminarPeso);
 router.get('/estadisticas', v.periodo, v.fechaConsulta, validar, controlador.estadisticas);
 router.get('/', v.fechaConsulta, validar, controlador.delDia);
 router.post('/', v.fecha, v.momento, v.alimentoId, v.gramos, validar, controlador.agregar);

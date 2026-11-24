@@ -20,6 +20,9 @@ export const actualizarPersonalizado = (id, datos) => solicitar(`/comidas/plan/p
 export const eliminarPersonalizado = (id) => solicitar(`/comidas/plan/personalizados/${id}`, { metodo: 'DELETE' });
 export const guardarMetaPeso = (datos) => solicitar('/comidas/plan/meta-peso', { metodo: 'PUT', cuerpo: datos });
 export const quitarMetaPeso = () => solicitar('/comidas/plan/meta-peso', { metodo: 'DELETE' });
+// Historial de peso (SC-43): cada acción responde el plan completo.
+export const anotarPeso = (datos) => solicitar('/comidas/plan/pesos', { metodo: 'POST', cuerpo: datos });
+export const borrarPeso = (id) => solicitar(`/comidas/plan/pesos/${id}`, { metodo: 'DELETE' });
 
 export const MOMENTOS = reglas.comidas.momentos;
 export const { min: GRAMOS_MIN, max: GRAMOS_MAX } = reglas.comidas.gramos;

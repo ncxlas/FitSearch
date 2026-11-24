@@ -359,6 +359,14 @@ La migración `20261111120000_plan_alimentacion` crea `planes_personalizados`, `
 | PUT | `/api/comidas/plan/meta-peso` | Bearer JWT (rol usuario) | Guarda `pesoObjetivoKg` y `ritmoSemanalKg`; 400 con el motivo si no corresponde a la meta o al peso actual |
 | DELETE | `/api/comidas/plan/meta-peso` | Bearer JWT (rol usuario) | Quita la meta de peso |
 
+### Historial de peso (SC-43, 24-11-2026)
+
+En **Comidas › Plan**, la tarjeta «Tu peso» anota el peso del día (o de un día del último año, uno por día) y muestra un gráfico del peso contra el ritmo de la meta de peso, el ritmo real de las últimas 8 semanas y la lista de pesajes, desde donde se pueden borrar. El último pesaje queda como peso del perfil, así que las calorías del plan y el avance de la meta se recalculan solos.
+
+- `POST /api/comidas/plan/pesos` (`{ pesoKg, fecha? }`) y `DELETE /api/comidas/plan/pesos/:id` responden el plan completo; `GET /api/comidas/plan` trae `historialPeso` (180 días).
+- Tabla `registros_peso` (migración `20261124130000_registro_peso`). Los pesajes se incluyen al descargar los datos y se borran al eliminar la cuenta.
+- `npm run test:mysql:peso` lo comprueba con MySQL real (12 comprobaciones). Evidencia: [Historial de peso](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Historial_de_Peso_2026-11-24.md).
+
 ### Agua — FS-HU-33
 
 En «Tu progreso» del Inicio, la persona suma el agua que toma en el día:
