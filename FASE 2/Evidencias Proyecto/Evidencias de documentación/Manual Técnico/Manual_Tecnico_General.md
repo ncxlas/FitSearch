@@ -173,10 +173,15 @@ La evidencia de ejecución y las limitaciones de comprobación visual se registr
 
 ## 11. Carrusel de herramientas y escala de letra
 
-En la portada pública, «Más herramientas para tu bienestar» es una cinta horizontal de movimiento continuo y vuelta sin corte: muestra una tarjeta en móvil, dos desde 40rem y tres desde 64rem. Avanza a 45px/s en ventanas del carrusel menores de 900px y a 70px/s en las mayores. Se puede arrastrar o recorrer con las flechas y pausar/reanudar. Se detiene con el mouse o el foco dentro de la cinta, fuera de pantalla y en pestañas ocultas; con movimiento reducido solo se recorre manualmente. Conserva las cinco herramientas y sus destinos. Las copias visuales completan el ciclo sin repetir opciones para lectores de pantalla ni para Tab, y sus enlaces activan la herramienta correspondiente.
+En la portada pública, «Más herramientas para tu bienestar» es una cinta horizontal de movimiento continuo y vuelta sin corte: muestra una tarjeta en móvil, dos desde 40rem, tres desde 64rem y cuatro desde 90rem. Avanza a 45px/s en ventanas del carrusel menores de 900px y a 70px/s en las mayores. Se puede arrastrar o recorrer con las flechas y pausar/reanudar. Se detiene con el mouse o el foco dentro de la cinta, fuera de pantalla y en pestañas ocultas; con movimiento reducido solo se recorre manualmente. Conserva las cinco herramientas y sus destinos. Las copias visuales completan el ciclo sin repetir opciones para lectores de pantalla ni para Tab, y sus enlaces activan la herramienta correspondiente.
 
 `CarruselHerramientas.jsx/.css` anima únicamente el transform de una pista mediante Web Animations API, con duración calculada por ancho y velocidad. No espera intervalos entre tarjetas. Conserva la fase al redimensionar, muestra la herramienta enfocada y evita abrir un enlace al terminar un arrastre. Usa IntersectionObserver, ResizeObserver y la preferencia de movimiento reducido; libera animación, copias y manejadores al desmontar. Si no está disponible la animación, mantiene el desplazamiento nativo y las flechas. Los controles quedan fuera del área de pausa por hover/foco, por lo que Reanudar puede activarse con teclado.
 
 La base de letra de la página es 106,25% (17px con el tamaño predeterminado del navegador); las etiquetas del nav y Más son .95rem para conservar su proporción con los íconos. El ajuste sigue las preferencias de tamaño del navegador.
 
 Comprobación completa actual: 58 archivos y 524 pruebas frontend aprobadas, compilación correcta y lint sin errores con la advertencia ya registrada de Mensajes.jsx. Se conserva la revisión visual pendiente.
+
+
+### Distribución del espacio de la portada
+
+Después del hero, las secciones y el pie aprovechan el ancho de la ventana con márgenes laterales fluidos de 1rem a 4rem, sin el límite anterior de 1240px. En escritorio, los encabezados de especialidades y herramientas reparten título y descripción entre ambos lados; el asistente combina texto a la izquierda con una conversación más amplia a la derecha, y el bloque profesional sitúa el ejemplo a la izquierda y sus beneficios a la derecha. Desde 80rem, Cómo funciona distribuye su introducción y los tres pasos en dos columnas. En móvil se conserva la lectura vertical y el desplazamiento horizontal queda dentro de los carruseles.

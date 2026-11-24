@@ -31,6 +31,9 @@
 @media (min-width: 64rem) {
   .portada .carrusel-herramientas .portada__herramienta { width: calc((var(--carrusel-ancho, 85vw) - 2rem) / 3); }
 }
+@media (min-width: 90rem) {
+  .portada .carrusel-herramientas .portada__herramienta { width: calc((var(--carrusel-ancho, 85vw) - 3rem) / 4); }
+}
 @media (prefers-reduced-motion: reduce) {
   .carrusel-herramientas__ventana { scroll-behavior: auto; }
 }
