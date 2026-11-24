@@ -8,7 +8,8 @@ const conPartes = {
   usuario: persona,
   profesional: { select: { id: true, usuarioId: true, especialidad: true, usuario: persona } },
 };
-const seleccionMensaje = { id: true, autorId: true, texto: true, leido: true, fechaCreacion: true };
+// adjunto y guardadoEn: planes enviados por el chat (SC-46).
+const seleccionMensaje = { id: true, autorId: true, texto: true, leido: true, adjunto: true, guardadoEn: true, fechaCreacion: true };
 
 function buscar(id) {
   return prisma.chatCita.findUnique({ where: { id }, include: conPartes });
@@ -111,5 +112,5 @@ async function chatsVisibles(usuario) {
 
 module.exports = {
   buscar, participantesDeReserva, obtenerOCrear, chatsDe, mensajes, ultimoMensaje, noLeidos, reservasDePareja,
-  crearMensaje, marcarLeidos, eliminarPara, noLeidosDe, chatsVisibles,
+  crearMensaje, marcarLeidos, eliminarPara, noLeidosDe, chatsVisibles, seleccionMensaje,
 };

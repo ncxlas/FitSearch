@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
 import Carrusel from '../components/Carrusel.jsx';
 import Icono from '../components/Icono.jsx';
@@ -73,7 +73,9 @@ function TarjetaObjetivo({ objetivo }) {
 export default function Comidas() {
   const [fecha, setFecha] = useState(null);
   const [intento, setIntento] = useState(0);
-  const [pestana, setPestana] = useState('resumen');
+  // ?seccion= abre una pestaña concreta (por ejemplo, desde un plan guardado en el chat; SC-46).
+  const [parametros] = useSearchParams();
+  const [pestana, setPestana] = useState(() => (PESTANAS.some((p) => p.clave === parametros.get('seccion') && !p.proximamente) ? parametros.get('seccion') : 'resumen'));
   const [registro, setRegistro] = useState({ abierto: false, momento: null });
   const [datos, setDatos] = useState(null);
   const clave = `${fecha}-${intento}`;
