@@ -1,4 +1,5 @@
-# Integración continua de FitSearch (SC-41; DAS, D42). Corre en cada PR hacia main y en cada push a main:
+# Integración continua de FitSearch (SC-41; DAS, D42). Corre en cada PR (también los que van sobre otro PR) y en cada
+# push a main:
 #   - Backend: lint y pruebas de Jest (unitarias e integración con datos simulados).
 #   - Frontend: lint, pruebas de Vitest y build de producción.
 #   - MySQL: aplica todas las migraciones en una base vacía, comprueba que coinciden con schema.prisma, carga los
@@ -8,7 +9,6 @@ name: Pruebas
 
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
