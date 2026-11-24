@@ -86,6 +86,13 @@ export function SesionProvider({ children }) {
       // "nombre" lo usa la despedida de la portada.
       setAviso({ tipo: 'exito', texto: 'Cerraste sesión correctamente.', origen: 'cierre', nombre });
     },
+    // La cuenta ya se eliminó en el servidor (SC-42): se olvida todo lo guardado en este navegador y la portada despide.
+    cuentaEliminada: () => {
+      establecer(null);
+      olvidarUbicacion();
+      olvidarFotoCuenta();
+      setAviso({ tipo: 'exito', origen: 'cierre', eliminada: true, texto: 'Borramos tus datos personales y cerramos tus sesiones. Gracias por haber usado FitSearch.' });
+    },
   }), [sesion, aviso, establecer, limpiarAviso]);
 
   return <SesionContext.Provider value={valor}>{children}</SesionContext.Provider>;

@@ -102,6 +102,8 @@ function resumirResenas(grupos) {
 
 // Nombre visible del autor de una reseña: nombre y la inicial del apellido ("Rodrigo C."), nunca el correo.
 function nombrePublico(nombre) {
+  // Reseñas de cuentas eliminadas (SC-42): se muestran como «Usuario eliminado», sin abreviar.
+  if (nombre === 'Usuario eliminado') return nombre;
   const [primero, segundo] = nombre.trim().split(/\s+/);
   return segundo ? `${primero} ${segundo[0].toUpperCase()}.` : primero;
 }

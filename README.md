@@ -420,6 +420,15 @@ La API limita los intentos en las rutas de acceso y responde `429` con la cabece
 
 Los contadores viven en la memoria de la API (un solo proceso) y empiezan de cero si se reinicia; las peticiones mal formadas no cuentan. Con Docker, nginx reenvía `/api` y `TRUST_PROXY=1` permite leer la IP real del cliente; en un servidor público conviene publicar solo el puerto web, porque si la API queda expuesta directo un cliente podría inventar su IP en `X-Forwarded-For` (el límite por correo sigue funcionando igual). Diseño en el DAS (QS8 y D41) y evidencia en [Límite de intentos y CI](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Limite_Intentos_y_CI_2026-11-24.md).
 
+## Mi cuenta: descargar mis datos y eliminar la cuenta (SC-42, 24-11-2026)
+
+«Privacidad y datos» está en **Mi perfil** (usuario) y en **Configuración** (profesional), por la Ley 21.719 de datos personales, vigente desde el 1 de diciembre de 2026.
+
+- **Descargar mis datos** (`GET /api/perfil/mis-datos`): un archivo `fitsearch-mis-datos-AAAA-MM-DD.json` con la cuenta, el perfil, la salud, las comidas, el agua, los planes y metas, las citas, las reseñas, los chats y las conversaciones con el asistente; en el profesional, también su ficha, su agenda, sus documentos (sin el archivo) y las reseñas recibidas. No incluye la contraseña ni identificadores internos.
+- **Eliminar mi cuenta** (`DELETE /api/perfil/cuenta`): hay que escribir ELIMINAR y confirmar con la contraseña o con la cuenta de Google vinculada (mismo límite de intentos que cambiar el correo). Se borran los datos personales, las citas futuras se cancelan y se avisa por correo a la otra parte, y las citas y reseñas pasadas quedan como «Usuario eliminado» o «Profesional eliminado». La cuenta queda anonimizada e inactiva (`usuarios.eliminado_en`) y el correo puede volver a registrarse. Un administrador no puede eliminarse desde la aplicación.
+
+`npm run test:mysql:cuenta` lo comprueba con MySQL real (30 comprobaciones, con cuentas temporales que se borran al terminar). Diseño en el DAS (QS9 y D43) y evidencia en [Mis datos y eliminar cuenta](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Mis_Datos_y_Eliminar_Cuenta_2026-11-24.md).
+
 ## Pruebas
 
 ```bash

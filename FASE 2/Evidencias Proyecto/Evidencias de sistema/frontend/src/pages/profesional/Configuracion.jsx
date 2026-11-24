@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import Alerta from '../../components/Alerta.jsx';
 import Icono from '../../components/Icono.jsx';
 import { solicitar } from '../../services/api.js';
+import PrivacidadDatos from '../../components/cuenta/PrivacidadDatos.jsx';
+import useCuentaPerfil from '../../components/perfil/useCuentaPerfil.js';
 import './Configuracion.css';
 
 const PREFERENCIAS = [
@@ -25,6 +27,7 @@ export default function Configuracion() {
   const [estado, setEstado] = useState({ cargando: true });
   const [guardando, setGuardando] = useState(null);
   const [aviso, setAviso] = useState({ tipo: '', texto: '' });
+  const cuentaEstado = useCuentaPerfil();
 
   useEffect(() => {
     let activo = true;
@@ -86,6 +89,11 @@ export default function Configuracion() {
           <div aria-live="polite"><Alerta tipo={aviso.tipo || 'exito'}>{aviso.texto}</Alerta></div>
         </>
       )}
+      {/* SC-42: descargar una copia de los datos y eliminar la cuenta. */}
+      <section className="configuracion__seccion" aria-labelledby="configuracion-privacidad">
+        <h2 id="configuracion-privacidad">Privacidad y datos</h2>
+        <PrivacidadDatos cuenta={cuentaEstado.cuenta} rol="profesional" />
+      </section>
     </div>
   );
 }

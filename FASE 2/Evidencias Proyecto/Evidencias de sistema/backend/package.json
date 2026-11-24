@@ -14,6 +14,7 @@
     "test:mysql:acceso": "node scripts/probar-acceso-mysql.js",
     "test:mysql:agua": "node scripts/probar-agua-mysql.js",
     "test:mysql:agenda": "node scripts/probar-agenda-mysql.js",
+    "test:mysql:cuenta": "node scripts/probar-cuenta-mysql.js",
     "test:mysql:asistente": "node scripts/probar-asistente-mysql.js",
     "test:mysql:mejoras": "node scripts/probar-mejoras-mysql.js",
     "test:mysql:plan": "node scripts/probar-plan-alimentacion-mysql.js",

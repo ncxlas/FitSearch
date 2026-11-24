@@ -1,0 +1,75 @@
+/* Privacidad y datos (SC-42): descargar mis datos y eliminar la cuenta. */
+.privacidad { display: grid; gap: .85rem; }
+
+.privacidad__bloque {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
+  padding: 1.1rem 1.15rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-superficie);
+}
+
+.privacidad__icono {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  color: var(--color-primario);
+  background: var(--color-info-fondo);
+}
+
+.privacidad__bloque--peligro .privacidad__icono { color: var(--color-error); background: var(--color-error-fondo); }
+
+.privacidad__texto h3 { margin: .1rem 0 .3rem; font-size: 1rem; }
+.privacidad__texto p { margin: 0; font-size: .92rem; line-height: 1.55; color: var(--color-texto-secundario); text-wrap: pretty; }
+.privacidad__texto .alerta { margin-top: .6rem; }
+
+.privacidad__listo {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin-top: .5rem !important;
+  color: var(--color-exito) !important;
+  font-weight: 600;
+}
+
+.privacidad__accion { width: auto; min-height: 2.5rem; white-space: nowrap; align-self: center; }
+
+/* Botones de peligro: el borde para abrir el diálogo y el relleno para confirmar. */
+.boton--peligro-borde {
+  font-size: .9rem;
+  color: var(--color-error);
+  background: transparent;
+  border: 1px solid currentColor;
+}
+
+.boton--peligro { width: auto; background: var(--color-error); color: #fff; }
+
+@media (hover: hover) and (pointer: fine) {
+  .boton--peligro-borde:hover { background: var(--color-error-fondo); }
+  .boton--peligro:hover:not(:disabled) { background: var(--color-error); filter: brightness(.92); }
+}
+
+.boton--peligro:disabled { cursor: not-allowed; }
+
+.eliminar-cuenta__lista {
+  display: grid;
+  gap: .45rem;
+  margin: 0 0 1.1rem;
+  padding: .9rem 1rem .9rem 2rem;
+  border-radius: var(--radio-control);
+  background: var(--color-error-fondo);
+  font-size: .92rem;
+  line-height: 1.5;
+}
+
+.eliminar-cuenta__google { margin-bottom: 1rem; }
+
+@media (max-width: 36rem) {
+  .privacidad__bloque { grid-template-columns: auto minmax(0, 1fr); }
+  .privacidad__accion { grid-column: 1 / -1; width: 100%; }
+}

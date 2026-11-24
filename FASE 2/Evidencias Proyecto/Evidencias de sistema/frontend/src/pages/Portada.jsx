@@ -64,7 +64,7 @@ export default function Portada() {
 
   return (
     <div className="portada" ref={animaciones}>
-      {esDespedida && <Despedida nombre={aviso.nombre} texto={aviso.texto} onCerrar={cerrarDespedida} />}
+      {esDespedida && <Despedida nombre={aviso.nombre} texto={aviso.texto} eliminada={aviso.eliminada} onCerrar={cerrarDespedida} />}
       <a className="portada__saltar" href="#contenido">Saltar al contenido</a>
       <EncabezadoPortada marca={<MarcaPortada />} />
 

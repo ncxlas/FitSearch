@@ -1,0 +1,102 @@
+/* Cuadro de diálogo modal reutilizable (24-11-2026). Usa los tokens del tema para verse bien en claro y oscuro. */
+.dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(6 38 63 / 45%);
+  animation: dialogo-fondo 180ms ease-out both;
+}
+
+.dialogo__tarjeta {
+  width: min(100%, 28rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.4rem 1.5rem 1.5rem;
+  border-radius: 1.2rem;
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  box-shadow: 0 24px 60px rgb(6 38 63 / 30%);
+  animation: dialogo-entrada 220ms var(--curva-salida) both;
+}
+
+.dialogo__tarjeta--ancho { width: min(100%, 46rem); }
+.dialogo__tarjeta--peligro { border-top: 4px solid var(--color-error); }
+
+.dialogo__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dialogo__cabecera h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.3;
+  color: var(--color-primario-oscuro);
+}
+
+.dialogo__tarjeta--peligro .dialogo__cabecera h2 { color: var(--color-error); }
+
+.dialogo__cerrar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: -.35rem -.5rem 0 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-texto-secundario);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dialogo__cerrar:focus-visible { outline: 3px solid var(--color-foco); outline-offset: 2px; }
+
+.dialogo__descripcion {
+  margin: .6rem 0 0;
+  font-size: .95rem;
+  line-height: 1.55;
+  color: var(--color-texto-secundario);
+}
+
+.dialogo__cuerpo { margin-top: 1.1rem; }
+
+.dialogo__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .6rem;
+  margin-top: 1.25rem;
+}
+
+@media (hover: hover) {
+  .dialogo__cerrar:hover { background: var(--color-superficie-suave); color: var(--color-texto); }
+}
+
+@media (max-width: 30rem) {
+  .dialogo { place-items: end center; padding: 0; }
+  .dialogo__tarjeta, .dialogo__tarjeta--ancho {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 1.2rem 1.2rem 0 0;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+  .dialogo__acciones { display: grid; grid-template-columns: 1fr; }
+  .dialogo__acciones > .boton { width: 100%; justify-content: center; min-height: 2.8rem; }
+  .dialogo__acciones > .boton--principal, .dialogo__acciones > .boton--peligro { grid-row: 1; }
+}
+
+@keyframes dialogo-fondo { from { opacity: 0; } }
+@keyframes dialogo-entrada { from { opacity: 0; transform: translateY(8px) scale(.97); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogo, .dialogo__tarjeta { animation: none; }
+}
