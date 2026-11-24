@@ -97,6 +97,9 @@ jobs:
       DATABASE_URL: mysql://root:raiz-ci@127.0.0.1:3306/fitsearch
       JWT_SECRET: secreto-solo-para-la-ci
       IA_API_KEY: ''
+      # test:mysql:acceso comprueba que el acceso con Google esté configurado y que rechace credenciales falsas;
+      # un ID de cliente de prueba basta, porque ninguna credencial llega a validarse con Google.
+      GOOGLE_CLIENT_ID: ci-pruebas.apps.googleusercontent.com
     steps:
       - uses: actions/checkout@v4
         with:
