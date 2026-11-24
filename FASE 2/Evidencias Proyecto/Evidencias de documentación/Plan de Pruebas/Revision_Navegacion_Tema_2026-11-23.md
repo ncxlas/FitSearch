@@ -15,7 +15,7 @@ Base: integración del PR #82, commit `2285469ed6cc8259873ae27f69557790140601db`
 
 | Comprobación | Resultado |
 | --- | --- |
-| Suite frontend completa | 56 archivos, 513 pruebas aprobadas |
+| Suite frontend completa | 58 archivos, 520 pruebas aprobadas |
 | Regresión de Tab sobre los radios del tema | Aprobada; antes volvía a Cerrar menú |
 | Estado activo de la campana al abrir/cerrar | Aprobado |
 | Foto compartida entre nav y barra, actualización y fallo de imagen | Aprobado |
@@ -43,3 +43,12 @@ El nav y la barra móvil comparten ahora el fondo del cuerpo sin separadores. La
 El panel de notificaciones se ancla al rectángulo real de la campana: abre a su lado si hay espacio, o debajo/encima en móvil. Se mantiene dentro de la pantalla y recalcula al desplegar el menú, desplazarlo, cambiar el tamaño de ventana o variar el tamaño del panel. Los íconos laterales son de 26px, la barra móvil y Más de 28px, y la foto de acceso al perfil de 28px.
 
 Comprobación de esta ronda: 20 pruebas focalizadas aprobadas (incluyen posición en nav contraído/desplegado, borde inferior y móvil), lint sin errores con la advertencia ya registrada y compilación aprobada. La última suite completa de la ronda anterior fue de 513 aprobadas; no se declara una nueva suite completa por sumar estos tres casos. Se conserva la revisión visual pendiente.
+
+
+## Carrusel de herramientas de la portada
+
+En la portada pública, «Más herramientas para tu bienestar» es un carrusel horizontal: muestra una tarjeta en móvil, dos desde 40rem y tres desde 64rem. Avanza una tarjeta cada 4,5 segundos y vuelve al inicio al llegar al final. Se puede recorrer con las flechas o el dedo y pausar/reanudar. Se detiene mientras el mouse o el foco están dentro, al quedar fuera de pantalla o al ocultar la pestaña; con movimiento reducido solo se recorre manualmente. Mantiene las cinco herramientas y sus destinos originales, sin duplicar enlaces.
+
+Se ejecutó de nuevo la suite completa: 58 archivos/520 pruebas aprobadas. Los cuatro casos nuevos comprueban el avance y retorno al inicio, la pausa independiente de mouse/foco, el control Pausar/Reanudar y la pestaña oculta, y la preferencia de movimiento reducido con recorrido manual. Portada.test.jsx conserva la comprobación de las cinco herramientas y sus destinos de acceso. Compilación aprobada; lint sin errores y con la advertencia de Fast Refresh ya indicada. No se acredita una revisión visual nueva.
+
+El perfil del nav quedó debajo de Notificaciones. La tipografía general se amplió a 106,25%, moderando el texto del nav a .95rem. Las planillas oficiales y sus resultados permanecen sin cambios.
