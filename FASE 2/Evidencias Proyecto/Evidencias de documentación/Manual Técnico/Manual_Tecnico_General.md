@@ -185,3 +185,6 @@ Comprobación completa actual: 58 archivos y 524 pruebas frontend aprobadas, com
 ### Distribución del espacio de la portada
 
 Después del hero, las secciones y el pie aprovechan el ancho de la ventana con márgenes laterales fluidos de 1rem a 4rem, sin el límite anterior de 1240px. En escritorio, los encabezados de especialidades y herramientas reparten título y descripción entre ambos lados; el asistente combina texto a la izquierda con una conversación más amplia a la derecha, y el bloque profesional sitúa el ejemplo a la izquierda y sus beneficios a la derecha. Desde 80rem, Cómo funciona distribuye su introducción y los tres pasos en dos columnas. En móvil se conserva la lectura vertical y el desplazamiento horizontal queda dentro de los carruseles.
+
+
+En el hero se retiraron los bordes dorados de ambas hojas, responsables de la línea central al entrar. Las hojas se solapan ligeramente para evitar una rendija de redondeo entre píxeles. La apertura conserva su comportamiento. Se recompiló después de este ajuste CSS; la revisión visual continúa pendiente.
