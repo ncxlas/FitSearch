@@ -15,6 +15,7 @@
     "test:mysql:agua": "node scripts/probar-agua-mysql.js",
     "test:mysql:agenda": "node scripts/probar-agenda-mysql.js",
     "test:mysql:compartir": "node scripts/probar-compartir-mysql.js",
+    "test:mysql:planes-chat": "node scripts/probar-planes-chat-mysql.js",
     "test:mysql:cuenta": "node scripts/probar-cuenta-mysql.js",
     "test:mysql:asistente": "node scripts/probar-asistente-mysql.js",
     "test:mysql:planes-comida": "node scripts/probar-planes-comida-mysql.js",

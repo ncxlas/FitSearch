@@ -605,14 +605,18 @@ model ChatCita {
 
 // Mensajes de un chat (FS-HU-31). leido marca los que ya vio quien los recibe (el aviso de mensaje nuevo).
 model MensajeCita {
-  id            Int      @id @default(autoincrement())
-  chatId        Int      @map("chat_id")
-  autorId       Int      @map("autor_id")
-  texto         String   @db.VarChar(1000)
-  leido         Boolean  @default(false)
-  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.DateTime(0)
-  chat          ChatCita @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  autor         Usuario  @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  id            Int       @id @default(autoincrement())
+  chatId        Int       @map("chat_id")
+  autorId       Int       @map("autor_id")
+  texto         String    @db.VarChar(1000)
+  leido         Boolean   @default(false)
+  // SC-46: un plan de comidas o de macronutrientes que el profesional envía por el chat; guardado_en marca cuándo la
+  // persona lo guardó en sus planes (una sola vez).
+  adjunto       Json?
+  guardadoEn    DateTime? @map("guardado_en") @db.DateTime(0)
+  fechaCreacion DateTime  @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  chat          ChatCita  @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  autor         Usuario   @relation(fields: [autorId], references: [id], onDelete: Cascade)
 
   @@index([chatId, id])
   @@index([autorId])

@@ -1,0 +1,78 @@
+/* Planes enviados por el chat (SC-46): la tarjeta del mensaje y el diálogo del profesional. Tokens del tema. */
+.plan-adjunto {
+  display: grid;
+  gap: .55rem;
+  margin-top: .45rem;
+  padding: .75rem .85rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 14px;
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  text-align: left;
+  min-width: min(100%, 17rem);
+}
+.plan-adjunto__cabecera { display: flex; align-items: center; gap: .6rem; }
+.plan-adjunto__icono {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  background: var(--color-info-fondo);
+  color: var(--color-primario-vivo);
+}
+.plan-adjunto__titulo { display: grid; min-width: 0; }
+.plan-adjunto__titulo small { font-size: .78rem; color: var(--color-texto-secundario); }
+.plan-adjunto__titulo strong { font-size: .98rem; overflow-wrap: anywhere; }
+.plan-adjunto__resumen { margin: 0; font-size: .88rem; line-height: 1.45; color: var(--color-texto-secundario); overflow-wrap: anywhere; }
+.plan-adjunto__macros { display: flex; flex-wrap: wrap; gap: .35rem; margin: 0; padding: 0; list-style: none; font-size: .85rem; }
+.plan-adjunto__macros li { padding: .25rem .6rem; border-radius: 999px; background: var(--color-superficie-suave); }
+.plan-adjunto__macros strong { font-variant-numeric: tabular-nums; }
+.plan-adjunto__ver { justify-self: start; font-size: .88rem; }
+.plan-adjunto__detalle { max-height: 22rem; overflow-y: auto; padding-top: .25rem; border-top: 1px solid var(--color-borde); }
+.plan-adjunto__pie { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.plan-adjunto__guardado { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .3rem; font-size: .86rem; color: var(--color-exito); }
+.plan-adjunto__guardado a { color: var(--color-primario); font-weight: 600; }
+.plan-adjunto__pendiente { font-size: .84rem; color: var(--color-texto-secundario); }
+
+.enviar-plan__opciones { display: grid; gap: .6rem; margin: 0; padding: 0; list-style: none; }
+.enviar-plan__opciones button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: .75rem;
+  width: 100%;
+  padding: .85rem .95rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.enviar-plan__opciones button > svg { color: var(--color-primario-vivo); margin-top: .1rem; }
+.enviar-plan__opciones span { display: grid; gap: .2rem; }
+.enviar-plan__opciones small { font-size: .86rem; line-height: 1.45; color: var(--color-texto-secundario); }
+@media (hover: hover) {
+  .enviar-plan__opciones button:hover { border-color: var(--color-primario-claro); background: var(--color-info-fondo); }
+}
+.enviar-plan__opciones button:focus-visible { outline: 3px solid var(--color-foco); outline-offset: 1px; }
+
+.enviar-plan__macros { display: grid; gap: .8rem; }
+.enviar-plan__porcentajes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin: 0; padding: 0; border: 0; }
+.enviar-plan__porcentajes legend { margin-bottom: .4rem; }
+.enviar-plan__porcentajes input { font-variant-numeric: tabular-nums; }
+.enviar-plan__suma { grid-column: 1 / -1; margin: 0; font-size: .85rem; color: var(--color-error); }
+.enviar-plan__suma--ok { color: var(--color-texto-secundario); }
+.enviar-plan__nota { margin: 0; font-size: .85rem; }
+
+/* El editor de planes de comidas va dentro del diálogo: sin su propia tarjeta ni título repetido. */
+.dialogo__tarjeta .editor-plan.panel-tarjeta { padding: 0; border: 0; box-shadow: none; background: transparent; }
+.dialogo__tarjeta .editor-plan > .panel-tarjeta__titulo { display: none; }
+
+@media (max-width: 30rem) {
+  .enviar-plan__porcentajes { grid-template-columns: 1fr; }
+}

@@ -49,7 +49,11 @@ const conProfesional = (fila) => {
 };
 // En los chats, cada mensaje dice si lo escribió la persona o la otra parte, sin exponer identificadores.
 const mensajesDeChat = (mensajes, usuarioId, otro) =>
-  mensajes.map((m) => ({ autor: m.autorId === usuarioId ? 'Tú' : otro, texto: m.texto, leido: m.leido, fecha: m.fechaCreacion }));
+  mensajes.map((m) => ({
+    autor: m.autorId === usuarioId ? 'Tú' : otro, texto: m.texto, leido: m.leido, fecha: m.fechaCreacion,
+    // Un plan enviado por el chat (SC-46): el plan tal como llegó y cuándo se guardó.
+    ...(m.adjunto ? { planEnviado: { tipo: m.adjunto.tipo, plan: m.adjunto.plan, guardadoEn: m.guardadoEn } } : {}),
+  }));
 
 async function exportar(usuarioId) {
   const u = await prisma.usuario.findUnique({

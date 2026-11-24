@@ -17,6 +17,13 @@ router.post('/', body('reservaId').isInt({ min: 1, max: 2147483647 }).withMessag
 router.get('/:id', id, validar, async (req, res) => res.json(await servicio.abrir(req.usuario, matchedData(req).id)));
 router.post('/:id/mensajes', id, body('texto').isString().withMessage('Escribe un mensaje'), validar,
   async (req, res) => res.status(201).json(await servicio.enviar(req.usuario, matchedData(req).id, req.body.texto)));
+// Planes por el chat (SC-46): el profesional envía un plan de comidas o de macronutrientes y la persona lo guarda en sus planes.
+const planes = require('../services/planesPorChat.service');
+router.post('/:id/planes', id, body('tipo').isIn(['comidas', 'macros']).withMessage('Elige qué plan quieres enviar'),
+  body('plan').isObject().withMessage('Falta el plan'), body('texto').optional({ values: 'null' }).isString().withMessage('Escribe un mensaje'), validar,
+  async (req, res) => res.status(201).json(await planes.enviar(req.usuario, matchedData(req).id, req.body)));
+router.post('/:id/mensajes/:mensajeId/guardar', id, param('mensajeId').isInt({ min: 1, max: 2147483647 }).withMessage('El plan indicado no es válido').toInt(), validar,
+  async (req, res) => { const { id: chatId, mensajeId } = matchedData(req); res.status(201).json(await planes.guardar(req.usuario, chatId, mensajeId)); });
 // Elimina el chat solo para quien lo pide.
 router.delete('/:id', id, validar, async (req, res) => res.json(await servicio.eliminar(req.usuario, matchedData(req).id)));
 

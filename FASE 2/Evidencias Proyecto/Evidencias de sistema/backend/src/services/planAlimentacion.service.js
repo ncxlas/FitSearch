@@ -316,6 +316,6 @@ async function eliminarMetaPeso(usuarioId, ahora = new Date()) {
 }
 
 module.exports = {
-  calcular, delDia, obtener, guardar, crearPersonalizado, actualizarPersonalizado, eliminarPersonalizado, guardarMetaPeso, eliminarMetaPeso,
+  calcular, delDia, obtener, guardar, datosPersonalizado, crearPersonalizado, actualizarPersonalizado, eliminarPersonalizado, guardarMetaPeso, eliminarMetaPeso,
   registrarPeso, eliminarPeso, ritmoReal,
 };

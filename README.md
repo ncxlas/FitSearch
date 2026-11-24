@@ -437,6 +437,18 @@ La API limita los intentos en las rutas de acceso y responde `429` con la cabece
 
 Los contadores viven en la memoria de la API (un solo proceso) y empiezan de cero si se reinicia; las peticiones mal formadas no cuentan. Con Docker, nginx reenvía `/api` y `TRUST_PROXY=1` permite leer la IP real del cliente; en un servidor público conviene publicar solo el puerto web, porque si la API queda expuesta directo un cliente podría inventar su IP en `X-Forwarded-For` (el límite por correo sigue funcionando igual). Diseño en el DAS (QS8 y D41) y evidencia en [Límite de intentos y CI](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Limite_Intentos_y_CI_2026-11-24.md).
 
+## Planes enviados por el chat (SC-46, 24-11-2026)
+
+El profesional (por ejemplo, un nutricionista) envía un plan por el chat y la persona lo guarda en sus planes con un botón.
+
+- **Profesional:** en el chat con un cliente, «Enviar un plan» ofrece dos opciones:
+  - **Plan de comidas** de un día o de una semana, armado con el mismo editor de la persona y el catálogo de alimentos (`GET /api/profesional/alimentos`).
+  - **Plan de macronutrientes:** nombre y reparto de proteínas, carbohidratos y grasas que suma 100 %, con un mensaje opcional.
+- **Persona:** el plan llega como una tarjeta en el chat, con su detalle. «Guardar en mis planes» lo deja en Comidas › Plan de comidas (con origen «profesional») o en Plan de macronutrientes (como plan personalizado; si el nombre ya existe, queda «Nombre (2)»). Se guarda una sola vez, y el enlace «Ver en…» abre esa pestaña (`/comidas?seccion=…`).
+- El profesional ve en la tarjeta si su cliente ya lo guardó.
+- Rutas `POST /api/chats/:id/planes` y `POST /api/chats/:id/mensajes/:mensajeId/guardar`. Columnas `adjunto` (JSON) y `guardado_en` en `mensajes_chat` (migración `20261124160000_planes_por_chat`). La descarga de «Mis datos» incluye los planes recibidos.
+- `npm run test:mysql:planes-chat` lo comprueba con MySQL real (17 comprobaciones). Evidencia: [Planes por el chat](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Planes_Por_Chat_2026-11-24.md).
+
 ## Compartir el progreso con un profesional (SC-45, 24-11-2026)
 
 La persona decide qué ve cada profesional con el que tiene un chat (es decir, con quien tuvo al menos una cita). El profesional solo mira; no cambia nada.
