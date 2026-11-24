@@ -68,7 +68,7 @@ function textoCalorias(kcal, kcalBase, { ajusteCalorias, ajusteKcal, ritmoSemana
   return `Tu gasto diario estimado (${base} kcal) ${signo} un ${porcentaje} %.`;
 }
 
-// Plan de alimentación de Comidas (11-11-2026; pedido del PO): por defecto, el de la meta del perfil; o uno de la lista
+// Plan de macronutrientes de Comidas (11-11-2026, antes «Plan de alimentación»; renombrado en SC-44; pedido del PO): por defecto, el de la meta del perfil; o uno de la lista
 // de planes personalizados. Incluye la meta de peso, que ajusta las calorías. Al cambiar algo se avisa a la página para
 // que el resumen del día use el plan nuevo.
 export default function PlanAlimentacion({ alGuardar }) {
@@ -149,7 +149,7 @@ export default function PlanAlimentacion({ alGuardar }) {
       <div className="plan__columna">
         <section className="panel-tarjeta plan__principal" aria-labelledby="titulo-plan">
           <div className="plan__encabezado">
-            <h2 id="titulo-plan" className="panel-tarjeta__titulo">Tu plan de alimentación</h2>
+            <h2 id="titulo-plan" className="panel-tarjeta__titulo">Tu plan de macronutrientes</h2>
             <p className="texto-secundario">{vigente}</p>
           </div>
 

@@ -42,6 +42,20 @@ async function guardarMetaPeso(req, res) {
   res.json(await planes.guardarMetaPeso(req.usuario.id, { pesoObjetivoKg, ritmoSemanalKg }));
 }
 async function eliminarMetaPeso(req, res) { res.json(await planes.eliminarMetaPeso(req.usuario.id)); }
+// Planes de comidas (SC-44): cada cambio responde la lista completa.
+const planesComida = require('../services/planComida.service');
+const cuerpoPlan = ({ nombre, tipo, nota, items }) => ({ nombre, tipo, nota, items });
+async function listarPlanesComida(req, res) { res.json(await planesComida.listar(req.usuario.id)); }
+async function crearPlanComida(req, res) {
+  res.status(201).json(await planesComida.crear(req.usuario.id, cuerpoPlan(req.body), { usar: req.body.usar === true }));
+}
+async function actualizarPlanComida(req, res) { res.json(await planesComida.actualizar(req.usuario.id, req.params.id, cuerpoPlan(req.body))); }
+async function eliminarPlanComida(req, res) { res.json(await planesComida.eliminar(req.usuario.id, req.params.id)); }
+async function usarPlanComida(req, res) { res.json(await planesComida.usar(req.usuario.id, req.params.id, req.body.enUso)); }
+async function registrarPlanComida(req, res) {
+  const { fecha, momento, items } = req.body;
+  res.status(201).json(await planesComida.registrar(req.usuario.id, req.params.id, { fecha, momento, items }));
+}
 async function registrarPeso(req, res) {
   const { pesoKg, fecha } = req.body;
   res.status(201).json(await planes.registrarPeso(req.usuario.id, { pesoKg, fecha }));
@@ -51,4 +65,5 @@ async function eliminarPeso(req, res) { res.json(await planes.eliminarPeso(req.u
 module.exports = {
   alimentos, delDia, semana, estadisticas, agregar, actualizar, eliminar, plan, guardarPlan, crearPersonalizado, actualizarPersonalizado,
   eliminarPersonalizado, guardarMetaPeso, eliminarMetaPeso, registrarPeso, eliminarPeso,
+  planesComida: listarPlanesComida, crearPlanComida, actualizarPlanComida, eliminarPlanComida, usarPlanComida, registrarPlanComida,
 };

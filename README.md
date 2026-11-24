@@ -334,7 +334,7 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 | PATCH | `/api/comidas/:id` | Bearer JWT (rol usuario) | Cambia los `gramos` (recalcula el aporte) o el `momento` de un registro propio; 404 si no existe o es de otra cuenta |
 | DELETE | `/api/comidas/:id` | Bearer JWT (rol usuario) | Quita un registro propio (204) |
 
-### Plan de alimentación y meta de peso (11-11-2026)
+### Plan de macronutrientes y meta de peso (11-11-2026; antes «Plan de alimentación»)
 
 La pestaña «Plan de alimentación» de Comidas reemplaza el reparto fijo. Hay dos formas de plan:
 
@@ -358,6 +358,15 @@ La migración `20261111120000_plan_alimentacion` crea `planes_personalizados`, `
 | DELETE | `/api/comidas/plan/personalizados/:id` | Bearer JWT (rol usuario) | Borra uno propio; si estaba en uso, desde hoy vuelve el plan de la meta |
 | PUT | `/api/comidas/plan/meta-peso` | Bearer JWT (rol usuario) | Guarda `pesoObjetivoKg` y `ritmoSemanalKg`; 400 con el motivo si no corresponde a la meta o al peso actual |
 | DELETE | `/api/comidas/plan/meta-peso` | Bearer JWT (rol usuario) | Quita la meta de peso |
+
+### Plan de comidas (SC-44, 24-11-2026)
+
+Comidas tiene ahora cinco pestañas: Resumen, Comidas, **Plan de comidas**, **Plan de macronutrientes** (la que antes se llamaba «Plan de alimentación») y Estadísticas.
+
+- **Plan de comidas:** qué comer cada día y en cada momento (desayuno, media mañana, almuerzo, merienda y cena), con alimentos del catálogo y sus gramos, más notas libres. Un plan es para un día (se repite) o para una semana de lunes a domingo; el editor calcula calorías y macros y copia un día a toda la semana. Hasta 10 planes y uno en uso.
+- **Hoy te toca…:** el Resumen muestra las comidas del plan en uso para el día; «Lo comí» abre un diálogo para desmarcar lo que no se comió y ajustar los gramos, y registra solo eso (origen «plan»).
+- Rutas `/api/comidas/planes-comida` (`GET`, `POST`, `PUT /:id`, `DELETE /:id`, `PUT /:id/uso` y `POST /:id/registrar`). Tablas `planes_comida` y `plan_comida_items` (migraciones `20261124140000_planes_comida` y `20261124141000_restricciones_planes`). Los planes se incluyen al descargar los datos y se borran al eliminar la cuenta.
+- `npm run test:mysql:planes-comida` lo comprueba con MySQL real (12 comprobaciones). Evidencia: [Plan de comidas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Plan_de_Comidas_2026-11-24.md).
 
 ### Historial de peso (SC-43, 24-11-2026)
 

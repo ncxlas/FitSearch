@@ -3,7 +3,7 @@
 jest.mock('../../src/models/prisma', () => {
   const modelo = () => ({ deleteMany: jest.fn(), findMany: jest.fn(), update: jest.fn(), findUnique: jest.fn() });
   const tx = {};
-  ['planAlimentacion', 'planPersonalizado', 'metaPeso', 'registroPeso', 'registroComida', 'registroAgua', 'conversacion', 'usoAsistente',
+  ['planAlimentacion', 'planPersonalizado', 'metaPeso', 'registroPeso', 'planComida', 'registroComida', 'registroAgua', 'conversacion', 'usoAsistente',
     'favorito', 'listaEspera', 'chatCita', 'tokenRecuperacion', 'informacionSalud', 'perfilUsuario', 'datosCuenta',
     'documentoProfesional', 'bloqueoAgenda', 'disponibilidad', 'profesional', 'reserva', 'usuario'].forEach((m) => { tx[m] = modelo(); });
   tx.$queryRaw = jest.fn();
@@ -58,7 +58,7 @@ describe('exportar', () => {
       ...cuenta(), rol: { nombre: 'usuario' }, fechaRegistro: new Date('2026-09-01T10:00:00Z'), datosCuenta: { usuarioId: 7, telefono: '+56 9 1234 5678' },
       perfil: { id: 1, usuarioId: 7, pesoKg: new Prisma.Decimal('70') }, informacionSalud: { condiciones: ['asma'] }, usoAsistente: null,
       favoritos: [], resenas: [], reservas: [], listaEspera: [], conversaciones: [], registrosAgua: [], planesAlimentacion: [],
-      planesPersonalizados: [], metasPeso: [], registrosPeso: [],
+      planesPersonalizados: [], metasPeso: [], registrosPeso: [], planesComida: [],
       registrosComida: [{ id: 5, gramos: 120, alimento: { nombre: 'Pollo' } }],
       chats: [{ profesional: { especialidad: 'Nutrición', usuario: { nombre: 'Matías Rojas' } },
         mensajes: [{ autorId: 7, texto: 'Hola', leido: true, fechaCreacion: new Date('2026-11-20T10:00:00Z') },
@@ -117,7 +117,7 @@ describe('eliminar', () => {
 
     expect(prisma.reserva.update.mock.calls.map(([a]) => a.where.id)).toEqual([1, 3]);
     expect(prisma.reserva.update).toHaveBeenCalledWith({ where: { id: 1 }, data: { estado: 'cancelada', canceladaPor: 'usuario', fechaCambio: RELOJ } });
-    for (const m of ['perfilUsuario', 'informacionSalud', 'datosCuenta', 'registroComida', 'registroAgua', 'conversacion', 'favorito', 'chatCita', 'metaPeso', 'registroPeso']) {
+    for (const m of ['perfilUsuario', 'informacionSalud', 'datosCuenta', 'registroComida', 'registroAgua', 'conversacion', 'favorito', 'chatCita', 'metaPeso', 'registroPeso', 'planComida']) {
       expect(prisma[m].deleteMany).toHaveBeenCalledWith({ where: { usuarioId: 7 } });
     }
     const { data } = prisma.usuario.update.mock.calls[0][0];

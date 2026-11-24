@@ -56,5 +56,20 @@ const peso = [
   body('fecha').optional().custom(esFecha).withMessage(mensajeFecha),
 ];
 const idPeso = param('id').isInt({ min: 1 }).withMessage('El pesaje indicado no es válido').toInt();
+// Planes de comidas (SC-44): aquí solo la forma; planComida.service valida cada línea y junta los errores.
+const planComida = [
+  body('nombre').isString().withMessage('Ponle un nombre al plan'),
+  body('tipo').isIn(['dia', 'semana']).withMessage('Elige si el plan es para un día o para una semana'),
+  body('nota').optional({ values: 'null' }).isString().withMessage('La nota debe ser texto'),
+  body('items').isArray({ min: 1, max: 200 }).withMessage('Agrega entre 1 y 200 líneas al plan'),
+  body('usar').optional().isBoolean({ strict: true }).withMessage('Indica si quieres usarlo'),
+];
+const idPlanComida = param('id').isInt({ min: 1 }).withMessage('El plan indicado no es válido').toInt();
+const usoPlanComida = body('enUso').isBoolean({ strict: true }).withMessage('Indica si el plan queda en uso');
+const registrarPlanComida = [
+  body('fecha').optional().custom(esFecha).withMessage(mensajeFecha),
+  momento,
+  body('items').isArray({ min: 1, max: 12 }).withMessage('Elige qué alimentos del plan comiste'),
+];
 
-module.exports = { peso, idPeso, plan, personalizado, idPersonalizado, metaPeso, id, fechaConsulta, fecha, busqueda, periodo, momento, momentoOpcional, alimentoId, gramos, gramosOpcional, algunCambio };
+module.exports = { planComida, idPlanComida, usoPlanComida, registrarPlanComida, peso, idPeso, plan, personalizado, idPersonalizado, metaPeso, id, fechaConsulta, fecha, busqueda, periodo, momento, momentoOpcional, alimentoId, gramos, gramosOpcional, algunCambio };

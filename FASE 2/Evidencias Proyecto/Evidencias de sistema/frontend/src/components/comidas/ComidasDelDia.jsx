@@ -52,6 +52,7 @@ function Registro({ registro, alCambiar }) {
         <p className="registro-comida__nombre">
           {registro.nombre}
           {registro.origen === 'asistente' && <span className="registro-comida__origen"><Icono nombre="chispa" tamano={13} /> Asistente</span>}
+          {registro.origen === 'plan' && <span className="registro-comida__origen"><Icono nombre="calendario" tamano={13} /> Del plan</span>}
         </p>
         <p className="registro-comida__detalle">
           <span>{formatearNumero(registro.gramos)} g</span><span>{formatearNumero(registro.calorias ?? 0)} kcal</span>{macros(registro)}
