@@ -42,12 +42,12 @@ describe('Diseño del profesional', () => {
     await screen.findByRole('heading', SALUDO);
 
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    const nombres = within(menu).getAllByRole('link').map((enlace) => enlace.textContent.replace('Próximamente', '').trim());
+    const nombres = within(menu).getAllByRole('link').filter((enlace) => enlace.classList.contains('menu-lateral__enlace')).map((enlace) => enlace.querySelector('.menu-lateral__texto').textContent);
     expect(nombres).toEqual(['Inicio', 'Agenda', 'Clientes', 'Perfil profesional', 'Mensajes', 'Reportes', 'Configuración']);
     expect(within(menu).getByRole('button', { name: 'Notificaciones' })).toBeInTheDocument();
     expect(within(menu).queryByText('¿Necesitas una recomendación?')).not.toBeInTheDocument();
     const barra = screen.getByRole('navigation', { name: 'Navegación inferior' });
-    expect(within(barra).getAllByRole('link').map((enlace) => enlace.textContent)).toEqual(['Inicio', 'Agenda', 'Clientes', 'Perfil']);
+    expect(within(barra).getAllByRole('link').map((enlace) => enlace.querySelector('.barra-inferior__texto').textContent)).toEqual(['Inicio', 'Agenda', 'Clientes', 'Perfil']);
     expect(screen.getByRole('link', { name: 'FitSearch, ir al inicio' })).toHaveAttribute('href', '/profesional/inicio');
   });
 

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import Icono from '../Icono.jsx';
+import AvatarNavegacion from './AvatarNavegacion.jsx';
 import { ESPACIOS } from './secciones.js';
 
 // Navegación inferior en celular y tableta (en escritorio la reemplaza el menú lateral). Desde el 18-11-2026 muestra solo
@@ -12,7 +13,7 @@ export default function BarraInferior({ espacio = 'usuario' }) {
         <NavLink key={seccion} to={secciones[seccion].ruta} className="barra-inferior__enlace">
           {({ isActive }) => (
             <>
-              <Icono nombre={icono} tamano={24} activo={isActive} />
+              {seccion === 'perfil' ? <AvatarNavegacion /> : <Icono nombre={icono} tamano={24} activo={isActive} />}
               <span className="barra-inferior__texto">{nombre}</span>
             </>
           )}

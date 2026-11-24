@@ -65,7 +65,7 @@
 .menu-usuario__rol { display: block; font-size: 0.7rem; font-weight: 600; line-height: 1.1; color: var(--color-primario); }
 .notificaciones__titulo { margin: 0; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--color-primario); }
 .notificaciones__vacio { display: flex; gap: 0.75rem; padding: 0.75rem; color: var(--color-texto-secundario); font-size: 0.85rem; }
-.notificaciones__vacio .icono { color: #9fb3c4; }
+.notificaciones__vacio .icono { color: light-dark(#9fb3c4, var(--color-texto-secundario)); }
 .notificaciones__vacio p { margin: 0; }
 .notificaciones__vacio strong { display: block; color: var(--color-texto); margin-bottom: 0.15rem; }
 /* Aviso de mensajes nuevos (FS-HU-31): contador sobre la campana y acceso directo en el panel. */
@@ -80,7 +80,7 @@
   font-size: 0.85rem; color: var(--color-texto-secundario); text-decoration: none;
 }
 .notificaciones__aviso strong { display: block; color: var(--color-texto); }
-.notificaciones__aviso-icono { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; color: var(--color-acento-oscuro); background: #fff1e6; }
+.notificaciones__aviso-icono { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; color: var(--color-acento-oscuro); background: light-dark(#fff1e6, var(--color-aviso-fondo)); }
 @media (hover: hover) and (pointer: fine) {
   .notificaciones__aviso:hover { background: var(--color-superficie-suave); }
 }
@@ -114,7 +114,7 @@
   .desplegable__opcion:hover { color: var(--color-primario); }
   /* El recuadro celeste que antes marcaba la sección actual ahora aparece al pasar el mouse por cualquier opción. */
   .menu-lateral__enlace:hover { background: var(--color-info-fondo); color: var(--color-primario); }
-  .tarjeta-recomendacion__boton:hover { background: #fff7f0; }
+  .tarjeta-recomendacion__boton:hover { background: light-dark(#fff7f0, var(--color-aviso-fondo)); }
 }
 /* La sección actual se reconoce por el ícono relleno (Icono activo) y el nombre en azul oscuro, sin recuadro de fondo
    (18-11-2026, pedido del PO; antes era una píldora celeste). */
@@ -131,12 +131,12 @@
     radial-gradient(circle at 90% 0%, rgb(247 147 30 / 30%), transparent 40%),
     linear-gradient(160deg, #0f5f96 0%, #0b4f80 55%, #06263f 100%);
 }
-.tarjeta-recomendacion__icono { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: rgb(255 255 255 / 16%); }
+.tarjeta-recomendacion__icono { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: light-dark(rgb(255 255 255 / 16%), var(--color-superficie)); }
 .tarjeta-recomendacion__titulo { margin: 0.25rem 0 0; font-size: 1.02rem; font-weight: 700; line-height: 1.3; }
 .tarjeta-recomendacion__texto { margin: 0; font-size: 0.8rem; color: rgb(255 255 255 / 82%); }
 .tarjeta-recomendacion__boton {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 2.6rem; margin-top: 0.35rem;
-  border-radius: 999px; background: #fff; color: var(--color-primario); font-size: 0.88rem; font-weight: 600; text-decoration: none;
+  border-radius: 999px; background: light-dark(#fff, var(--color-superficie)); color: var(--color-primario); font-size: 0.88rem; font-weight: 600; text-decoration: none;
 }
 .tarjeta-recomendacion .etiqueta-proximamente { position: absolute; top: 1rem; right: 1rem; }
 

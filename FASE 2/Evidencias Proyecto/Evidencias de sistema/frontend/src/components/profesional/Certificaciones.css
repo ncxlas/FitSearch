@@ -9,24 +9,24 @@
 }
 .certificaciones button {
   padding: 0.5rem 0.9rem; border: 1px solid var(--color-primario); border-radius: var(--radio-control);
-  font: inherit; font-weight: 600; color: #fff; background: var(--color-primario); cursor: pointer; overflow-wrap: anywhere;
+  font: inherit; font-weight: 600; color: #fff; background: var(--color-boton, var(--color-primario)); cursor: pointer; overflow-wrap: anywhere;
 }
 @media (hover: hover) and (pointer: fine) {
-  .certificaciones button:hover:not(:disabled) { background: var(--color-primario-oscuro); }
+  .certificaciones button:hover:not(:disabled) { background: var(--color-boton-oscuro, var(--color-primario-oscuro)); }
 }
 .certificaciones button:disabled { opacity: 0.55; cursor: default; }
 .certificaciones button:focus-visible, .certificaciones input:focus-visible { outline: 3px solid var(--color-foco); outline-offset: 2px; }
-.certificaciones__error { padding: 0.6rem 0.8rem; border-radius: var(--radio-control); color: #8a2525; background: #fdecec; }
+.certificaciones__error { padding: 0.6rem 0.8rem; border-radius: var(--radio-control); color: light-dark(#8a2525, var(--color-error)); background: light-dark(#fdecec, var(--color-aviso-fondo)); }
 .certificaciones__error ul { margin: 0.3rem 0 0; padding-left: 1.2rem; }
-.certificaciones__aviso { color: #14543c; }
+.certificaciones__aviso { color: light-dark(#14543c, var(--color-exito)); }
 
 .certificaciones__estado {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 1rem;
-  padding: 0.6rem 0.85rem; border-radius: var(--radio-control); background: #f1f7fb;
+  padding: 0.6rem 0.85rem; border-radius: var(--radio-control); background: light-dark(#f1f7fb, var(--color-info-fondo));
 }
-.certificaciones__estado--verificado { background: #e8f6ef; }
-.certificaciones__estado--rechazado { background: #fff5e9; }
-.certificaciones__correccion { padding: 0.6rem 0.85rem; border-left: 3px solid var(--color-acento); border-radius: var(--radio-control); color: #724515; background: #fff5e9; }
+.certificaciones__estado--verificado { background: light-dark(#e8f6ef, var(--color-exito-fondo)); }
+.certificaciones__estado--rechazado { background: light-dark(#fff5e9, var(--color-aviso-fondo)); }
+.certificaciones__correccion { padding: 0.6rem 0.85rem; border-left: 3px solid var(--color-acento); border-radius: var(--radio-control); color: light-dark(#724515, var(--color-acento-oscuro)); background: light-dark(#fff5e9, var(--color-aviso-fondo)); }
 
 /* Un documento por fila: a la izquierda qué es y si está adjunto; a la derecha, elegir el archivo y subirlo. */
 .certificaciones__documentos { display: grid; margin: 0; padding: 0; list-style: none; border: 1px solid var(--color-borde); border-radius: var(--radio-control); }
@@ -37,9 +37,9 @@
 .certificaciones__documento:first-child { border-top: 0; }
 .certificaciones__info { display: grid; gap: 0.2rem; min-width: 0; }
 .certificaciones__info h4 { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; color: var(--color-primario); }
-.certificaciones__etiqueta { padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; color: #426077; background: #edf4f8; }
+.certificaciones__etiqueta { padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; color: light-dark(#426077, var(--color-texto-secundario)); background: light-dark(#edf4f8, var(--color-info-fondo)); }
 .certificaciones__indicador { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: var(--color-texto-secundario); }
-.certificaciones__indicador--adjuntado { color: #197054; }
+.certificaciones__indicador--adjuntado { color: light-dark(#197054, var(--color-exito)); }
 /* El último archivo subido, para descargarlo. */
 .certificaciones__indicador .documentos-versiones, .certificaciones__indicador .documentos-versiones > div { display: contents; }
 .certificaciones__indicador ul { display: contents; }
@@ -87,7 +87,7 @@
 }
 .certificaciones__plegable .icono { margin-left: auto; transition: transform 160ms var(--curva-salida); }
 .certificaciones__plegable[aria-expanded='true'] .icono { transform: rotate(180deg); }
-.certificaciones__contador { padding: 0 0.45rem; border-radius: 999px; font-size: 0.75rem; color: #426077; background: #edf4f8; }
+.certificaciones__contador { padding: 0 0.45rem; border-radius: 999px; font-size: 0.75rem; color: light-dark(#426077, var(--color-texto-secundario)); background: light-dark(#edf4f8, var(--color-info-fondo)); }
 .certificaciones__historial-contenido { display: grid; gap: 0.5rem; padding-top: 0.35rem; }
 .certificaciones__historial-contenido > p { font-size: 0.82rem; color: var(--color-texto-secundario); }
 .certificaciones__historial-contenido > ul { margin: 0; padding: 0; list-style: none; }
@@ -99,7 +99,7 @@
 .certificaciones__evento time { font-size: 0.78rem; text-align: right; color: var(--color-texto-secundario); }
 .certificaciones__evento--exito > .icono { color: var(--color-exito); }
 .certificaciones__evento--aviso > .icono { color: var(--color-acento-oscuro); }
-.certificaciones .certificaciones__ver-historial { display: flex; align-items: center; justify-content: center; gap: 0.5rem; justify-self: end; color: var(--color-primario); background: white; }
+.certificaciones .certificaciones__ver-historial { display: flex; align-items: center; justify-content: center; gap: 0.5rem; justify-self: end; color: var(--color-primario); background: light-dark(white, var(--color-superficie)); }
 .certificaciones .certificaciones__ver-historial:hover:not(:disabled) { background: var(--color-info-fondo); }
 
 /* En un panel ancho, el documento y su carga van en la misma fila, y el RUT junto al teléfono. */

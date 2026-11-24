@@ -4,12 +4,16 @@ import Icono from '../Icono.jsx';
 import MarcaFitSearch from './MarcaFitSearch.jsx';
 import Notificaciones from './Notificaciones.jsx';
 import MenuMas from './MenuMas.jsx';
+import AvatarNavegacion from './AvatarNavegacion.jsx';
 import { ESPACIOS } from './secciones.js';
 import useBloquearScroll from './useBloquearScroll.js';
 import useMenuDesplegable from './useMenuDesplegable.js';
+import { inicioDe } from '../../services/navegacion.js';
+import { useSesion } from '../../context/SesionContext.jsx';
 
 export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', tema, onTema }) {
   const { secciones, menu } = ESPACIOS[espacio];
+  const { sesion } = useSesion();
   const { desplegado, propiedades } = useMenuDesplegable();
   const panel = useRef(null);
   const cerrar = useRef(null);
@@ -24,7 +28,17 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', te
         onCerrar(); return;
       }
       if (evento.key !== 'Tab') return;
-      const controles = [...panel.current.querySelectorAll('a[href], button:not(:disabled)')];
+      const candidatos = [...panel.current.querySelectorAll('a[href], button, input, select, textarea, [tabindex]')];
+      const controles = candidatos.filter((control) => {
+        if (control.disabled || control.tabIndex < 0 || control.closest('[hidden], [inert]')) return false;
+        for (let actual = control; actual && actual !== panel.current; actual = actual.parentElement) {
+          const estilo = getComputedStyle(actual);
+          if (estilo.display === 'none' || estilo.visibility === 'hidden') return false;
+        }
+        if (control.type !== 'radio' || !control.name) return true;
+        const grupo = candidatos.filter((otro) => otro.type === 'radio' && otro.name === control.name && !otro.disabled);
+        return control === (grupo.find((otro) => otro.checked) || grupo[0]);
+      });
       const primero = controles[0];
       const ultimo = controles.at(-1);
       const afuera = !panel.current.contains(document.activeElement);
@@ -40,10 +54,10 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', te
   const posicionAvisos = menu.indexOf('mensajes');
   return <>
     <div className={`menu-lateral__fondo${abierto ? ' menu-lateral__fondo--visible' : ''}`} onClick={onCerrar} aria-hidden="true" />
-    <div ref={panel} role={abierto ? 'dialog' : undefined} aria-modal={abierto ? true : undefined} aria-label={abierto ? 'Navegación' : undefined} className={`navegacion-lateral${abierto ? ' navegacion-lateral--abierta' : ''}`}>
-      <nav id="menu-principal" className={`menu-lateral${abierto ? ' menu-lateral--abierto' : ''}${desplegado ? ' menu-lateral--desplegado' : ''}`} aria-label="Menú principal" {...propiedades}>
+    <div ref={panel} role={abierto ? 'dialog' : undefined} aria-modal={abierto ? true : undefined} aria-label={abierto ? 'Navegación' : undefined} className={`navegacion-lateral${abierto ? ' navegacion-lateral--abierta' : ''}${desplegado ? ' navegacion-lateral--desplegada' : ''}`} {...propiedades}>
+      <nav id="menu-principal" className={`menu-lateral${abierto ? ' menu-lateral--abierto' : ''}${desplegado ? ' menu-lateral--desplegado' : ''}`} aria-label="Menú principal">
         <div className="menu-lateral__cabecera">
-          <MarcaFitSearch />
+          <Link to={inicioDe(sesion.usuario)} className="menu-lateral__marca" aria-label="FitSearch, ir al inicio desde el menú" onClick={onCerrar}><MarcaFitSearch /></Link>
           <button ref={cerrar} type="button" className="boton-icono" aria-label="Cerrar menú" onClick={onCerrar}><Icono nombre="cerrar" tamano={22} /></button>
         </div>
         <ul className="menu-lateral__lista">
@@ -51,7 +65,7 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', te
             const { ruta, nombre, icono, proximamente } = secciones[clave];
             return <li key={clave}>
               <NavLink to={ruta} className="menu-lateral__enlace" onClick={onCerrar}>
-                {({ isActive }) => <><Icono nombre={icono} tamano={21} activo={isActive} />
+                {({ isActive }) => <>{clave === 'perfil' ? <AvatarNavegacion /> : <Icono nombre={icono} tamano={21} activo={isActive} />}
                   <span className="menu-lateral__texto">{nombre}</span>
                   {proximamente && <span className="etiqueta-proximamente">Próximamente</span>}
                 </>}
@@ -59,11 +73,10 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', te
               {indice === posicionAvisos && <Notificaciones ubicacion="lateral" />}
             </li>;
           })}
-          {espacio === 'usuario' && <li><Link to="/asistente/nuevo?inicio=profesional" className="menu-lateral__enlace" onClick={onCerrar}><Icono nombre="chispa" tamano={21} /><span>Pedir recomendación</span></Link></li>}
           {posicionAvisos === -1 && <li><Notificaciones ubicacion="lateral" /></li>}
         </ul>
       </nav>
-      <MenuMas tema={tema} onTema={onTema} />
+      <MenuMas tema={tema} onTema={onTema} onNavegar={onCerrar} />
     </div>
   </>;
 }

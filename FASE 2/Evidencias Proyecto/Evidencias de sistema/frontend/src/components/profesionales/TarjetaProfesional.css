@@ -12,11 +12,11 @@
   position: relative; display: grid; place-items: center; height: 6.25rem;
   background:
     radial-gradient(circle at 85% 10%, rgb(247 147 30 / 25%), transparent 45%),
-    linear-gradient(140deg, #e6f0f8, #cfe2f0);
+    linear-gradient(140deg, light-dark(#e6f0f8, var(--color-info-fondo)), light-dark(#cfe2f0, var(--color-info-fondo)));
 }
 .tarjeta-profesional__iniciales {
-  display: grid; place-items: center; width: 4rem; height: 4rem; border-radius: 50%; border: 4px solid #fff;
-  color: #fff; font-size: 1.25rem; font-weight: 700; background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario-oscuro));
+  display: grid; place-items: center; width: 4rem; height: 4rem; border-radius: 50%; border: 4px solid light-dark(#fff, var(--color-borde));
+  color: #fff; font-size: 1.25rem; font-weight: 700; background: linear-gradient(135deg, var(--color-boton-claro, var(--color-primario-claro)), var(--color-boton-oscuro, var(--color-primario-oscuro)));
   box-shadow: 0 6px 16px rgb(11 79 128 / 25%);
 }
 .tarjeta-profesional .tarjeta-profesional__favorito { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 2; }
@@ -60,40 +60,40 @@
 .tarjeta-profesional__horarios { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
 .hora-rapida {
   position: relative; z-index: 2; display: grid; justify-items: center; gap: 0; min-height: 2.75rem; padding: 0.3rem 0.25rem;
-  border: 1px solid #a6dac1; border-radius: 10px; font-size: 0.7rem; line-height: 1.25; text-decoration: none; color: #145236; background: #e8f6ef;
+  border: 1px solid light-dark(#a6dac1, var(--color-borde)); border-radius: 10px; font-size: 0.7rem; line-height: 1.25; text-decoration: none; color: light-dark(#145236, var(--color-exito)); background: light-dark(#e8f6ef, var(--color-exito-fondo));
   transition: background-color 150ms ease, border-color 150ms ease, transform 160ms var(--curva-salida);
 }
 .hora-rapida strong { font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .hora-rapida:active { transform: scale(var(--escala-presion)); }
 @media (hover: hover) and (pointer: fine) {
-  .hora-rapida:hover { border-color: #1f7a52; background: #d6efe3; }
+  .hora-rapida:hover { border-color: #1f7a52; background: light-dark(#d6efe3, var(--color-exito-fondo)); }
 }
 .tarjeta-profesional__sin-horas { margin: 0; font-size: 0.8rem; font-style: italic; color: var(--color-texto-secundario); }
 .tarjeta-profesional__acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%; padding-top: 0.25rem; }
 .tarjeta-profesional__ver-mapa {
   position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 0.3rem; min-height: 2.25rem; padding: 0.3rem 0.8rem;
-  border: 1px solid #bfd6e5; border-radius: 999px; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--color-primario);
+  border: 1px solid light-dark(#bfd6e5, var(--color-borde)); border-radius: 999px; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--color-primario);
   background: var(--color-superficie); cursor: pointer;
 }
-.tarjeta-profesional__ver-mapa[aria-pressed='true'] { border-color: var(--color-primario); color: #fff; background: var(--color-primario); }
+.tarjeta-profesional__ver-mapa[aria-pressed='true'] { border-color: var(--color-primario); color: #fff; background: var(--color-boton, var(--color-primario)); }
 @media (hover: hover) and (pointer: fine) {
   .tarjeta-profesional__ver-mapa:hover { border-color: var(--color-primario); }
 }
 .tarjeta-profesional--fila .tarjeta-profesional__ver {
-  margin: 0 0 0 auto; padding: 0.4rem 0.95rem; border-radius: 999px; color: #fff; background: var(--color-primario);
+  margin: 0 0 0 auto; padding: 0.4rem 0.95rem; border-radius: 999px; color: #fff; background: var(--color-boton, var(--color-primario));
 }
 .tarjeta-profesional--resaltada { border-color: var(--color-primario-claro); }
 .tarjeta-profesional--seleccionada { border-color: var(--color-acento); box-shadow: 0 0 0 2px rgb(244 123 32 / 30%), 0 6px 18px rgb(11 79 128 / 7%); }
 .favorito { position: relative; display: inline-flex; }
 .boton-favorito {
   display: grid; place-items: center; width: 2.5rem; height: 2.5rem; padding: 0; border: 1px solid var(--color-borde); border-radius: 50%;
-  color: var(--color-primario); background: rgb(255 255 255 / 92%); cursor: pointer; transition: color 0.15s, transform 160ms var(--curva-salida);
+  color: var(--color-primario); background: light-dark(rgb(255 255 255 / 92%), var(--color-superficie)); cursor: pointer; transition: color 0.15s, transform 160ms var(--curva-salida);
 }
 @media (hover: hover) and (pointer: fine) {
-  .boton-favorito:hover { color: #e0435a; transform: scale(1.06); }
+  .boton-favorito:hover { color: light-dark(#e0435a, var(--color-error)); transform: scale(1.06); }
 }
 .boton-favorito:active:not(:disabled) { transform: scale(0.9); }
-.boton-favorito--activo { color: #e0435a; border-color: #f6c3cb; }
+.boton-favorito--activo { color: light-dark(#e0435a, var(--color-error)); border-color: light-dark(#f6c3cb, var(--color-borde)); }
 /* Al guardar un favorito el corazón late una vez (solo al marcarlo, no al cargar la lista ni al quitarlo). */
 .boton-favorito__latido { animation: latido 320ms var(--curva-salida); }
 @keyframes latido {

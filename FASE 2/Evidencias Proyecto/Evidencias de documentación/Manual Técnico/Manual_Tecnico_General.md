@@ -1,6 +1,6 @@
 # Manual Técnico General — FitSearch
 
-Versión 1.0 · corte 16-11-2026 · Sprint 5 · Duoc UC, sección 003D.
+Versión 1.1 · corte 23-11-2026 · Sprint 5 · Duoc UC, sección 003D.
 
 Documento de instalación local, arquitectura, configuración, operación y pruebas. Complementa [Manual_Tecnico_Despliegue_Docker.docx](Manual_Tecnico_Despliegue_Docker.docx), versión 1.1, que describe los contenedores. El modelo de datos y las decisiones de arquitectura se mantienen en el DAS 1.35. Estado: preparado para revisión del equipo y del PO; no acredita por sí mismo el cierre del sprint.
 
@@ -157,3 +157,15 @@ La evidencia de carga histórica registra 515 profesionales: búsqueda p95 máxi
 Referencias: DAS 1.35, Plan de Pruebas 1.0.3, Planilla de Casos, Registro de Defectos, manual Docker 1.1 y `Sprint 5/Cierre_Tecnico_Sprint5_2026-11-16.md`. Los valores de versión corresponden al corte indicado; revisar cambios posteriores antes de operar otra entrega.
 
 Faltan la revisión del manual por el equipo/PO, aceptación de historias y cambios, validación de horas y acuerdos de retrospectiva (criterios FS-HU-32 y tres aportes ya registrados), QA residual, revisión independiente y reemplazo manual en Drive. Este manual completa el contenido general que no cubría el documento de Docker; no atribuye ese trabajo a una persona por su asignación inicial en el backlog.
+
+
+## 10. Navegación, tema y perfil — revisión del 23-11-2026
+
+Las pantallas con sesión comparten una columna de navegación con la marca FitSearch, las secciones y «Más». En escritorio con mouse, la columna permanece contraída a los íconos y muestra solo el logo; al acercar el mouse o recorrerla con el teclado aparecen el nombre FitSearch y los nombres de las opciones sobre el contenido, sin desplazarlo. En pantallas táctiles grandes se mantiene completa. En móvil, el encabezado compacto muestra la marca centrada y el botón del menú; el panel lateral conserva el foco, se cierra con Escape y devuelve el foco al botón que lo abrió. La barra inferior mantiene los íconos con nombres accesibles. El acceso al perfil usa la foto de la cuenta, o sus iniciales si no tiene foto o no carga; la selección se distingue con un anillo. La campana queda marcada mientras su panel compacto está abierto. «Más» permite cambiar entre claro y oscuro y cerrar sesión; el tema se conserva en el navegador y se aplica también a los diálogos y avisos. La identidad del usuario y del profesional se presenta centrada. Se retiró el acceso duplicado «Pedir recomendación» del nav y el bloque de categorías del asistente, conservando sus tarjetas de acción, sugerencias y consejos. Si se abre una ruta protegida sin sesión, después de iniciar sesión se vuelve a ella con sus filtros.
+
+`NavegacionCompacta.css` define la estructura compartida; `TemaAplicacion.css` contiene la paleta oscura y la identidad centrada. Las hojas de cada vista conservan sus colores claros y usan `light-dark()` para sus equivalentes oscuros. El tema se propaga con `data-tema` en el documento mientras está montado el diseño con sesión, de forma que los portales a `document.body` reciban la misma paleta. La preferencia se guarda como `fitsearch_aspecto` y sigue funcionando en memoria cuando el almacenamiento no está disponible.
+
+`AvatarNavegacion` reutiliza la caché de foto de la cuenta; un guardado o eliminación desde el perfil actualiza el menú y la barra sin guardar imágenes en la sesión. La campana usa la versión activa de `Icono` mientras `aria-expanded` es verdadero. El foco del menú móvil incluye los radios habilitados de tema y recorre únicamente la opción tabulable de cada grupo.
+
+La evidencia de ejecución y las limitaciones de comprobación visual se registran en [Revision_Navegacion_Tema_2026-11-23.md](../Plan%20de%20Pruebas/Revision_Navegacion_Tema_2026-11-23.md). No se acredita cierre formal de historias ni del sprint con esta revisión.
+

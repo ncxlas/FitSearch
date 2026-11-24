@@ -43,7 +43,7 @@ export default function Notificaciones({ ubicacion = 'encabezado' }) {
           ? `Notificaciones: ${noLeidos} ${noLeidos === 1 ? 'verificación pendiente' : 'verificaciones pendientes'}`
           : `Notificaciones: ${noLeidos} ${noLeidos === 1 ? 'mensaje sin leer' : 'mensajes sin leer'}`}
         onClick={() => setAbierto(!abierto)}>
-        <Icono nombre="campana" tamano={22} />
+        <Icono nombre="campana" tamano={22} activo={abierto} />
         {lateral && <span className="menu-lateral__texto">Notificaciones</span>}
         {noLeidos > 0 && <span className="notificaciones__contador" aria-hidden="true">{noLeidos > 9 ? '9+' : noLeidos}</span>}
       </button>

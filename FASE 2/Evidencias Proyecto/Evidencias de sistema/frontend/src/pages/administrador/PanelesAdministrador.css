@@ -54,7 +54,7 @@
   display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; background: var(--color-info-fondo);
   color: var(--color-primario); font-size: 0.76rem; font-weight: 600; white-space: nowrap;
 }
-.admin-espera--atrasada { background: #fdf0e1; color: #8a4b00; }
+.admin-espera--atrasada { background: light-dark(#fdf0e1, var(--color-aviso-fondo)); color: light-dark(#8a4b00, var(--color-acento-oscuro)); }
 .admin-vacio { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; border-radius: 14px; background: var(--color-exito-fondo); color: var(--color-exito); }
 .admin-vacio p { display: grid; gap: 0.2rem; margin: 0; font-size: 0.88rem; color: var(--color-texto); }
 .admin-vacio strong { color: var(--color-exito); }
@@ -62,8 +62,8 @@
 .admin-estado { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem 1rem; margin: 0; }
 .admin-estado dt { font-size: 0.8rem; color: var(--color-texto-secundario); }
 .admin-estado dd { margin: 0.15rem 0 0; font-size: 1.2rem; font-weight: 600; color: var(--color-primario-oscuro); }
-.admin-medidor { height: 0.5rem; overflow: hidden; border-radius: 999px; background: #e3ebf2; }
-.admin-medidor span { display: block; height: 100%; border-radius: inherit; background: var(--color-exito); }
+.admin-medidor { height: 0.5rem; overflow: hidden; border-radius: 999px; background: light-dark(#e3ebf2, var(--color-info-fondo)); }
+.admin-medidor span { display: block; height: 100%; border-radius: inherit; background: var(--color-relleno-exito, var(--color-exito)); }
 
 .admin-cuentas { display: grid; gap: 0.15rem; margin: 0; padding: 0; list-style: none; }
 .admin-cuentas li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid var(--color-borde); }

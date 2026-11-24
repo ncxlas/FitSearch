@@ -37,7 +37,7 @@
 }
 .reserva__hora-boton { border: 1px solid var(--color-borde); background: var(--color-superficie); color: var(--color-primario); }
 .reserva__hora--elegida .reserva__hora-boton { border-color: var(--color-primario-claro); background: var(--color-info-fondo); }
-.reserva__confirmar { overflow: hidden; padding-inline: 0.5rem; white-space: nowrap; border: 0; color: #fff; background: var(--color-primario); }
+.reserva__confirmar { overflow: hidden; padding-inline: 0.5rem; white-space: nowrap; border: 0; color: #fff; background: var(--color-boton, var(--color-primario)); }
 @starting-style {
   .reserva__confirmar { opacity: 0; }
 }
@@ -46,7 +46,7 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .reserva__hora-boton:hover { border-color: var(--color-primario); }
-  .reserva__confirmar:hover { background: var(--color-primario-oscuro); }
+  .reserva__confirmar:hover { background: var(--color-boton-oscuro, var(--color-primario-oscuro)); }
 }
 
 /* ---------- Paso del mensaje (obligatorio, 10 a 500 caracteres) ---------- */
@@ -62,13 +62,13 @@
 .reserva-enviada { display: grid; justify-items: center; gap: 0.6rem; padding: 1.5rem 0.5rem 0.5rem; text-align: center; }
 .reserva-enviada__check {
   display: grid; place-items: center; width: 4.5rem; height: 4.5rem; border: 3px solid #1e9e5a; border-radius: 50%;
-  color: #1e9e5a; box-shadow: 0 0 0 8px #e3f5eb; animation: aparecer-escala 350ms var(--curva-salida) both;
+  color: light-dark(#1e9e5a, var(--color-exito)); box-shadow: 0 0 0 8px #e3f5eb; animation: aparecer-escala 350ms var(--curva-salida) both;
 }
 .reserva-enviada h3 { margin: 0.6rem 0 0; font-size: 1.5rem; color: var(--color-primario-oscuro); }
 .reserva-enviada__cuando { margin: 0; font-weight: 500; }
 .reserva-enviada__fecha { display: inline-block; }
 .reserva-enviada__fecha::first-letter { text-transform: uppercase; }
-.reserva-enviada__estado { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; color: var(--color-acento-oscuro); background: #fff1e6; }
+.reserva-enviada__estado { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; color: var(--color-acento-oscuro); background: light-dark(#fff1e6, var(--color-aviso-fondo)); }
 .reserva-enviada__texto { max-width: 28rem; margin: 0; font-size: 0.9rem; color: var(--color-texto-secundario); }
 .reserva-enviada__acciones { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin-top: 0.75rem; }
 .reserva-enviada__nota { margin: 0.25rem 0 0; font-size: 0.75rem; color: var(--color-texto-secundario); }
@@ -103,19 +103,19 @@
   border-radius: var(--radio-control); font-size: 0.9rem; font-weight: 500; text-align: center; color: var(--color-primario);
   background: var(--color-superficie); transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
-.opciones-reserva__opcion input:checked + span { color: #fff; background: var(--color-primario); border-color: var(--color-primario); }
+.opciones-reserva__opcion input:checked + span { color: #fff; background: var(--color-boton, var(--color-primario)); border-color: var(--color-primario); }
 .opciones-reserva__opcion input:focus-visible + span { outline: 3px solid var(--color-foco); outline-offset: 2px; }
 @media (hover: hover) and (pointer: fine) {
   .opciones-reserva__opcion input:not(:checked):hover + span { border-color: var(--color-primario); }
 }
-.reserva-enviada__estado--confirmada { color: #145236; background: #e8f6ef; }
+.reserva-enviada__estado--confirmada { color: light-dark(#145236, var(--color-exito)); background: light-dark(#e8f6ef, var(--color-exito-fondo)); }
 
 /* «Avísame si se libera una hora». */
 .lista-espera {
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0.75rem 0.9rem; padding: 1rem;
-  border: 1px dashed #b6d3e4; border-radius: 12px; background: var(--color-superficie-suave);
+  border: 1px dashed light-dark(#b6d3e4, var(--color-borde)); border-radius: 12px; background: var(--color-superficie-suave);
 }
-.lista-espera__icono { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; color: var(--color-acento-oscuro); background: #fff1e6; }
+.lista-espera__icono { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; color: var(--color-acento-oscuro); background: light-dark(#fff1e6, var(--color-aviso-fondo)); }
 .lista-espera__texto { display: grid; gap: 0.2rem; }
 .lista-espera__texto strong { color: var(--color-primario-oscuro); }
 .lista-espera__texto > span { font-size: 0.9rem; color: var(--color-texto-secundario); }

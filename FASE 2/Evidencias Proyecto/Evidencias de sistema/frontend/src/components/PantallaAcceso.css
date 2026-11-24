@@ -121,9 +121,9 @@
 .fortaleza { margin: -0.5rem 0 1rem; font-size: 0.8rem; }
 .fortaleza__barras { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.3rem; margin-bottom: 0.35rem; }
 .fortaleza__barras span { height: 0.3rem; border-radius: 999px; background: var(--color-borde); }
-.fortaleza--debil .fortaleza__barras span:nth-child(-n + 1) { background: var(--color-error); }
+.fortaleza--debil .fortaleza__barras span:nth-child(-n + 1) { background: var(--color-relleno-error, var(--color-error)); }
 .fortaleza--media .fortaleza__barras span:nth-child(-n + 2) { background: var(--color-acento); }
-.fortaleza--fuerte .fortaleza__barras span { background: var(--color-exito); }
+.fortaleza--fuerte .fortaleza__barras span { background: var(--color-relleno-exito, var(--color-exito)); }
 .fortaleza__nivel { margin: 0 0 0.25rem; font-weight: 500; color: var(--color-texto-secundario); }
 .fortaleza__requisitos { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; color: var(--color-texto-secundario); }
 .fortaleza__requisitos li { display: flex; align-items: center; gap: 0.35rem; }

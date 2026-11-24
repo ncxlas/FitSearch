@@ -85,6 +85,7 @@ const TRAZOS = {
 // el relleno no se entiende (buscar, mancuerna, comida, medico, grafico, ajustes, objetivos) conservan su dibujo con un
 // trazo más grueso (.icono--activo-linea). En ambos casos van en el azul vivo de .icono--activo.
 const ACTIVOS = {
+  campana: <><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15Z" fill="currentColor" /><path d="M10 20.5a2 2 0 0 0 4 0" /></>,
   // La puerta es un hueco del relleno (no un parche blanco), para que tome el color del fondo también al pasar el mouse.
   casa: <><path d="M5 10 12 4.5l7 5.5v10h-4.1v-5.7a1 1 0 0 0-1-1h-3.8a1 1 0 0 0-1 1V20H5Z" fill="currentColor" /><path d="M3 11 12 4l9 7" /></>,
   profesional: <><circle cx="10" cy="8" r="4" fill="currentColor" /><path d="M3 21c0-4 3.1-7 7-7 1.2 0 2.3.3 3.2.8C12.4 16.6 12.2 19 12.8 21Z" fill="currentColor" />

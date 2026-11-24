@@ -5,14 +5,14 @@
 }
 /* La barra crece con transform para no recalcular el diseño; el avance se lee en el texto de arriba. */
 .agua-hoy__barra > span {
-  display: block; height: 100%; border-radius: inherit; background: var(--color-primario-claro);
+  display: block; height: 100%; border-radius: inherit; background: var(--color-boton-claro, var(--color-primario-claro));
   transform-origin: left center; transition: transform 300ms var(--curva-salida);
 }
 .agua-hoy__meta { display: inline-flex; align-items: center; gap: 0.25rem; flex-basis: 100%; font-size: 0.78rem; font-weight: 600; color: var(--color-exito); }
 .agua-hoy__acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.85rem; flex-basis: 100%; }
 .agua-hoy__vaso {
   display: inline-flex; align-items: center; gap: 0.3rem; min-height: 2.25rem; padding: 0.3rem 0.85rem;
-  border: 1px solid #bfd6e5; border-radius: 999px; font: inherit; font-size: 0.82rem; font-weight: 600;
+  border: 1px solid light-dark(#bfd6e5, var(--color-borde)); border-radius: 999px; font: inherit; font-size: 0.82rem; font-weight: 600;
   color: var(--color-primario); background: var(--color-superficie); cursor: pointer;
   transition: transform 160ms var(--curva-salida), border-color 150ms ease;
 }

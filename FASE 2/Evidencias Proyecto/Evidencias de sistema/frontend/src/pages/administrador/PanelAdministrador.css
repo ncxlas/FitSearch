@@ -14,10 +14,10 @@
 .admin select, .admin input { border: 1px solid var(--color-borde); border-radius: var(--radio-control); background: var(--color-superficie); padding: 11px; color: var(--color-texto); min-width: 0; }
 .admin__nota { font-size: 14px; color: var(--color-texto-secundario); }
 .admin__tarjeta { background: var(--color-superficie); border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 22px; margin: 18px 0; box-shadow: var(--sombra-tarjeta); }
-.admin .admin__boton, .admin button[aria-pressed=true] { background: var(--color-primario); color: #fff; border-color: var(--color-primario); }
+.admin .admin__boton, .admin button[aria-pressed=true] { background: var(--color-boton, var(--color-primario)); color: #fff; border-color: var(--color-primario); }
 @media (hover: hover) and (pointer: fine) {
   .admin button:not(:disabled):not([aria-pressed=true]):not(.boton):hover { background: var(--color-superficie-suave); border-color: var(--color-primario); }
-  .admin .admin__boton:hover { background: var(--color-primario-oscuro); }
+  .admin .admin__boton:hover { background: var(--color-boton-oscuro, var(--color-primario-oscuro)); }
 }
 .admin__filtros { display: flex; gap: 8px; flex-wrap: wrap; margin: 24px 0; }
 .admin__estado-cuenta { display: grid; gap: 8px; width: 220px; max-width: 100%; margin-bottom: 20px; }
@@ -32,7 +32,7 @@
 .admin__fila > div { flex: 1; min-width: 140px; overflow-wrap: anywhere; }
 .admin__fila small { display: block; color: var(--color-texto-secundario); }
 .admin__indicadores { margin-top: 4px; font-variant-numeric: tabular-nums; }
-.admin__estado { display: inline-flex; align-items: center; gap: 6px; background: var(--color-advertencia-fondo, #fff3d8); color: #735517; border-radius: 20px; padding: 5px 10px; font-size: 14px; }
+.admin__estado { display: inline-flex; align-items: center; gap: 6px; background: var(--color-advertencia-fondo, light-dark(#fff3d8, var(--color-aviso-fondo))); color: light-dark(#735517, var(--color-acento-oscuro)); border-radius: 20px; padding: 5px 10px; font-size: 14px; }
 .admin__estado--verificado { background: var(--color-exito-fondo); color: var(--color-exito); }
 .admin__paginacion { display: flex; align-items: center; justify-content: center; gap: 15px; }
 .admin__tabla { overflow-x: auto; }

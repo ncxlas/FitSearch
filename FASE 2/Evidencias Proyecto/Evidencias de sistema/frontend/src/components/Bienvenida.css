@@ -16,11 +16,11 @@
   width: 2.5rem; height: 2.5rem; padding: 0; border: 0; border-radius: 50%;
   color: #fff; background: transparent; cursor: pointer;
 }
-.bienvenida__cerrar:hover { background: rgb(255 255 255 / 15%); }
+.bienvenida__cerrar:hover { background: light-dark(rgb(255 255 255 / 15%), var(--color-superficie)); }
 .bienvenida__logo {
   position: absolute; left: 50%; bottom: -2.2rem; transform: translateX(-50%);
   display: grid; place-items: center; width: 4.7rem; height: 4.7rem; border-radius: 50%;
-  background: #fff; box-shadow: 0 8px 20px rgb(6 44 66 / 23%);
+  background: light-dark(#fff, var(--color-superficie)); box-shadow: 0 8px 20px rgb(6 44 66 / 23%);
 }
 .bienvenida__logo img { width: 3.1rem; height: 3.1rem; object-fit: contain; }
 .bienvenida__contenido { padding: 3rem 1.5rem 1.5rem; }
@@ -28,7 +28,7 @@
 .bienvenida__contenido > p { margin: 0.6rem 0 1.25rem; }
 .bienvenida__cuenta {
   display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.5rem;
-  padding: 1rem; border-radius: 1rem; background: #edf5fc; text-align: left;
+  padding: 1rem; border-radius: 1rem; background: light-dark(#edf5fc, var(--color-info-fondo)); text-align: left;
 }
 .bienvenida__iniciales {
   flex: 0 0 3rem; display: grid; place-items: center; height: 3rem; border-radius: 50%;
