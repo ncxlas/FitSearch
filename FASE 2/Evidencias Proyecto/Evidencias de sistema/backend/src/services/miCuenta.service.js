@@ -69,6 +69,8 @@ async function exportar(usuarioId) {
       metasPeso: { orderBy: { desde: 'asc' } },
       registrosPeso: { orderBy: { fecha: 'asc' } },
       planesComida: { include: { items: { orderBy: [{ dia: 'asc' }, { orden: 'asc' }] } }, orderBy: { id: 'asc' } },
+      permisosCompartir: { include: { profesional: PROFESIONAL } },
+      accesosCompartidos: { include: { profesional: PROFESIONAL }, orderBy: { fecha: 'asc' } },
       profesional: {
         include: {
           documentos: { select: { tipo: true, nombre: true, mime: true, tamano: true, fechaCreacion: true } },
@@ -100,6 +102,8 @@ async function exportar(usuarioId) {
     metasDePeso: u.metasPeso,
     pesajes: u.registrosPeso,
     planesDeComidas: u.planesComida,
+    progresoCompartido: u.permisosCompartir.map(conProfesional),
+    registroDeAccesos: u.accesosCompartidos.map(conProfesional),
     asistente: {
       usoDeHoy: u.usoAsistente,
       conversaciones: u.conversaciones.map((c) => ({
@@ -185,6 +189,8 @@ async function eliminar(usuarioId, datos, reloj = new Date()) {
     await tx.metaPeso.deleteMany(donde);
     await tx.registroPeso.deleteMany(donde);
     await tx.planComida.deleteMany(donde);
+    await tx.permisoCompartir.deleteMany(donde);
+    await tx.accesoCompartido.deleteMany(donde);
     await tx.registroComida.deleteMany(donde);
     await tx.registroAgua.deleteMany(donde);
     await tx.conversacion.deleteMany(donde);
@@ -209,6 +215,7 @@ async function eliminar(usuarioId, datos, reloj = new Date()) {
       await tx.listaEspera.deleteMany(dondeP);
       await tx.favorito.deleteMany(dondeP);
       await tx.chatCita.deleteMany(dondeP);
+      await tx.permisoCompartir.deleteMany(dondeP);
       await tx.disponibilidad.deleteMany({ where: { profesionalId, reservas: { none: {} } } });
       await tx.profesional.update({
         where: { id: profesionalId },

@@ -437,6 +437,16 @@ La API limita los intentos en las rutas de acceso y responde `429` con la cabece
 
 Los contadores viven en la memoria de la API (un solo proceso) y empiezan de cero si se reinicia; las peticiones mal formadas no cuentan. Con Docker, nginx reenvía `/api` y `TRUST_PROXY=1` permite leer la IP real del cliente; en un servidor público conviene publicar solo el puerto web, porque si la API queda expuesta directo un cliente podría inventar su IP en `X-Forwarded-For` (el límite por correo sigue funcionando igual). Diseño en el DAS (QS8 y D41) y evidencia en [Límite de intentos y CI](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Limite_Intentos_y_CI_2026-11-24.md).
 
+## Compartir el progreso con un profesional (SC-45, 24-11-2026)
+
+La persona decide qué ve cada profesional con el que tiene un chat (es decir, con quien tuvo al menos una cita). El profesional solo mira; no cambia nada.
+
+- **Desde el chat:** el botón «Compartir mi progreso» abre un diálogo con cinco categorías: perfil y objetivos, información de salud (dato sensible, con su aviso), comidas y agua de los últimos 7 días, peso (pesajes de 90 días y meta) y planes (plan de macronutrientes y plan de comidas en uso). Se puede cambiar o dejar de compartir cuando se quiera.
+- **Mi perfil › Privacidad y datos:** la lista de profesionales con acceso y el **registro de accesos** (cuándo se dio, cambió o quitó cada permiso y cuándo el profesional miró, como máximo una vez cada 30 minutos).
+- **Espacio del profesional:** «Progreso compartido» en la ficha del cliente, solo con las categorías permitidas; si no comparte, explica cómo hacerlo.
+- Rutas `GET/PUT/DELETE /api/compartir/:profesionalId` (persona) y `GET /api/profesional/progreso` y `/api/profesional/progreso/:usuarioId` (profesional). Tablas `permisos_compartir` y `accesos_compartidos` (migración `20261124150000_compartir_progreso`). Eliminar la cuenta borra los permisos y el registro; la descarga de datos los incluye.
+- `npm run test:mysql:compartir` lo comprueba con MySQL real (20 comprobaciones). Evidencia: [Compartir progreso](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Compartir_Progreso_2026-11-24.md).
+
 ## Mi cuenta: descargar mis datos y eliminar la cuenta (SC-42, 24-11-2026)
 
 «Privacidad y datos» está en **Mi perfil** (usuario) y en **Configuración** (profesional), por la Ley 21.719 de datos personales, vigente desde el 1 de diciembre de 2026.

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import ProgresoCliente from '../../components/compartir/ProgresoCliente.jsx';
 import { Link, useParams } from 'react-router-dom';
 import EstadoVacio from '../../components/EstadoVacio.jsx';
 import ErrorCarga from '../../components/profesional/ErrorCarga.jsx';
@@ -116,6 +117,8 @@ export function HistorialCliente() {
         <li><strong>{cliente.estados.confirmadas + cliente.estados.pendientes}</strong> Próximas</li>
         <li><strong>{cliente.estados.canceladas}</strong> Canceladas</li>
       </ul>
+      {/* SC-45: lo que el cliente decidió compartir (solo lectura). */}
+      <ProgresoCliente usuarioId={Number(id)} nombre={cliente.nombre} />
       <h2 className="historial__titulo">Historial de citas</h2>
       <ol className="historial__lista">
         {citas.map((cita) => {

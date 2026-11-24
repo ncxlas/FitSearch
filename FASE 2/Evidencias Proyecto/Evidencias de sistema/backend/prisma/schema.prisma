@@ -60,6 +60,8 @@ model Usuario {
   metasPeso            MetaPeso[]
   registrosPeso        RegistroPeso[]
   planesComida         PlanComida[]
+  permisosCompartir    PermisoCompartir[]
+  accesosCompartidos   AccesoCompartido[]
 
   @@index([rolId])
   @@map("usuarios")
@@ -122,6 +124,8 @@ model Profesional {
   listaEspera           ListaEspera[]
   chats                 ChatCita[]
   planesComida          PlanComida[]
+  permisosCompartir     PermisoCompartir[]
+  accesosCompartidos    AccesoCompartido[]
 
   @@index([especialidad])
   @@index([comuna])
@@ -381,6 +385,44 @@ model PlanComidaItem {
   @@index([planId, dia])
   @@index([alimentoId])
   @@map("plan_comida_items")
+}
+
+// Progreso compartido con un profesional (SC-45, 24-11-2026): qué categorías ve cada profesional con el que la persona
+// tiene un chat. El profesional solo mira; la persona lo cambia o lo quita cuando quiere (sin categorías, la fila se borra).
+model PermisoCompartir {
+  id                 Int         @id @default(autoincrement())
+  usuarioId          Int         @map("usuario_id")
+  profesionalId      Int         @map("profesional_id")
+  perfil             Boolean     @default(false)
+  salud              Boolean     @default(false)
+  comidas            Boolean     @default(false)
+  peso               Boolean     @default(false)
+  planes             Boolean     @default(false)
+  fechaOtorgado      DateTime    @default(now()) @map("fecha_otorgado") @db.DateTime(0)
+  fechaActualizacion DateTime    @default(now()) @updatedAt @map("fecha_actualizacion") @db.DateTime(0)
+  usuario            Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  profesional        Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, profesionalId])
+  @@index([profesionalId])
+  @@map("permisos_compartir")
+}
+
+// Registro de accesos (SC-45): cada permiso dado, cambiado o quitado y cada vez que el profesional mira el progreso
+// (como máximo una consulta registrada cada 30 minutos). Solo la persona dueña de los datos lo ve.
+model AccesoCompartido {
+  id            Int         @id @default(autoincrement())
+  usuarioId     Int         @map("usuario_id")
+  profesionalId Int         @map("profesional_id")
+  accion        String      @db.VarChar(20)
+  categorias    String?     @db.VarChar(100)
+  fecha         DateTime    @default(now()) @db.DateTime(0)
+  usuario       Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  profesional   Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, fecha])
+  @@index([profesionalId, usuarioId, fecha])
+  @@map("accesos_compartidos")
 }
 
 // Agua que registra cada usuario por día (FS-HU-33). Cada suma es una fila, para poder deshacer la última; el total del

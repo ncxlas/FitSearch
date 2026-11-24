@@ -6,6 +6,7 @@ import Dialogo from '../Dialogo.jsx';
 import Icono from '../Icono.jsx';
 import { useSesion } from '../../context/SesionContext.jsx';
 import { descargarMisDatos, eliminarCuenta } from '../../services/miCuenta.js';
+import { AccesosCompartidos } from '../compartir/CompartirProgreso.jsx';
 import './PrivacidadDatos.css';
 
 const BORRA = {
@@ -50,6 +51,9 @@ export default function PrivacidadDatos({ cuenta, rol = 'usuario' }) {
           {descarga.ocupado ? 'Preparando…' : <><Icono nombre="descargar" tamano={18} /> Descargar</>}
         </button>
       </section>
+
+      {/* SC-45: con quién comparte su progreso y el registro de accesos. */}
+      {rol === 'usuario' && <AccesosCompartidos />}
 
       <section className="privacidad__bloque privacidad__bloque--peligro" aria-labelledby="privacidad-eliminar">
         <span className="privacidad__icono" aria-hidden="true"><Icono nombre="basura" tamano={20} /></span>
