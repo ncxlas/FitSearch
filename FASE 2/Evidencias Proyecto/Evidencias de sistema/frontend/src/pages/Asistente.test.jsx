@@ -88,14 +88,13 @@ describe('bienvenida e historial', () => {
     expect(screen.queryByText(/131/)).toBeNull();
   });
 
-  test('una tarjeta de acción o una categoría completan el comienzo de la pregunta en el campo', async () => {
+  test('una tarjeta de acción completa la pregunta y ya no aparecen las categorías', async () => {
     simularAsistente();
     renderizarApp('/asistente');
     await userEvent.click(await screen.findByRole('button', { name: 'Planificar tu alimentación y entrenamiento' }));
     expect(campo()).toHaveValue('Ayúdame a organizar mi alimentación y entrenamiento para ');
     await waitFor(() => expect(campo()).toHaveFocus());
-    await userEvent.click(screen.getByRole('button', { name: 'Suplementos' }));
-    expect(campo()).toHaveValue('Tengo una duda sobre suplementos: ');
+    expect(screen.queryByRole('heading', { name: 'Categorías' })).not.toBeInTheDocument();
   });
 });
 
@@ -176,14 +175,11 @@ describe('recomendación de profesional (FS-HU-08)', () => {
     expect(within(mensajes()).getAllByText(/Te recomendamos consultar con/)).toHaveLength(1);
   });
 
-  test('el acceso para pedir recomendación abre un chat nuevo con la pregunta, aunque el asistente ya esté abierto', async () => {
+  test('el menú ya no duplica el acceso al asistente con Pedir recomendación', async () => {
     simularAsistente();
     renderizarApp('/asistente');
-    const banner = await screen.findByRole('link', { name: 'Pedir recomendación' });
-    expect(banner).toHaveAttribute('href', '/asistente/nuevo?inicio=profesional');
-    await userEvent.click(banner);
-    await waitFor(() => expect(campo()).toHaveValue('¿Qué tipo de profesional me conviene consultar para '));
-    await waitFor(() => expect(campo()).toHaveFocus());
+    expect(screen.queryByRole('link', { name: 'Pedir recomendación' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Asistente IA' })).toHaveAttribute('href', '/asistente');
   });
 
   test('con ?inicio=profesional el campo trae la pregunta y el cursor al final para terminarla', async () => {

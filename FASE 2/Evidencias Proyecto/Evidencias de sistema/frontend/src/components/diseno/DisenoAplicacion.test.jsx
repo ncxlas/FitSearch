@@ -46,16 +46,16 @@ describe('Con sesión', () => {
     expect(await screen.findByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Mi perfil' })).toHaveAttribute('aria-current', 'page');
     // La sección actual se reconoce por el ícono relleno (18-11-2026); las demás quedan con el ícono de línea.
-    expect(within(menu).getByRole('link', { name: 'Mi perfil' }).querySelector('.icono--activo')).not.toBeNull();
+    expect(within(menu).getByRole('link', { name: 'Mi perfil' }).querySelector('.avatar-navegacion')).not.toBeNull();
     expect(within(menu).getByRole('link', { name: 'Inicio' }).querySelector('.icono--activo')).toBeNull();
 
     await userEvent.click(within(menu).getByRole('link', { name: 'Inicio' }));
     const barra = screen.getByRole('navigation', { name: 'Navegación inferior' });
-    expect(within(barra).getAllByRole('link').map((enlace) => enlace.textContent)).toEqual(['Inicio', 'Profesionales', 'Chat IA', 'Comidas', 'Perfil']);
+    expect(within(barra).getAllByRole('link').map((enlace) => enlace.querySelector('.barra-inferior__texto').textContent)).toEqual(['Inicio', 'Profesionales', 'Chat IA', 'Comidas', 'Perfil']);
     await userEvent.click(within(barra).getByRole('link', { name: 'Perfil' }));
     expect(await screen.findByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
     // Barra inferior solo con íconos (18-11-2026): el nombre queda para lectores de pantalla y la sección actual va rellena.
-    expect(within(barra).getByRole('link', { name: 'Perfil' }).querySelector('.icono--activo')).not.toBeNull();
+    expect(within(barra).getByRole('link', { name: 'Perfil' }).querySelector('.avatar-navegacion')).not.toBeNull();
     expect(within(barra).getByRole('link', { name: 'Chat IA' }).querySelector('.icono--activo')).toBeNull();
     expect(within(barra).getByText('Perfil')).toHaveClass('barra-inferior__texto');
   });
@@ -63,8 +63,8 @@ describe('Con sesión', () => {
   test('el menú conserva todas las secciones del usuario con sus títulos', () => {
     renderizarApp('/inicio');
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    expect(within(menu).getAllByRole('link').map((enlace) => enlace.textContent.trim())).toEqual([
-      'Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mi perfil', 'Favoritos', 'Mis citas', 'Mensajes', 'Pedir recomendación',
+    expect(within(menu).getAllByRole('link').filter((enlace) => enlace.classList.contains('menu-lateral__enlace')).map((enlace) => enlace.querySelector('.menu-lateral__texto').textContent)).toEqual([
+      'Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Favoritos', 'Mis citas', 'Mensajes', 'Mi perfil',
     ]);
     expect(within(menu).getByRole('button', { name: 'Notificaciones' })).toBeInTheDocument();
   });
@@ -103,7 +103,7 @@ describe('Con sesión', () => {
     const salir = within(screen.getByRole('navigation', { name: 'Cuenta' })).getByRole('button', { name: 'Más opciones' });
     salir.focus();
     await userEvent.tab();
-    expect(within(screen.getByRole('navigation', { name: 'Menú principal' })).getByRole('button', { name: 'Cerrar menú' })).toHaveFocus();
+    expect(screen.getByRole('link', { name: 'FitSearch, ir al inicio desde el menú' })).toHaveFocus();
     await userEvent.click(screen.getByRole('button', { name: 'Notificaciones' }));
     await userEvent.keyboard('{Escape}');
     expect(abrir).toHaveAttribute('aria-expanded', 'true');
@@ -119,9 +119,11 @@ describe('Con sesión', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Cambiar aspecto' }));
     await userEvent.click(screen.getByRole('radio', { name: 'Oscuro' }));
     expect(document.querySelector('.app')).toHaveClass('app--oscuro');
+    expect(document.documentElement).toHaveAttribute('data-tema', 'oscuro');
     expect(localStorage.getItem('fitsearch_aspecto')).toBe('oscuro');
     await userEvent.click(screen.getByRole('radio', { name: 'Claro' }));
     expect(document.querySelector('.app')).not.toHaveClass('app--oscuro');
+    expect(document.documentElement).toHaveAttribute('data-tema', 'claro');
     expect(localStorage.getItem('fitsearch_aspecto')).toBe('claro');
   });
 

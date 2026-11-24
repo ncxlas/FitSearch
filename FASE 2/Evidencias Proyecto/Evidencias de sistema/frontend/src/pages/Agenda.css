@@ -1,6 +1,6 @@
 .agenda {
   margin: 1.4rem 0;
-  color: #0b4f80;
+  color: light-dark(#0b4f80, var(--color-primario));
 }
 .agenda__cabecera,
 .agenda__acciones,
@@ -22,11 +22,11 @@
 /* El filtro elegido se distingue: antes «Próximas» y «Todas e historial» se veían iguales. */
 .agenda__filtros .boton[aria-pressed='true'] {
   color: #fff;
-  background: var(--color-primario);
+  background: var(--color-boton, var(--color-primario));
   border-color: var(--color-primario);
 }
 @media (hover: hover) and (pointer: fine) {
-  .agenda__filtros .boton[aria-pressed='true']:hover { background: var(--color-primario-oscuro); }
+  .agenda__filtros .boton[aria-pressed='true']:hover { background: var(--color-boton-oscuro, var(--color-primario-oscuro)); }
 }
 /* Buscador y filtros por estado y fecha (15-11-2026). Los campos son de 1rem para que el iPhone no acerque la página. */
 .agenda__buscador {
@@ -69,8 +69,8 @@
 .agenda__tarjeta,
 .agenda__formulario {
   padding: 1.3rem;
-  background: #fff;
-  border: 1px solid #d7e8f1;
+  background: light-dark(#fff, var(--color-superficie));
+  border: 1px solid light-dark(#d7e8f1, var(--color-borde));
   border-radius: 16px;
   box-shadow: 0 6px 20px #0b4f8009;
 }
@@ -152,7 +152,7 @@
 }
 .publicar__duraciones .chip[aria-pressed='true'] {
   color: #fff;
-  background: var(--color-primario);
+  background: var(--color-boton, var(--color-primario));
   border-color: var(--color-primario);
 }
 .publicar__duraciones .chip:disabled {
@@ -166,35 +166,35 @@
   }
   .publicar__horas {
     padding-left: 1.75rem;
-    border-left: 1px solid #d7e8f1;
+    border-left: 1px solid light-dark(#d7e8f1, var(--color-borde));
   }
 }
 .agenda__estado {
   padding: 0.3rem 0.7rem;
   border-radius: 99px;
-  background: #e9f4fb;
+  background: light-dark(#e9f4fb, var(--color-info-fondo));
   font-size: 0.85rem;
 }
 /* Mismos colores que la agenda del profesional (15-11-2026). */
 .agenda__estado--pendiente {
-  background: #fff4ea;
-  color: #833705;
+  background: light-dark(#fff4ea, var(--color-aviso-fondo));
+  color: light-dark(#833705, var(--color-acento-oscuro));
 }
 .agenda__estado--confirmada {
-  background: #def5ec;
-  color: #076342;
+  background: light-dark(#def5ec, var(--color-exito-fondo));
+  color: light-dark(#076342, var(--color-exito));
 }
 .agenda__estado--realizada {
   background: #2d7a55;
   color: #fff;
 }
 .agenda__estado--noRealizada {
-  background: #fdecec;
-  color: #8f2424;
+  background: light-dark(#fdecec, var(--color-aviso-fondo));
+  color: light-dark(#8f2424, var(--color-error));
 }
 .agenda__estado--cancelada {
-  background: #fce5e5;
-  color: #962b2b;
+  background: light-dark(#fce5e5, var(--color-aviso-fondo));
+  color: light-dark(#962b2b, var(--color-error));
 }
 .agenda__mensaje {
   white-space: pre-wrap;
@@ -222,16 +222,16 @@
 }
 .agenda__error {
   padding: 1rem;
-  background: #fff0f0;
-  color: #a02525;
+  background: light-dark(#fff0f0, var(--color-aviso-fondo));
+  color: light-dark(#a02525, var(--color-error));
   border-radius: 10px;
 }
 /* La pregunta de confirmación ocupa su propia fila dentro de la tarjeta, debajo de los datos de la cita. */
 .agenda__confirmacion {
   flex-basis: 100%;
   padding: 1rem;
-  background: #f3f8fc;
-  border: 1px solid #bfd6e5;
+  background: light-dark(#f3f8fc, var(--color-info-fondo));
+  border: 1px solid light-dark(#bfd6e5, var(--color-borde));
   border-radius: 12px;
   /* Aparece en su lugar con un fundido corto (200 ms); al responder desaparece sin esperar. */
   transition:
@@ -253,7 +253,7 @@
 }
 .agenda__vacio {
   padding: 1rem;
-  border: 1px dashed #b6d3e4;
+  border: 1px dashed light-dark(#b6d3e4, var(--color-borde));
   border-radius: 12px;
 }
 @media (max-width: 600px) {

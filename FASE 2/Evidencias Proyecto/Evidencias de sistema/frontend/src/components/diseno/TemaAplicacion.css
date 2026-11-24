@@ -1,0 +1,61 @@
+/* El tema también se hereda en los diálogos y avisos montados en document.body. */
+:root { color-scheme: light; }
+:root[data-tema="oscuro"], .app.app--oscuro {
+  color-scheme: dark;
+  --color-texto: #e5edf5;
+  --color-texto-secundario: #b1c0cf;
+  --color-primario: #99c9ee;
+  --color-primario-oscuro: #d3e8f8;
+  --color-primario-claro: #81bce9;
+  --color-primario-vivo: #75baff;
+  --color-boton: #155b8c;
+  --color-boton-oscuro: #104a73;
+  --color-boton-claro: #1a689e;
+  --color-relleno-exito: #246b4d;
+  --color-relleno-error: #a3332b;
+  --color-relleno-acento: #a63f08;
+  --color-superficie: #1b2633;
+  --color-superficie-suave: #243343;
+  --color-fondo: #111b26;
+  --color-borde: #3d5062;
+  --color-info-fondo: #213c52;
+  --color-aviso-fondo: #3d2c20;
+  --color-error: #ffb4aa;
+  --color-error-fondo: #482725;
+  --color-exito: #91dcba;
+  --color-exito-fondo: #203c32;
+  --color-acento-oscuro: #ffc08d;
+  --color-foco: #87c7ff;
+  --cristal-fondo: #1b2633;
+  --cristal-borde: #3d5062;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+}
+.app.app--oscuro .campo__control::placeholder { color: #a5b5c4; }
+.app.app--oscuro .perfil-editor { color: var(--color-texto); }
+.app.app--oscuro .perfil-editor .campo__control { border-color: var(--color-borde); }
+.app.app--oscuro .perfil-editor .campo__control:focus-visible { outline-color: var(--color-foco); }
+.app.app--oscuro .perfil-editor__foto > span { color: #d3e8f8; }
+.app.app--oscuro .perfil-editor__foto { background: var(--color-info-fondo); }
+
+/* La misma identidad centrada en los perfiles de usuario y profesional. */
+.app .perfil-editor__identidad { flex-direction: column; align-items: center; justify-content: center; gap: .8rem; padding: 1.5rem; text-align: center; }
+.app .perfil-editor__foto-bloque { flex: none; }
+.app .perfil-editor__persona { flex: none; width: 100%; }
+.app .perfil-editor__identidad h2 { margin: 0 0 .3rem; }
+.app .perfil-editor__meta { flex: none; max-width: none; width: 100%; justify-content: center; gap: .5rem .85rem; }
+.app .perfil-editor__identidad-acciones { width: 100%; margin: 0; display: flex; justify-content: center; }
+.app .perfil-prof__botones { justify-content: center; }
+.app .perfil-prof__copia { text-align: center; }
+.app .perfil-editor__foto-bloque .boton-texto { min-height: 2rem; }
+.app .perfil-editor__foto-ayuda { max-width: 10rem; font-size: .7rem; }
+.app .perfil-editor__panel { min-width: 0; }
+.app .perfil-editor__navegacion { scroll-padding-inline: .5rem; }
+@media (max-width: 42rem) {
+  .app .perfil-editor__identidad { padding: 1.25rem 1rem; }
+  .app .perfil-editor__foto { width: 4.75rem; height: 4.75rem; }
+  .app .perfil-editor__contenido { padding: 1rem; }
+  .app .perfil-editor__panel { padding: 0; }
+  .app .perfil-editor__acciones { flex-wrap: wrap; }
+  .app .perfil-editor__acciones .boton { flex-basis: 100%; }
+}

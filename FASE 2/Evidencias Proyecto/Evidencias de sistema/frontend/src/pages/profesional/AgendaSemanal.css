@@ -13,7 +13,7 @@
 .agenda-semanal__cabecera h1 { margin: 0; font-size: 1.75rem; letter-spacing: -0.02em; }
 
 /* Pestañas Calendario y Reservas (15-11-2026), junto al título para no restarle alto al calendario. */
-.agenda-semanal__pestanas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.25rem; width: 100%; padding: 0.25rem; border-radius: 12px; background: #e3ebf2; }
+.agenda-semanal__pestanas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.25rem; width: 100%; padding: 0.25rem; border-radius: 12px; background: light-dark(#e3ebf2, var(--color-info-fondo)); }
 .agenda-semanal__pestana {
   display: inline-flex;
   align-items: center;
@@ -35,7 +35,7 @@
 .agenda-semanal__pestana[aria-selected='true'] { color: var(--color-primario-oscuro); background: var(--color-superficie); box-shadow: 0 1px 3px rgb(6 38 63 / 14%); }
 .agenda-semanal__pestana:focus-visible { outline: 3px solid var(--color-foco); outline-offset: 1px; }
 @media (hover: hover) and (pointer: fine) {
-  .agenda-semanal__pestana:not([aria-selected='true']):hover { color: var(--color-primario-oscuro); background: rgb(255 255 255 / 55%); }
+  .agenda-semanal__pestana:not([aria-selected='true']):hover { color: var(--color-primario-oscuro); background: light-dark(rgb(255 255 255 / 55%), var(--color-superficie)); }
 }
 .agenda-semanal__contador {
   display: inline-grid;
@@ -87,12 +87,12 @@
 }
 .agenda-semanal__leyenda li { display: inline-flex; align-items: center; gap: 0.4rem; }
 .leyenda__muestra { width: 0.85rem; height: 0.85rem; border: 1px solid; border-radius: 4px; }
-.leyenda__muestra--libre { background: #f3f8fc; border-color: #c4d9e8; }
-.leyenda__muestra--pendiente { background: #fff4ea; border-color: #f0c39d; }
-.leyenda__muestra--confirmada { background: #e8f6ef; border-color: #a6dac1; }
+.leyenda__muestra--libre { background: light-dark(#f3f8fc, var(--color-info-fondo)); border-color: light-dark(#c4d9e8, var(--color-borde)); }
+.leyenda__muestra--pendiente { background: light-dark(#fff4ea, var(--color-aviso-fondo)); border-color: light-dark(#f0c39d, var(--color-borde)); }
+.leyenda__muestra--confirmada { background: light-dark(#e8f6ef, var(--color-exito-fondo)); border-color: light-dark(#a6dac1, var(--color-borde)); }
 .leyenda__muestra--realizada { background: #2d7a55; border-color: #22603f; }
-.leyenda__muestra--noRealizada { background: #fdecec; border-color: #eeb1b1; }
-.leyenda__muestra--bloqueado { border-color: #c7d3de; background: repeating-linear-gradient(135deg, rgb(95 111 128 / 22%) 0 3px, transparent 3px 6px); }
+.leyenda__muestra--noRealizada { background: light-dark(#fdecec, var(--color-aviso-fondo)); border-color: light-dark(#eeb1b1, var(--color-borde)); }
+.leyenda__muestra--bloqueado { border-color: light-dark(#c7d3de, var(--color-borde)); background: repeating-linear-gradient(135deg, rgb(95 111 128 / 22%) 0 3px, transparent 3px 6px); }
 
 .agenda-semanal__vista { transition: opacity 150ms ease; }
 .agenda-semanal__vista--actualizando { opacity: 0.6; }
@@ -102,7 +102,7 @@
   border: 1px solid var(--color-borde);
   border-radius: var(--radio);
   background:
-    linear-gradient(90deg, transparent, rgb(255 255 255 / 70%), transparent) 0 0 / 40% 100% no-repeat,
+    linear-gradient(90deg, transparent, light-dark(rgb(255 255 255 / 70%), var(--color-superficie)), transparent) 0 0 / 40% 100% no-repeat,
     var(--color-superficie-suave);
   animation: esqueleto-agenda 1.2s ease-in-out infinite;
 }

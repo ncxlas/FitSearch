@@ -1,6 +1,6 @@
 # Manual Técnico General — FitSearch
 
-Versión 1.0 · corte 16-11-2026 · Sprint 5 · Duoc UC, sección 003D.
+Versión 1.1 · corte 23-11-2026 · Sprint 5 · Duoc UC, sección 003D.
 
 Documento de instalación local, arquitectura, configuración, operación y pruebas. Complementa [Manual_Tecnico_Despliegue_Docker.docx](Manual_Tecnico_Despliegue_Docker.docx), versión 1.1, que describe los contenedores. El modelo de datos y las decisiones de arquitectura se mantienen en el DAS 1.35. Estado: preparado para revisión del equipo y del PO; no acredita por sí mismo el cierre del sprint.
 
@@ -157,3 +157,44 @@ La evidencia de carga histórica registra 515 profesionales: búsqueda p95 máxi
 Referencias: DAS 1.35, Plan de Pruebas 1.0.3, Planilla de Casos, Registro de Defectos, manual Docker 1.1 y `Sprint 5/Cierre_Tecnico_Sprint5_2026-11-16.md`. Los valores de versión corresponden al corte indicado; revisar cambios posteriores antes de operar otra entrega.
 
 Faltan la revisión del manual por el equipo/PO, aceptación de historias y cambios, validación de horas y acuerdos de retrospectiva (criterios FS-HU-32 y tres aportes ya registrados), QA residual, revisión independiente y reemplazo manual en Drive. Este manual completa el contenido general que no cubría el documento de Docker; no atribuye ese trabajo a una persona por su asignación inicial en el backlog.
+
+
+## 10. Navegación, tema y perfil — revisión del 23-11-2026
+
+Las pantallas con sesión comparten una columna de navegación con la marca FitSearch, las secciones y «Más». En escritorio con mouse, la columna permanece contraída a los íconos y muestra solo el logo; al acercar el mouse o recorrerla con el teclado aparecen el nombre FitSearch y los nombres de las opciones sobre el contenido, sin desplazarlo. En pantallas táctiles grandes se mantiene completa. En móvil, el encabezado compacto muestra la marca centrada y el botón del menú; el panel lateral conserva el foco, se cierra con Escape y devuelve el foco al botón que lo abrió. La barra inferior mantiene los íconos con nombres accesibles. En el menú del usuario, el acceso al perfil queda debajo de Notificaciones; en el profesional queda debajo de Reportes. Usa la foto de la cuenta, o sus iniciales si no tiene foto o no carga; la selección se distingue con un anillo. La campana queda marcada mientras su panel compacto está abierto y lo despliega junto al botón pulsado, ajustándolo a los bordes de la pantalla y actualizándolo al desplegar el nav, desplazarlo o redimensionar la ventana. Los íconos laterales miden 26px; la barra móvil y el botón Más, 28px. La columna comparte el fondo del cuerpo, sin líneas de separación; sus opciones se centran verticalmente y Más permanece al pie. «Más» permite cambiar entre claro y oscuro y cerrar sesión; el tema se conserva en el navegador y se aplica también a los diálogos y avisos. La identidad del usuario y del profesional se presenta centrada. Se retiró el acceso duplicado «Pedir recomendación» del nav y el bloque de categorías del asistente, conservando sus tarjetas de acción, sugerencias y consejos. Si se abre una ruta protegida sin sesión, después de iniciar sesión se vuelve a ella con sus filtros.
+
+`NavegacionCompacta.css` define la estructura compartida; `TemaAplicacion.css` contiene la paleta oscura y la identidad centrada. Las hojas de cada vista conservan sus colores claros y usan `light-dark()` para sus equivalentes oscuros. El tema se propaga con `data-tema` en el documento mientras está montado el diseño con sesión, de forma que los portales a `document.body` reciban la misma paleta. La preferencia se guarda como `fitsearch_aspecto` y sigue funcionando en memoria cuando el almacenamiento no está disponible.
+
+`AvatarNavegacion` reutiliza la caché de foto de la cuenta; un guardado o eliminación desde el perfil actualiza el menú y la barra sin guardar imágenes en la sesión. La campana usa la versión activa de `Icono` mientras `aria-expanded` es verdadero. El foco del menú móvil incluye los radios habilitados de tema y recorre únicamente la opción tabulable de cada grupo.
+
+La evidencia de ejecución y las limitaciones de comprobación visual se registran en [Revision_Navegacion_Tema_2026-11-23.md](../Plan%20de%20Pruebas/Revision_Navegacion_Tema_2026-11-23.md). No se acredita cierre formal de historias ni del sprint con esta revisión.
+
+
+
+## 11. Carrusel de herramientas y escala de letra
+
+En la portada pública, «Más herramientas para tu bienestar» es una cinta horizontal de movimiento continuo y vuelta sin corte: muestra una tarjeta en móvil, dos desde 40rem, tres desde 64rem y cuatro desde 90rem. Avanza a 45px/s en ventanas del carrusel menores de 900px y a 70px/s en las mayores. Se puede arrastrar o recorrer con las flechas y pausar/reanudar. Se detiene con el foco dentro de la cinta, fuera de pantalla y en pestañas ocultas; con movimiento reducido solo se recorre manualmente. Conserva las cinco herramientas y sus destinos. Las copias visuales completan el ciclo sin repetir opciones para lectores de pantalla ni para Tab, y sus enlaces activan la herramienta correspondiente.
+
+`CarruselHerramientas.jsx/.css` anima únicamente el transform de una pista mediante Web Animations API, con duración calculada por ancho y velocidad. No espera intervalos entre tarjetas. Conserva la fase al redimensionar, muestra la herramienta enfocada y evita abrir un enlace al terminar un arrastre. Usa IntersectionObserver, ResizeObserver y la preferencia de movimiento reducido; libera animación, copias y manejadores al desmontar. Si no está disponible la animación, mantiene el desplazamiento nativo y las flechas. Los controles quedan fuera del área de pausa por foco, por lo que Reanudar puede activarse con teclado.
+
+La base de letra de la página es 106,25% (17px con el tamaño predeterminado del navegador); las etiquetas del nav y Más son .95rem para conservar su proporción con los íconos. El ajuste sigue las preferencias de tamaño del navegador.
+
+Comprobación completa actual: 58 archivos y 524 pruebas frontend aprobadas, compilación correcta y lint sin errores con la advertencia ya registrada de Mensajes.jsx. Se conserva la revisión visual pendiente.
+
+
+### Distribución del espacio de la portada
+
+Después del hero, las secciones y el pie aprovechan el ancho de la ventana con márgenes laterales fluidos de 1rem a 4rem, sin el límite anterior de 1240px. En escritorio, los encabezados de especialidades y herramientas reparten título y descripción entre ambos lados; el asistente combina texto a la izquierda con una conversación más amplia a la derecha, y el bloque profesional sitúa el ejemplo a la izquierda y sus beneficios a la derecha. Desde 80rem, Cómo funciona distribuye su introducción y los tres pasos en dos columnas. En móvil se conserva la lectura vertical y el desplazamiento horizontal queda dentro de los carruseles.
+
+
+En el hero se retiraron los bordes dorados de ambas hojas, responsables de la línea central al entrar. Las hojas se solapan ligeramente para evitar una rendija de redondeo entre píxeles. La apertura conserva su comportamiento. Se recompiló después de este ajuste CSS; la revisión visual continúa pendiente.
+
+
+### Movimiento y contorno del header — 24-11-2026
+
+Las animaciones de la portada continúan al pasar el cursor: se retiró la pausa por hover de la cinta decorativa, la vitrina de objetivos y el carrusel de herramientas. Se conservan la pausa manual, la pausa al enfocar controles o enlaces y la preferencia de movimiento reducido. Las opciones del header y el acceso Iniciar sesión muestran un contorno tenue al pasar el mouse, sin subrayado; el foco de teclado mantiene su contorno visible.
+
+
+### Menú profesional — 24-11-2026
+
+El menú profesional muestra Inicio, Agenda, Clientes, Mensajes, Reportes y Perfil profesional, con la campana junto a Mensajes. Configuración se encuentra únicamente dentro de Más, el botón de hamburguesa al pie del nav, y conserva la ruta /profesional/configuracion. La barra inferior móvil mantiene sus accesos.

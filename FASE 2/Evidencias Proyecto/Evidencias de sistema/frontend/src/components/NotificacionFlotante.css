@@ -2,7 +2,7 @@
   position: fixed; z-index: 110; left: 50%; bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%); display: flex; align-items: center; gap: .75rem;
   width: max-content; max-width: min(34rem, calc(100vw - 2rem)); padding: .9rem 1rem;
-  border: 1px solid #b9decf; border-radius: 1rem; background: #f0fbf5; color: #176341;
+  border: 1px solid light-dark(#b9decf, var(--color-borde)); border-radius: 1rem; background: light-dark(#f0fbf5, var(--color-exito-fondo)); color: light-dark(#176341, var(--color-exito));
   box-shadow: 0 8px 30px rgb(8 58 95 / 18%); font-size: 1rem;
 }
 .notificacion-flotante > .icono { flex-shrink: 0; }
@@ -12,5 +12,5 @@
   border: 0; border-radius: .6rem; background: transparent; color: inherit; cursor: pointer;
 }
 .notificacion-flotante button:hover { background: rgb(8 58 95 / 8%); }
-.notificacion-flotante--info { color: #154b70; background: #eff7ff; border-color: #bcd8ec; }
+.notificacion-flotante--info { color: light-dark(#154b70, var(--color-primario)); background: light-dark(#eff7ff, var(--color-info-fondo)); border-color: light-dark(#bcd8ec, var(--color-borde)); }
 @media (min-width: 64rem) { .notificacion-flotante { bottom: 1.5rem; } }

@@ -5,7 +5,7 @@ import Alerta from '../components/Alerta.jsx';
 import Icono from '../components/Icono.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
 import {
-  ACCIONES, bloquesDe, CATEGORIAS, CONSEJOS, enlaceProfesionales, fechaCorta, horaDe, nombreProfesionales, SUGERENCIAS,
+  ACCIONES, bloquesDe, CONSEJOS, enlaceProfesionales, fechaCorta, horaDe, nombreProfesionales, SUGERENCIAS,
 } from '../services/asistente.js';
 import {
   abrirConversacion, eliminarConversacion, enviarMensaje, fijarConversacion, iniciarConversacion, listarConversaciones,
@@ -92,7 +92,7 @@ function ItemConversacion({ conversacion, activa, ahora }) {
 }
 
 // Asistente IA del usuario (FS-HU-07, DAS D33), según el mockup del PO: historial a la izquierda (fijadas y recientes),
-// chat al centro y sugerencias, categorías y consejos a la derecha. En el celular, la lista y el chat son vistas separadas
+// chat al centro y sugerencias y consejos a la derecha. En el celular, la lista y el chat son vistas separadas
 // (/asistente y /asistente/:id), así el botón Atrás del teléfono vuelve a la lista. El banner «¿Necesitas una
 // recomendación?» abre /asistente/nuevo?inicio=profesional con la pregunta para que recomiende un profesional (FS-HU-08).
 export default function Asistente() {
@@ -166,7 +166,7 @@ export default function Asistente() {
     if (pidePregunta) enfocar();
   }, [pidePregunta, navegacion]);
 
-  // Tarjetas de acción y categorías: completan el comienzo de la pregunta y llevan al chat.
+  // Las tarjetas de acción completan el comienzo de la pregunta y llevan al chat.
   function usarInicio(inicio) {
     setTexto(inicio);
     setError('');
@@ -371,7 +371,7 @@ export default function Asistente() {
         </form>
       </section>
 
-      <aside className="chat-ia__extra" aria-label="Sugerencias y categorías">
+      <aside className="chat-ia__extra" aria-label="Sugerencias y consejos">
         <section className="chat-ia__bloque" aria-labelledby="titulo-sugerencias">
           <h2 id="titulo-sugerencias" className="chat-ia__subtitulo"><Icono nombre="rayo" tamano={16} /> Sugerencias rápidas</h2>
           <ul className="chat-ia__sugerencias">
@@ -379,19 +379,6 @@ export default function Asistente() {
               <li key={sugerencia}>
                 <button type="button" className="sugerencia" disabled={Boolean(enviando) || sinCupo} onClick={() => enviar(sugerencia)}>
                   {sugerencia} <Icono nombre="flecha" tamano={16} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-        <section className="chat-ia__bloque" aria-labelledby="titulo-categorias">
-          <h2 id="titulo-categorias" className="chat-ia__subtitulo"><Icono nombre="diana" tamano={16} /> Categorías</h2>
-          <ul className="chat-ia__categorias">
-            {CATEGORIAS.map((categoria) => (
-              <li key={categoria.nombre}>
-                <button type="button" className="categoria" onClick={() => usarInicio(categoria.inicio)}>
-                  <span className="categoria__icono" aria-hidden="true"><Icono nombre={categoria.icono} tamano={22} /></span>
-                  {categoria.nombre}
                 </button>
               </li>
             ))}

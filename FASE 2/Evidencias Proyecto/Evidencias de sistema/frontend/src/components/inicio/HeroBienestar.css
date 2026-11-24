@@ -27,17 +27,17 @@
 .hero-bienestar .hero-bienestar__paso > .hero-bienestar__invitacion { margin-top: 1.2rem; font-size: 0.7rem; color: #e3ceac; }
 .hero-bienestar__invitacion span { display: inline-block; margin-left: 0.8rem; color: #ffac49; }
 .hero-bienestar__inferior { display: none; }
-.hero-bienestar a:focus-visible { outline: 3px solid #ffb25a; outline-offset: 5px; }
+.hero-bienestar a:focus-visible { outline: 3px solid light-dark(#ffb25a, var(--color-borde)); outline-offset: 5px; }
 .hero-bienestar--animado { height: 280svh; --apertura: 0; }
 .hero-bienestar--animado .hero-bienestar__escena { position: sticky; top: 0; height: 100svh; min-height: 620px; padding-block: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; }
 .hero-bienestar--animado .hero-bienestar__relato { display: grid; align-items: center; flex: 1; padding-block: 1rem; }
 .hero-bienestar--animado .hero-bienestar__paso { grid-area: 1 / 1; opacity: 0; translate: 0 22px; visibility: hidden; pointer-events: none; transition: opacity 450ms ease, translate 650ms cubic-bezier(0.22, 1, 0.36, 1); padding-block: 1rem; }
 .hero-bienestar--animado .hero-bienestar__paso[data-activo="true"] { opacity: 1; translate: 0 0; visibility: visible; pointer-events: auto; }
 .hero-bienestar--animado .hero-bienestar__puertas { display: block; position: absolute; z-index: -1; inset: 0; pointer-events: none; perspective: 1300px; }
-.hero-bienestar__puerta { position: absolute; top: -2%; width: 50%; height: 104%; background: repeating-linear-gradient(90deg, transparent 0 40px, #0000000f 41px 43px), linear-gradient(100deg, #103341 0%, #204a52 60%, #153a42 100%); box-shadow: inset 0 0 70px #00182580; border-inline: 1px solid #b8a37980; backface-visibility: hidden; }
+.hero-bienestar__puerta { position: absolute; top: -2%; width: calc(50% + 1px); height: 104%; background: repeating-linear-gradient(90deg, transparent 0 40px, #0000000f 41px 43px), linear-gradient(100deg, #103341 0%, #204a52 60%, #153a42 100%); box-shadow: inset 0 0 70px #00182580; border: 0; backface-visibility: hidden; }
 .hero-bienestar__puerta--izquierda { left: 0; transform-origin: left center; transform: translateX(calc(var(--apertura) * -35%)) rotateY(calc(var(--apertura) * -85deg)); }
 .hero-bienestar__puerta--derecha { right: 0; transform-origin: right center; transform: translateX(calc(var(--apertura) * 35%)) rotateY(calc(var(--apertura) * 85deg)); }
-.hero-bienestar__puerta > span { position: absolute; top: 45%; height: 16%; width: 5px; border-radius: 5px; background: linear-gradient(90deg, #755729, #e5c98f, #997841); box-shadow: 2px 1px 10px #0006; opacity: clamp(0, calc(1 - var(--apertura) * 100), 1); }
+.hero-bienestar__puerta > span { position: absolute; top: 45%; height: 16%; width: 5px; border-radius: 5px; background: linear-gradient(90deg, #755729, light-dark(#e5c98f, var(--color-aviso-fondo)), #997841); box-shadow: 2px 1px 10px #0006; opacity: clamp(0, calc(1 - var(--apertura) * 100), 1); }
 .hero-bienestar__puerta--izquierda > span { right: 1.5rem; }
 .hero-bienestar__puerta--derecha > span { left: 1.5rem; }
 /* El ancho protege el texto con las puertas cerradas. Los tiradores se desvanecen al comenzar
@@ -106,15 +106,15 @@
 .hero-bienestar__puerta {
   overflow: hidden;
   background:
-    repeating-linear-gradient(90deg, rgb(255 255 255 / 0%) 0 46px, rgb(255 255 255 / 4%) 47px 48px),
+    repeating-linear-gradient(90deg, light-dark(rgb(255 255 255 / 0%), var(--color-superficie)) 0 46px, light-dark(rgb(255 255 255 / 4%), var(--color-superficie)) 47px 48px),
     linear-gradient(100deg, rgb(6 40 54 / 86%) 0%, rgb(14 62 74 / 70%) 55%, rgb(8 44 56 / 82%) 100%);
   box-shadow: inset 0 0 90px rgb(0 18 30 / 55%), inset 0 1px 0 rgb(255 255 255 / 10%);
-  border-inline: 1px solid rgb(229 201 143 / 45%);
 }
+/* Las hojas se solapan ligeramente para cerrar la unión sin bordes dorados ni una rendija entre píxeles. */
 /* Un reflejo cruza cada hoja de vez en cuando, como la luz sobre un vidrio. */
 .hero-bienestar__puerta::before {
   content: ''; position: absolute; inset: -10% -60%; pointer-events: none;
-  background: linear-gradient(105deg, transparent 42%, rgb(255 255 255 / 11%) 50%, transparent 58%);
+  background: linear-gradient(105deg, transparent 42%, light-dark(rgb(255 255 255 / 11%), var(--color-superficie)) 50%, transparent 58%);
   transform: translateX(-60%); animation: puerta-reflejo 7s var(--curva-movimiento) 1.2s infinite;
 }
 .hero-bienestar__puerta--derecha::before { animation-delay: 1.5s; }

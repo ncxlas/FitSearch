@@ -13,9 +13,9 @@
 }
 .boton-subir > .icono { transform: rotate(-90deg); }
 .boton-subir:active { transform: scale(0.94); }
-.boton-subir:focus-visible { outline: 3px solid #ffb35d; outline-offset: 3px; }
+.boton-subir:focus-visible { outline: 3px solid light-dark(#ffb35d, var(--color-borde)); outline-offset: 3px; }
 @media (hover: hover) and (pointer: fine) {
-  .boton-subir:hover { background: var(--color-acento-oscuro); }
+  .boton-subir:hover { background: var(--color-relleno-acento, var(--color-acento-oscuro)); }
 }
 /* Anillo de recorrido: el trazo se completa a medida que se baja por la página (solo donde existe animation-timeline). */
 .boton-subir__anillo { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); transform: rotate(-90deg); pointer-events: none; }

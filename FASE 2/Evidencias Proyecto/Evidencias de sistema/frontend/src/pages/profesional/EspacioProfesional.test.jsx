@@ -42,12 +42,13 @@ describe('Diseño del profesional', () => {
     await screen.findByRole('heading', SALUDO);
 
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    const nombres = within(menu).getAllByRole('link').map((enlace) => enlace.textContent.replace('Próximamente', '').trim());
-    expect(nombres).toEqual(['Inicio', 'Agenda', 'Clientes', 'Perfil profesional', 'Mensajes', 'Reportes', 'Configuración']);
+    const nombres = within(menu).getAllByRole('link').filter((enlace) => enlace.classList.contains('menu-lateral__enlace')).map((enlace) => enlace.querySelector('.menu-lateral__texto').textContent);
+    expect(nombres).toEqual(['Inicio', 'Agenda', 'Clientes', 'Mensajes', 'Reportes', 'Perfil profesional']);
+    expect(within(menu).queryByRole('link', { name: 'Configuración' })).not.toBeInTheDocument();
     expect(within(menu).getByRole('button', { name: 'Notificaciones' })).toBeInTheDocument();
     expect(within(menu).queryByText('¿Necesitas una recomendación?')).not.toBeInTheDocument();
     const barra = screen.getByRole('navigation', { name: 'Navegación inferior' });
-    expect(within(barra).getAllByRole('link').map((enlace) => enlace.textContent)).toEqual(['Inicio', 'Agenda', 'Clientes', 'Perfil']);
+    expect(within(barra).getAllByRole('link').map((enlace) => enlace.querySelector('.barra-inferior__texto').textContent)).toEqual(['Inicio', 'Agenda', 'Clientes', 'Perfil']);
     expect(screen.getByRole('link', { name: 'FitSearch, ir al inicio' })).toHaveAttribute('href', '/profesional/inicio');
   });
 
@@ -58,7 +59,10 @@ describe('Diseño del profesional', () => {
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
     expect(within(menu).getByRole('link', { name: 'Perfil profesional' })).toHaveAttribute('href', '/profesional/perfil');
     await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
-    expect(within(screen.getByRole('navigation', { name: 'Cuenta' })).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+    const cuenta = screen.getByRole('navigation', { name: 'Cuenta' });
+    expect(within(cuenta).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+    expect(within(cuenta).getByRole('link', { name: 'Configuración' })).toHaveAttribute('href', '/profesional/configuracion');
+    expect(screen.getAllByRole('link', { name: 'Configuración' })).toHaveLength(1);
     expect(screen.queryByRole('button', { name: /menú de tu cuenta/ })).not.toBeInTheDocument();
   });
 

@@ -9,7 +9,7 @@
 
 .inicio__aviso {
   grid-area: aviso; display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; padding: 0.9rem 1.1rem;
-  border-radius: var(--radio); color: var(--color-primario); background: var(--color-info-fondo); border: 1px solid #c9dcea;
+  border-radius: var(--radio); color: var(--color-primario); background: var(--color-info-fondo); border: 1px solid light-dark(#c9dcea, var(--color-borde));
 }
 .inicio__aviso p { flex: 1 1 14rem; margin: 0; font-size: 0.9rem; }
 
@@ -28,7 +28,7 @@
 .inicio__hero-texto > p { max-width: 32rem; margin: 0 0 1.25rem; color: rgb(255 255 255 / 86%); font-size: 0.95rem; }
 .buscador-hero {
   display: flex; align-items: center; gap: 0.5rem; max-width: 30rem; padding: 0.3rem 0.3rem 0.3rem 1rem;
-  border-radius: 999px; color: var(--color-texto-secundario); background: #fff; box-shadow: 0 12px 30px rgb(0 0 0 / 20%);
+  border-radius: 999px; color: var(--color-texto-secundario); background: light-dark(#fff, var(--color-superficie)); box-shadow: 0 12px 30px rgb(0 0 0 / 20%);
 }
 .buscador-hero:focus-within { outline: 3px solid rgb(244 123 32 / 60%); outline-offset: 2px; }
 .buscador-hero input { flex: 1; min-width: 0; padding: 0.6rem 0; border: 0; background: none; font: inherit; font-size: 1rem; color: var(--color-texto); outline: none; }
@@ -37,7 +37,7 @@
   color: #fff; background: var(--degradado-acento); cursor: pointer;
 }
 @media (hover: hover) and (pointer: fine) {
-  .buscador-hero button:hover { background: var(--color-acento-oscuro); }
+  .buscador-hero button:hover { background: var(--color-relleno-acento, var(--color-acento-oscuro)); }
 }
 .inicio__categorias { position: relative; z-index: 1; display: none; gap: 1rem; margin: 0; padding: 0; list-style: none; }
 .inicio__categorias li { display: flex; align-items: center; gap: 0.8rem; }
@@ -78,9 +78,9 @@
 .acceso-rapido .etiqueta-proximamente { margin: auto 0 0; font-size: 0.6rem; }
 .acceso-rapido__flecha { margin-top: auto; color: var(--color-primario); }
 .acceso-rapido__icono { display: grid; place-items: center; width: 3.1rem; height: 3.1rem; border-radius: 50%; color: var(--color-primario); background: var(--color-info-fondo); }
-.acceso-rapido--centros .acceso-rapido__icono { color: #0f8a7e; background: #e3f6f4; }
-.acceso-rapido--gimnasios .acceso-rapido__icono { color: var(--color-acento-oscuro); background: #fff1e6; }
-.acceso-rapido--comidas .acceso-rapido__icono { color: #6b4fd8; background: #efeafd; }
+.acceso-rapido--centros .acceso-rapido__icono { color: light-dark(#0f8a7e, var(--color-primario)); background: light-dark(#e3f6f4, var(--color-info-fondo)); }
+.acceso-rapido--gimnasios .acceso-rapido__icono { color: var(--color-acento-oscuro); background: light-dark(#fff1e6, var(--color-aviso-fondo)); }
+.acceso-rapido--comidas .acceso-rapido__icono { color: light-dark(#6b4fd8, var(--color-primario)); background: light-dark(#efeafd, var(--color-info-fondo)); }
 .acceso-rapido--asistente .acceso-rapido__icono { color: var(--color-exito); background: var(--color-exito-fondo); }
 
 /* Columna derecha: objetivo, progreso y citas */
@@ -90,10 +90,10 @@
   .enlace-panel:hover { text-decoration: underline; }
 }
 .objetivo__nombre { margin: 0 0 0.6rem; font-weight: 600; color: var(--color-primario-oscuro); }
-.barra-progreso { height: 0.6rem; overflow: hidden; border-radius: 999px; background: #e7eef4; }
+.barra-progreso { height: 0.6rem; overflow: hidden; border-radius: 999px; background: light-dark(#e7eef4, var(--color-info-fondo)); }
 .barra-progreso--pendiente > span {
   display: block; height: 100%; width: 100%;
-  background: repeating-linear-gradient(-45deg, #dbe5ee 0 8px, #eef3f8 8px 16px);
+  background: repeating-linear-gradient(-45deg, light-dark(#dbe5ee, var(--color-info-fondo)) 0 8px, light-dark(#eef3f8, var(--color-info-fondo)) 8px 16px);
 }
 .objetivo__nota { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.6rem 0 0.9rem; font-size: 0.8rem; color: var(--color-texto-secundario); }
 .objetivo__nota .etiqueta-proximamente { margin: 0; }
@@ -106,7 +106,7 @@
 .progreso__valor small { font-size: 0.8rem; font-weight: 500; color: var(--color-texto-secundario); }
 .progreso__enlace { font-size: 0.8rem; font-weight: 500; }
 .progreso__icono { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; flex-shrink: 0; border-radius: 50%; }
-.progreso__icono--calorias { color: var(--color-acento-oscuro); background: #fff1e6; }
+.progreso__icono--calorias { color: var(--color-acento-oscuro); background: light-dark(#fff1e6, var(--color-aviso-fondo)); }
 .progreso__icono--agua { color: var(--color-primario-claro); background: var(--color-info-fondo); }
 .progreso__nota { margin: 0.9rem 0 0; font-size: 0.75rem; color: var(--color-texto-secundario); }
 
@@ -118,9 +118,9 @@
 /* Banner del asistente */
 .banner-asistente {
   grid-area: banner; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 1.25rem;
-  border-radius: var(--radio); background: linear-gradient(110deg, #e6f0f8, #fff7f0); border: 1px solid #d9e6ef;
+  border-radius: var(--radio); background: linear-gradient(110deg, light-dark(#e6f0f8, var(--color-info-fondo)), light-dark(#fff7f0, var(--color-aviso-fondo))); border: 1px solid light-dark(#d9e6ef, var(--color-borde));
 }
-.banner-asistente__icono { display: grid; place-items: center; width: 3rem; height: 3rem; flex-shrink: 0; border-radius: 50%; color: #fff; background: var(--color-primario); }
+.banner-asistente__icono { display: grid; place-items: center; width: 3rem; height: 3rem; flex-shrink: 0; border-radius: 50%; color: #fff; background: var(--color-boton, var(--color-primario)); }
 .banner-asistente__texto { flex: 1 1 16rem; }
 .banner-asistente h2 { color: var(--color-primario-oscuro); }
 .banner-asistente p { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.25rem 0 0; font-size: 0.88rem; color: var(--color-texto-secundario); }

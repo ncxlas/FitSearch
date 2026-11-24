@@ -19,10 +19,6 @@
 @keyframes cinta-correr {
   to { transform: translateX(-50%); }
 }
-/* Pasar el mouse la detiene, para leerla. */
-@media (hover: hover) and (pointer: fine) {
-  .cinta:hover .cinta__fila { animation-play-state: paused; }
-}
 @media (prefers-reduced-motion: reduce) {
   .cinta__fila { animation: none; }
 }

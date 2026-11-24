@@ -9,28 +9,28 @@
 .inicio__hero h1 { max-width: none; margin: 0 0 1rem; color: #fff; font-size: inherit; line-height: 1.08; }
 .inicio__hero-saludo { display: block; margin-bottom: 0.55rem; color: #e0edf6; font-size: clamp(1.1rem, 1.8vw, 1.45rem); font-weight: 600; letter-spacing: -0.01em; }
 .inicio__hero-pregunta { display: block; font-size: clamp(2rem, 3.8vw, 3.4rem); font-weight: 800; letter-spacing: -0.045em; text-wrap: balance; }
-.inicio__hero-pregunta span { color: #ff922b; }
+.inicio__hero-pregunta span { color: light-dark(#ff922b, var(--color-acento-oscuro)); }
 .inicio__hero-texto > p { max-width: 27rem; margin-bottom: 1.5rem; color: #e0edf6; line-height: 1.7; }
 .inicio__hero .buscador-hero { max-width: 33rem; min-height: 3.7rem; box-shadow: 0 5px 20px rgb(0 0 0 / 10%); }
 .inicio__hero .buscador-hero input { font-size: 0.85rem; }
 .inicio__hero .buscador-hero button { width: 2.9rem; height: 2.9rem; }
 .inicio__accesos { gap: 0.6rem; }
-.inicio__accesos > h2 { font-size: 0.9rem; color: #4e6a7d; }
+.inicio__accesos > h2 { font-size: 0.9rem; color: light-dark(#4e6a7d, var(--color-texto-secundario)); }
 .accesos-rapidos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
-.acceso-rapido { min-height: 6.5rem; border-color: transparent; border-radius: 18px; background: #fff; }
-.acceso-rapido__icono { color: #075583; background: #eaf5fc; }
-.acceso-rapido--asistente .acceso-rapido__icono { color: #075583; background: #eaf5fc; }
-.acceso-rapido--proximamente { min-height: 0; padding: 0.65rem; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 0.45rem; background: #f7fafc; color: #587084; border: 1px dashed #dce8f0; }
+.acceso-rapido { min-height: 6.5rem; border-color: transparent; border-radius: 18px; background: light-dark(#fff, var(--color-superficie)); }
+.acceso-rapido__icono { color: light-dark(#075583, var(--color-primario)); background: light-dark(#eaf5fc, var(--color-info-fondo)); }
+.acceso-rapido--asistente .acceso-rapido__icono { color: light-dark(#075583, var(--color-primario)); background: light-dark(#eaf5fc, var(--color-info-fondo)); }
+.acceso-rapido--proximamente { min-height: 0; padding: 0.65rem; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 0.45rem; background: light-dark(#f7fafc, var(--color-info-fondo)); color: light-dark(#587084, var(--color-texto-secundario)); border: 1px dashed light-dark(#dce8f0, var(--color-borde)); }
 .acceso-rapido--proximamente .acceso-rapido__icono { width: auto; height: auto; background: none; }
 .acceso-rapido--proximamente .acceso-rapido__icono .icono { width: 18px; height: 18px; }
 .acceso-rapido--proximamente .etiqueta-proximamente { margin: 0; }
-.inicio__especialidades { grid-area: especialidades; min-width: 0; padding: 1.2rem; border-radius: 20px; background: #fff; }
+.inicio__especialidades { grid-area: especialidades; min-width: 0; padding: 1.2rem; border-radius: 20px; background: light-dark(#fff, var(--color-superficie)); }
 .inicio__especialidades .inicio__titulo-seccion { flex-wrap: wrap; align-items: center; gap: 0.5rem; }
-.inicio__especialidades h2, .inicio__destacados h2 { color: #10273a; font-size: 1.25rem; letter-spacing: -0.035em; }
+.inicio__especialidades h2, .inicio__destacados h2 { color: light-dark(#10273a, var(--color-primario)); font-size: 1.25rem; letter-spacing: -0.035em; }
 .inicio__especialidades .enlace-panel { font-size: 0.72rem; }
-.inicio__bajada { margin: 0.55rem 0 1rem; color: #607587; font-size: 0.8rem; }
+.inicio__bajada { margin: 0.55rem 0 1rem; color: light-dark(#607587, var(--color-texto-secundario)); font-size: 0.8rem; }
 .inicio__panel { gap: 1rem; }
-.inicio__panel .panel-tarjeta { border-radius: 20px; border-color: #e6eef4; box-shadow: none; }
+.inicio__panel .panel-tarjeta { border-radius: 20px; border-color: light-dark(#e6eef4, var(--color-borde)); box-shadow: none; }
 .inicio__citas { order: -1; }
 .inicio__citas .agenda { margin: 0; }
 .inicio__citas .agenda__cabecera { gap: 0.5rem; }
@@ -40,12 +40,12 @@
 .inicio__citas .agenda__vacio { padding: 1rem; font-size: 0.8rem; line-height: 1.65; }
 .inicio__citas .agenda__vacio h3 { margin-top: 0; font-size: 0.95rem; }
 .inicio__citas .agenda__lista:empty { display: none; }
-.inicio__destacados { padding: 1.2rem; border-radius: 20px; background: #fff; }
+.inicio__destacados { padding: 1.2rem; border-radius: 20px; background: light-dark(#fff, var(--color-superficie)); }
 .inicio__titulo-seccion { flex-wrap: wrap; }
 .inicio__lista-destacados { gap: 0.8rem; }
-.inicio .banner-asistente { background: linear-gradient(110deg, #fff0dd, #ffead3); border: 0; border-radius: 20px; padding: 1.4rem; }
-.inicio .banner-asistente__icono { width: 3.8rem; height: 3.8rem; color: #ef7908; background: #ffe1bc; }
-.inicio .banner-asistente h2 { font-size: 1.25rem; color: #10273a; letter-spacing: -0.035em; }
+.inicio .banner-asistente { background: linear-gradient(110deg, light-dark(#fff0dd, var(--color-aviso-fondo)), light-dark(#ffead3, var(--color-aviso-fondo))); border: 0; border-radius: 20px; padding: 1.4rem; }
+.inicio .banner-asistente__icono { width: 3.8rem; height: 3.8rem; color: light-dark(#ef7908, var(--color-acento-oscuro)); background: light-dark(#ffe1bc, var(--color-aviso-fondo)); }
+.inicio .banner-asistente h2 { font-size: 1.25rem; color: light-dark(#10273a, var(--color-primario)); letter-spacing: -0.035em; }
 .inicio .banner-asistente .boton { border-radius: 999px; background: #075583; box-shadow: none; }
 
 /* Carruseles en celular (11-11-2026): accesos rápidos, especialidades y profesionales destacados se deslizan hacia la

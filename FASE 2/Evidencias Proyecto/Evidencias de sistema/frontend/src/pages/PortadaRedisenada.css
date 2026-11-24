@@ -5,6 +5,7 @@
   --p-fondo: #042536; --p-superficie: #0a3248; --p-superficie-alta: #0e3d57; --p-campo: #082c40;
   --p-borde: rgb(214 236 250 / 14%); --p-borde-fuerte: rgb(214 236 250 / 26%);
   --p-texto: #f3f8fb; --p-texto-suave: #c4d6e2; --p-texto-tenue: #9fb8c8; --p-acento: #ff9c3a;
+  --p-margen: clamp(1rem, 3vw, 4rem);
   --p-sombra: 0 1px 2px rgb(0 10 18 / 30%), 0 24px 48px -24px rgb(0 10 18 / 70%);
   position: relative; isolation: isolate; color: var(--p-texto); background: var(--p-fondo);
 }
@@ -40,6 +41,13 @@
 .portada__logotipo > span > span { color: var(--p-acento); font-weight: 400; }
 .portada .portada__navegacion { gap: 1.25rem; font-size: 0.875rem; font-weight: 500; }
 .portada .portada__navegacion a, .portada .portada__enlace-acceso { color: #e6f0f6; }
+.portada .portada__encabezado a,
+.portada .portada__encabezado a:hover { text-decoration: none; }
+@media (hover: hover) and (pointer: fine) {
+  .portada .portada__encabezado :is(.portada__navegacion a, .portada__enlace-acceso):hover:not(:focus-visible) {
+    outline: 1px solid var(--p-borde-fuerte); outline-offset: .4rem; border-radius: .25rem;
+  }
+}
 .portada .portada__enlace-acceso { font-size: 0.9375rem; }
 .portada .portada__accesos .boton { min-height: 2.75rem; padding-inline: 1.1rem; border-radius: 999px; font-size: 0.9375rem; }
 
@@ -76,6 +84,11 @@
 
 /* ---------- Contenido ---------- */
 .portada__contenido { position: relative; isolation: isolate; padding-bottom: 3rem; background: linear-gradient(180deg, #06293c 0%, var(--p-fondo) 35%, #03202f 100%); }
+/* Las secciones inferiores aprovechan el ancho de la ventana con un margen compartido. */
+.portada__contenido .portada__ancho,
+.portada__contenido .portada__pasos-fondo,
+.portada__pie .portada__ancho { width: calc(100% - 2 * var(--p-margen)); max-width: none; }
+.portada__contenido :is(.vitrina, .portada__asistente-texto, .portada__conversacion, .para-profesionales__texto, .panel-ejemplo) { min-width: 0; }
 .portada__seccion { padding-block: 4rem; }
 .portada .portada__titulo-seccion { max-width: 46rem; margin-bottom: 2rem; }
 .portada .portada__titulo-seccion h2, .portada__asistente h2 {
@@ -224,12 +237,31 @@
   .portada__busqueda form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
   .portada .portada__busqueda .boton { grid-column: auto; padding-inline: 1.6rem; }
   .portada__seccion { padding-block: 5rem; }
-  .portada__asistente { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 4rem; padding-block: 5rem; }
+  .portada__asistente { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(2rem, 4vw, 5rem); padding-block: 5rem; }
+  .portada__contenido > .portada__seccion > .portada__titulo-seccion {
+    display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    align-items: end; gap: clamp(2rem, 4vw, 5rem); max-width: none; margin-bottom: 2.5rem;
+  }
+  .portada__contenido > .portada__seccion > .portada__titulo-seccion > p { justify-self: end; margin: 0; max-width: 44ch; }
+  .portada .para-profesionales__contenido {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: 'panel texto';
+    gap: clamp(2rem, 4vw, 5rem); padding: clamp(2rem, 3vw, 3.5rem);
+  }
+  .portada .para-profesionales__texto { grid-area: texto; }
+  .portada .panel-ejemplo { grid-area: panel; }
   .portada__conversacion { padding: 1.5rem; }
   .portada .portada__herramientas { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .portada .portada__herramienta--disponible { grid-column: span 2; }
   .portada .portada__herramienta:not(.portada__herramienta--disponible) { grid-column: span 3; }
   .portada__pie-contenido { grid-template-columns: 1fr 1fr 1fr; }
+}
+@media (min-width: 80rem) {
+  .portada .portada__pasos-contenido {
+    display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.6fr);
+    align-items: center; gap: clamp(2rem, 4vw, 5rem);
+  }
+  .portada .portada__pasos-contenido > .portada__titulo-seccion { margin-bottom: 0; }
+  .portada .portada__pasos { margin-top: 0; }
 }
 @media (max-width: 639px) {
   .portada__barra { flex-wrap: nowrap; gap: 0.6rem; padding-block: 0.6rem; }

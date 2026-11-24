@@ -10,6 +10,7 @@ import MensajesFlotantes from './MensajesFlotantes.jsx';
 import './DisenoAplicacion.css';
 import './EstiloCristal.css';
 import './NavegacionCompacta.css';
+import './TemaAplicacion.css';
 
 // Estructura común de las pantallas con sesión: encabezado, menú lateral, contenido y barra inferior (DAS, D22).
 // "espacio" elige el menú del usuario o el del profesional (DAS, D25).
@@ -19,6 +20,10 @@ export default function DisenoAplicacion({ espacio = 'usuario' }) {
   const tipoNavegacion = useNavigationType();
   const [tema, setTema] = useState(() => { try { return localStorage.getItem('fitsearch_aspecto') === 'oscuro' ? 'oscuro' : 'claro'; } catch { return 'claro'; } });
   const cambiarTema = (valor) => { setTema(valor); try { localStorage.setItem('fitsearch_aspecto', valor); } catch { /* El tema sigue funcionando sin almacenamiento. */ } };
+  useEffect(() => {
+    document.documentElement.dataset.tema = tema;
+    return () => { delete document.documentElement.dataset.tema; };
+  }, [tema]);
   const [menuAbierto, setMenuAbierto] = useState(false);
   // El aviso de sesión iniciada o de cuenta creada se muestra una vez, en la primera pantalla.
   const [aviso, setAviso] = useState(avisoSesion);
@@ -38,7 +43,7 @@ export default function DisenoAplicacion({ espacio = 'usuario' }) {
   const esBienvenida = aviso?.origen === 'ingreso' && ['usuario', 'profesional'].includes(sesion?.usuario.rol);
 
   return (
-    <div className={`app app--${espacio}${tema === 'oscuro' ? ' app--oscuro' : ''}`}>
+    <div className={`app app--${espacio}${tema === 'oscuro' ? ' app--oscuro' : ''}${menuAbierto ? ' app--menu-abierto' : ''}`}>
       <a className="app__saltar" href="#contenido">Saltar al contenido</a>
       <Encabezado soloMarca menuAbierto={menuAbierto} onAlternarMenu={() => setMenuAbierto(!menuAbierto)} />
       <div className="app__cuerpo">

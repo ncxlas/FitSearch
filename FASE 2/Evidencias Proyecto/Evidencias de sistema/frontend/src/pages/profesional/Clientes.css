@@ -45,10 +45,10 @@
 .historial__nota { margin: 0; font-size: 0.88rem; }
 
 /* Los colores de los estados repiten los de la Agenda y cumplen contraste AA sobre su fondo. */
-.historial__estado { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 99px; font-size: 0.8rem; font-weight: 600; color: var(--color-primario); background: #e9f4fb; }
-.historial__estado--confirmada, .historial__estado--realizada { color: #076342; background: #def5ec; }
-.historial__estado--cancelada { color: #962b2b; background: #fce5e5; }
-.historial__estado--sin-confirmar { color: #6b4a00; background: #fdf1d6; }
+.historial__estado { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 99px; font-size: 0.8rem; font-weight: 600; color: var(--color-primario); background: light-dark(#e9f4fb, var(--color-info-fondo)); }
+.historial__estado--confirmada, .historial__estado--realizada { color: light-dark(#076342, var(--color-exito)); background: light-dark(#def5ec, var(--color-exito-fondo)); }
+.historial__estado--cancelada { color: light-dark(#962b2b, var(--color-error)); background: light-dark(#fce5e5, var(--color-aviso-fondo)); }
+.historial__estado--sin-confirmar { color: light-dark(#6b4a00, var(--color-acento-oscuro)); background: light-dark(#fdf1d6, var(--color-aviso-fondo)); }
 
 .carga-error { display: grid; justify-items: start; gap: 0.5rem; }
 

@@ -8,7 +8,7 @@
 .calendario__semana { margin-bottom: 0.25rem; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--color-texto-secundario); }
 .calendario .calendario__dia {
   position: relative; justify-self: center; display: grid; place-items: center; width: 2.6rem; max-width: 100%; aspect-ratio: 1;
-  padding: 0; border: 0; border-radius: 50%; background: none; font: inherit; font-size: 0.92rem; color: #a3b1bf;
+  padding: 0; border: 0; border-radius: 50%; background: none; font: inherit; font-size: 0.92rem; color: light-dark(#a3b1bf, var(--color-texto-secundario));
   transition: background-color 150ms ease, color 150ms ease, transform 160ms var(--curva-salida);
 }
 .calendario .calendario__dia:disabled { cursor: default; }
@@ -19,9 +19,9 @@
   content: ''; position: absolute; bottom: 0.3rem; width: 4px; height: 4px; border-radius: 50%; background: var(--color-acento);
 }
 .calendario .calendario__dia--hoy { box-shadow: inset 0 0 0 2px var(--color-borde); }
-.calendario .calendario__dia--elegido { color: #fff; background: var(--color-primario); box-shadow: none; }
-.calendario__dia--elegido::after { background: #fff; }
+.calendario .calendario__dia--elegido { color: #fff; background: var(--color-boton, var(--color-primario)); box-shadow: none; }
+.calendario__dia--elegido::after { background: light-dark(#fff, var(--color-superficie)); }
 .calendario .calendario__dia--habilitado:active:not(.calendario__dia--elegido) { transform: scale(var(--escala-presion)); }
 @media (hover: hover) and (pointer: fine) {
-  .calendario .calendario__dia--habilitado:not(.calendario__dia--elegido):hover { background: #d3e5f3; }
+  .calendario .calendario__dia--habilitado:not(.calendario__dia--elegido):hover { background: light-dark(#d3e5f3, var(--color-info-fondo)); }
 }

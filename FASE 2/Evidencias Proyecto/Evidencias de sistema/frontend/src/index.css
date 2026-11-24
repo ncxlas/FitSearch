@@ -39,6 +39,7 @@
   --elevacion-hover: -2px;
   --desplazamiento-entrada: 8px;
   --escala-entrada: 0.9;
+  font-size: 106.25%;
   font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   color: var(--color-texto);
   background: var(--color-fondo);
@@ -51,13 +52,13 @@ body {
   margin: 0; background: var(--color-fondo); -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility;
 }
-/* Los campos heredan la letra de la página (16 px). Con menos de 16 px, Safari en iPhone acerca la página al tocarlos. */
+/* Los campos heredan la letra de la página (17 px con la configuración normal del navegador). Con menos de 16 px, Safari en iPhone acerca la página al tocarlos. */
 input, select, textarea { font: inherit; caret-color: var(--color-primario); }
 /* Las piezas que dibuja el navegador también llevan la marca: selección, casillas y barras de desplazamiento. */
 ::selection { background: rgb(244 123 32 / 26%); color: inherit; }
 :root { accent-color: var(--color-primario); scrollbar-color: #a9bccb transparent; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: #b7c7d4; border: 2px solid transparent; border-radius: 999px; background-clip: padding-box; }
+::-webkit-scrollbar-thumb { background: light-dark(#b7c7d4, var(--color-info-fondo)); border: 2px solid transparent; border-radius: 999px; background-clip: padding-box; }
 ::-webkit-scrollbar-thumb:hover { background-color: #8fa5b7; }
 ::-webkit-scrollbar-track { background: transparent; }
 /* Las cifras (calorías, horas, precios) no bailan al cambiar: cada dígito ocupa lo mismo. */
@@ -157,7 +158,7 @@ a { color: var(--color-primario); }
 }
 .selector-rol__opcion input { position: absolute; opacity: 0; pointer-events: none; }
 .selector-rol__opcion:has(input:focus-visible) { outline: 3px solid var(--color-foco); outline-offset: 2px; }
-.selector-rol__opcion--activa { background: linear-gradient(180deg, var(--color-primario-claro), var(--color-primario)); border-color: var(--color-primario); color: #fff; }
+.selector-rol__opcion--activa { background: linear-gradient(180deg, var(--color-boton-claro, var(--color-primario-claro)), var(--color-boton, var(--color-primario))); border-color: var(--color-primario); color: #fff; }
 /* Variante en tarjetas para el tipo de cuenta del asistente de perfil (FS-HU-02) */
 
 /* ---------- Campos de formulario ---------- */
@@ -169,7 +170,7 @@ a { color: var(--color-primario); }
   border: 1px solid var(--color-borde); border-radius: var(--radio-control); background: var(--color-superficie); color: inherit;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.campo__control::placeholder { color: #8795a4; }
+.campo__control::placeholder { color: light-dark(#8795a4, var(--color-texto-secundario)); }
 .campo__control:focus { outline: none; border-color: var(--color-primario-claro); box-shadow: 0 0 0 3px rgb(21 101 160 / 18%); }
 .campo--icono .campo__control { padding-left: 2.9rem; }
 .campo--password .campo__control { padding-right: 3rem; }
@@ -189,7 +190,7 @@ a { color: var(--color-primario); }
 .boton {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
   width: 100%; min-height: 3rem; padding: 0.6rem 1.25rem; font: inherit; font-size: 1rem; font-weight: 600;
-  color: #fff; background: var(--color-primario); border: 0; border-radius: var(--radio-control); cursor: pointer; text-decoration: none;
+  color: #fff; background: var(--color-boton, var(--color-primario)); border: 0; border-radius: var(--radio-control); cursor: pointer; text-decoration: none;
 }
 .boton:disabled { opacity: 0.65; cursor: wait; }
 .boton--principal { background: var(--degradado-acento); box-shadow: var(--sombra-accion); }
@@ -199,8 +200,8 @@ a { color: var(--color-primario); }
 }
 /* Los cambios al pasar el mouse solo existen con mouse: en el celular el toque los dejaba "pegados". */
 @media (hover: hover) and (pointer: fine) {
-  .boton:hover { background: var(--color-primario-oscuro); }
-  .boton--principal:hover { background: var(--color-acento-oscuro); }
+  .boton:hover { background: var(--color-boton-oscuro, var(--color-primario-oscuro)); }
+  .boton--principal:hover { background: var(--color-relleno-acento, var(--color-acento-oscuro)); }
   .boton--secundario:hover { background: var(--color-superficie-suave); border-color: var(--color-primario); }
 }
 .boton--compacto { width: auto; min-width: 9.5rem; }
@@ -221,13 +222,13 @@ a { color: var(--color-primario); }
 /* ---------- Páginas internas (el encabezado y el menú están en components/diseno/DisenoAplicacion.css) ---------- */
 .avatar {
   display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; flex-shrink: 0;
-  color: #fff; font-size: 0.85rem; font-weight: 600; background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario-oscuro));
+  color: #fff; font-size: 0.85rem; font-weight: 600; background: linear-gradient(135deg, var(--color-boton-claro, var(--color-primario-claro)), var(--color-boton-oscuro, var(--color-primario-oscuro)));
 }
 /* Botón de la cuenta con la foto propia en vez de las iniciales (15-11-2026). */
-.avatar--foto { overflow: hidden; background: #e6f1f8; box-shadow: 0 0 0 1.5px #fff, 0 0 0 3px #b9d9ec; }
+.avatar--foto { overflow: hidden; background: light-dark(#e6f1f8, var(--color-info-fondo)); box-shadow: 0 0 0 1.5px #fff, 0 0 0 3px #b9d9ec; }
 .avatar--foto > img { width: 100%; height: 100%; object-fit: cover; }
 /* Cualquier avatar con la foto de la persona (components/Avatar.jsx, 15-11-2026): la imagen llena su forma. */
-.con-foto { overflow: hidden; background: #e6f1f8; }
+.con-foto { overflow: hidden; background: light-dark(#e6f1f8, var(--color-info-fondo)); }
 .con-foto > img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 .avatar--grande { width: 3.5rem; height: 3.5rem; font-size: 1.2rem; }
 .avatar--pequeno { width: 2rem; height: 2rem; font-size: 0.8rem; }
@@ -250,9 +251,9 @@ select.campo__control { cursor: pointer; }
 .panel-tarjeta__icono { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; color: var(--color-primario); background: var(--color-info-fondo); }
 .etiqueta-proximamente {
   display: inline-block; flex-shrink: 0; margin-left: auto; padding: 0.12rem 0.5rem; border-radius: 999px; white-space: nowrap;
-  font-size: 0.64rem; font-weight: 600; letter-spacing: 0.01em; color: var(--color-acento-oscuro); background: #fff1e6;
+  font-size: 0.64rem; font-weight: 600; letter-spacing: 0.01em; color: var(--color-acento-oscuro); background: light-dark(#fff1e6, var(--color-aviso-fondo));
 }
-.etiqueta-proximamente--clara { color: #fff; background: rgb(255 255 255 / 18%); }
+.etiqueta-proximamente--clara { color: #fff; background: light-dark(rgb(255 255 255 / 18%), var(--color-superficie)); }
 
 .estado-vacio { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 2rem 1rem; text-align: center; background: var(--color-superficie); border-radius: var(--radio); }
 .estado-vacio__icono { display: grid; place-items: center; width: 3.75rem; height: 3.75rem; border-radius: 50%; color: var(--color-primario); background: var(--color-info-fondo); }
@@ -302,7 +303,7 @@ select.campo__control { cursor: pointer; }
 /* La línea entre pasos se llena de izquierda a derecha al completar un paso (y se vacía al volver). */
 .indicador-pasos__paso:not(:last-child)::after {
   content: ''; position: absolute; top: 0.9rem; left: calc(50% + 1.1rem); right: calc(-50% + 1.1rem); height: 2px;
-  background: linear-gradient(var(--color-primario-claro), var(--color-primario-claro)) left / 0% 100% no-repeat, var(--color-borde);
+  background: linear-gradient(var(--color-boton-claro, var(--color-primario-claro)), var(--color-boton-claro, var(--color-primario-claro))) left / 0% 100% no-repeat, var(--color-borde);
   transition: background-size 400ms var(--curva-salida);
 }
 .indicador-pasos__paso--hecho:not(:last-child)::after { background-size: 100% 100%, auto; }
@@ -313,8 +314,8 @@ select.campo__control { cursor: pointer; }
 }
 /* Cada paso entra con un fundido corto: se nota que el asistente avanzó sin hacer esperar. */
 .asistente__paso { animation: aparecer 250ms var(--curva-salida); }
-.indicador-pasos__paso--actual .indicador-pasos__numero { color: #fff; background: var(--color-primario); border-color: var(--color-primario); box-shadow: 0 0 0 4px rgb(11 79 128 / 15%); }
-.indicador-pasos__paso--hecho .indicador-pasos__numero { color: #fff; background: var(--color-primario-claro); border-color: var(--color-primario-claro); }
+.indicador-pasos__paso--actual .indicador-pasos__numero { color: #fff; background: var(--color-boton, var(--color-primario)); border-color: var(--color-primario); box-shadow: 0 0 0 4px rgb(11 79 128 / 15%); }
+.indicador-pasos__paso--hecho .indicador-pasos__numero { color: #fff; background: var(--color-boton-claro, var(--color-primario-claro)); border-color: var(--color-primario-claro); }
 .indicador-pasos__nombre { font-size: 0.68rem; line-height: 1.2; color: var(--color-texto-secundario); max-width: 6.5rem; }
 .indicador-pasos__paso--actual .indicador-pasos__nombre { color: var(--color-primario); font-weight: 600; }
 
@@ -336,7 +337,7 @@ select.campo__control { cursor: pointer; }
   .tarjeta-objetivo:hover { border-color: var(--color-primario-claro); }
 }
 .tarjeta-objetivo:has(input:focus-visible) { outline: 3px solid var(--color-foco); outline-offset: 2px; }
-.tarjeta-objetivo--activa { border: 2px solid var(--color-acento); background: #fff7f0; box-shadow: 0 4px 12px rgb(244 123 32 / 18%); }
+.tarjeta-objetivo--activa { border: 2px solid var(--color-acento); background: light-dark(#fff7f0, var(--color-aviso-fondo)); box-shadow: 0 4px 12px rgb(244 123 32 / 18%); }
 .tarjeta-objetivo--activa::after {
   content: ''; position: absolute; top: 0.45rem; right: 0.45rem; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-acento);
 }
@@ -365,20 +366,20 @@ select.campo__control { cursor: pointer; }
 .resumen__cabecera .texto-secundario { margin: 0; }
 .etiqueta-rol {
   display: inline-block; padding: 0.05rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500;
-  color: var(--color-acento-oscuro); background: #fff1e6;
+  color: var(--color-acento-oscuro); background: light-dark(#fff1e6, var(--color-aviso-fondo));
 }
 .resumen__grilla { display: grid; grid-template-columns: 1fr; gap: 1rem; }
 .resumen-tarjeta { background: var(--color-superficie); border-radius: var(--radio); padding: 1.25rem; box-shadow: var(--sombra-tarjeta); }
 .resumen-tarjeta__encabezado { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; }
 .resumen-tarjeta__encabezado h2 { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1.05rem; }
 .resumen-tarjeta__datos { margin: 0; }
-.resumen-tarjeta__datos div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.5rem 0; border-top: 1px solid #edf1f5; font-size: 0.9rem; }
+.resumen-tarjeta__datos div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.5rem 0; border-top: 1px solid light-dark(#edf1f5, var(--color-borde)); font-size: 0.9rem; }
 .resumen-tarjeta__datos dt { color: var(--color-texto-secundario); }
 .resumen-tarjeta__datos dd { margin: 0; text-align: right; font-weight: 500; }
 
 .estimacion {
   border-radius: var(--radio); padding: 1.1rem 1.25rem; margin: 1rem 0; color: #fff;
-  background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario-oscuro));
+  background: linear-gradient(135deg, var(--color-boton-claro, var(--color-primario-claro)), var(--color-boton-oscuro, var(--color-primario-oscuro)));
 }
 .estimacion__titulo { margin: 0; font-weight: 500; color: rgb(255 255 255 / 85%); }
 .estimacion__valor { margin: 0.25rem 0; font-size: 1.9rem; font-weight: 700; color: #fff; }
@@ -402,7 +403,7 @@ select.campo__control { cursor: pointer; }
   .asistente__panel-mensaje { margin: 0; font-size: 1.35rem; font-weight: 700; line-height: 1.25; }
   .asistente__beneficios { display: grid; gap: 0.9rem; margin: 0; padding: 0; list-style: none; font-size: 0.88rem; color: rgb(255 255 255 / 90%); }
   .asistente__beneficios li { display: flex; align-items: center; gap: 0.7rem; }
-  .asistente__beneficio-icono { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; flex-shrink: 0; border-radius: 50%; background: rgb(255 255 255 / 14%); }
+  .asistente__beneficio-icono { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; flex-shrink: 0; border-radius: 50%; background: light-dark(rgb(255 255 255 / 14%), var(--color-superficie)); }
   .resumen__grilla { grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); }
 }
 

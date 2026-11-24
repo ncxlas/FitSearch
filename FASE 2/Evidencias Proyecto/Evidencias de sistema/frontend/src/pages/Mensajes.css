@@ -69,7 +69,7 @@
   max-width: 100%;
   overflow: hidden;
   padding: 0.05rem 0.5rem;
-  border: 1px solid #c5d9ea;
+  border: 1px solid light-dark(#c5d9ea, var(--color-borde));
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 600;
@@ -156,7 +156,7 @@
 .confirmar-eliminar__acciones .boton { width: 100%; min-width: 0; min-height: 2.75rem; font-size: 0.9rem; }
 .confirmar-eliminar__acciones .boton--secundario { background: var(--color-superficie); }
 .confirmar-eliminar .alerta { margin: 0; }
-.confirmar-eliminar__si.boton { background: var(--color-error); }
+.confirmar-eliminar__si.boton { background: var(--color-relleno-error, var(--color-error)); }
 @media (hover: hover) and (pointer: fine) {
   .confirmar-eliminar__si.boton:hover { background: #8f1d17; }
 }
@@ -193,7 +193,7 @@
   .buscador-chat > .icono { display: none; }
 }
 
-.mensajes mark { padding: 0 1px; border-radius: 3px; color: inherit; background: #ffe2a8; }
+.mensajes mark { padding: 0 1px; border-radius: 3px; color: inherit; background: light-dark(#ffe2a8, var(--color-aviso-fondo)); }
 
 .resultados-chat {
   position: relative;
@@ -266,7 +266,7 @@
   border-radius: 999px;
   font-size: 0.72rem;
   color: var(--color-texto-secundario);
-  background: #e7eef4;
+  background: light-dark(#e7eef4, var(--color-info-fondo));
 }
 .hilo__dia span::first-letter { text-transform: uppercase; }
 
@@ -278,7 +278,7 @@
   width: min(30rem, 100%);
   margin: 0.25rem 0;
   padding: 0.7rem 0.9rem;
-  border: 1px solid #cfe0ec;
+  border: 1px solid light-dark(#cfe0ec, var(--color-borde));
   border-radius: 12px;
   background: var(--color-superficie);
 }
@@ -300,14 +300,14 @@
   font-weight: 600;
   white-space: nowrap;
   color: var(--color-primario-oscuro);
-  background: #e9f4fb;
+  background: light-dark(#e9f4fb, var(--color-info-fondo));
 }
-.aviso-reserva__estado--confirmada { color: #076342; background: #def5ec; }
-.aviso-reserva__estado--cancelada { color: #962b2b; background: #fce5e5; }
+.aviso-reserva__estado--confirmada { color: light-dark(#076342, var(--color-exito)); background: light-dark(#def5ec, var(--color-exito-fondo)); }
+.aviso-reserva__estado--cancelada { color: light-dark(#962b2b, var(--color-error)); background: light-dark(#fce5e5, var(--color-aviso-fondo)); }
 .aviso-reserva__mensaje {
   margin: 0;
   padding-top: 0.4rem;
-  border-top: 1px solid #e3ebf2;
+  border-top: 1px solid light-dark(#e3ebf2, var(--color-borde));
   font-size: 0.88rem;
   line-height: 1.45;
   white-space: pre-wrap;
@@ -329,10 +329,10 @@
   border-color: transparent;
   border-radius: 14px 14px 4px 14px;
   color: #fff;
-  background: var(--color-primario);
+  background: var(--color-boton, var(--color-primario));
 }
 .mensaje-chat--propio time { color: rgb(255 255 255 / 78%); }
-.mensajes .mensaje-chat--propio mark { color: var(--color-texto); background: #ffd67a; }
+.mensajes .mensaje-chat--propio mark { color: var(--color-texto); background: light-dark(#ffd67a, var(--color-aviso-fondo)); }
 
 /* El resultado elegido en la búsqueda queda marcado; el destello inicial ayuda a encontrarlo al llegar. */
 .mensaje-chat:focus, .aviso-reserva:focus { outline: none; }

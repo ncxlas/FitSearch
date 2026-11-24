@@ -24,10 +24,8 @@ export default function VitrinaObjetivos() {
   const raiz = useRef(null);
   const [actual, setActual] = useState(0);
   const [pausada, setPausada] = useState(false);
-  // El mouse y el foco pausan por separado: retirar el mouse no reanuda si el foco sigue dentro (revisión del PR #46).
-  const [mouseDentro, setMouseDentro] = useState(false);
+  // El foco pausa la rotación para permitir recorrer las opciones con el teclado.
   const [focoDentro, setFocoDentro] = useState(false);
-  const enEspera = mouseDentro || focoDentro;
   const [fuera, setFuera] = useState(false);
   const [automatica, setAutomatica] = useState(() => Boolean(window.matchMedia && !window.matchMedia(consultaReducida).matches));
 
@@ -49,14 +47,13 @@ export default function VitrinaObjetivos() {
   }, []);
 
   // La barra de progreso del objetivo activo es el reloj: al terminar su animación pasa al siguiente. Así, pausar
-  // la barra (mouse encima, foco o el botón) también pausa la rotación, y al reanudar sigue desde donde iba.
-  const avanza = automatica && !pausada && !enEspera && !fuera;
+  // la barra (foco o el botón) también pausa la rotación, y al reanudar sigue desde donde iba.
+  const avanza = automatica && !pausada && !focoDentro && !fuera;
   const siguiente = () => setActual((indice) => (indice + 1) % OBJETIVOS.length);
   const elegido = OBJETIVOS[actual];
 
   return (
     <div ref={raiz} className="vitrina" data-automatica={automatica || undefined} data-avanza={avanza || undefined}
-      onMouseEnter={() => setMouseDentro(true)} onMouseLeave={() => setMouseDentro(false)}
       onFocus={() => setFocoDentro(true)} onBlur={(evento) => { if (!evento.currentTarget.contains(evento.relatedTarget)) setFocoDentro(false); }}>
       <div className="vitrina__escenario" aria-live={avanza ? 'off' : 'polite'}>
         {OBJETIVOS.map(({ especialidad, imagen, encuadre }, indice) => (

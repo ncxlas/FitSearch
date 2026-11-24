@@ -62,7 +62,7 @@ export const ESPACIOS = {
   usuario: { secciones: { ...SECCIONES, mensajes: { ruta: '/mensajes', nombre: 'Mensajes', icono: 'chat' } }, menu: [...MENU_LATERAL, 'mensajes'], barra: BARRA_INFERIOR },
   profesional: {
     secciones: SECCIONES_PROFESIONAL,
-    menu: ['inicio', 'agenda', 'clientes', 'perfil', 'mensajes', 'reportes', 'configuracion'],
+    menu: ['inicio', 'agenda', 'clientes', 'mensajes', 'reportes', 'perfil'],
     barra: [
       { seccion: 'inicio', nombre: 'Inicio', icono: 'casa' },
       { seccion: 'agenda', nombre: 'Agenda', icono: 'calendario' },

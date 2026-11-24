@@ -48,10 +48,10 @@
   cursor: pointer;
   transition: background-color 150ms ease;
 }
-.semana__dia[aria-pressed='true'] { background: #eef5fb; border-bottom-color: var(--color-primario); }
+.semana__dia[aria-pressed='true'] { background: light-dark(#eef5fb, var(--color-info-fondo)); border-bottom-color: var(--color-primario); }
 @media (hover: hover) and (pointer: fine) {
-  .semana__dia:hover { background: #f3f8fc; }
-  .semana__dia[aria-pressed='true']:hover { background: #e6f0f8; }
+  .semana__dia:hover { background: light-dark(#f3f8fc, var(--color-info-fondo)); }
+  .semana__dia[aria-pressed='true']:hover { background: light-dark(#e6f0f8, var(--color-info-fondo)); }
 }
 .semana__dia-nombre {
   font-size: 0.7rem;
@@ -71,7 +71,7 @@
   font-variant-numeric: tabular-nums;
   color: var(--color-primario-oscuro);
 }
-.semana__dia--hoy .semana__dia-numero { color: #fff; background: var(--color-primario); }
+.semana__dia--hoy .semana__dia-numero { color: #fff; background: var(--color-boton, var(--color-primario)); }
 .semana__dia-cuenta { grid-column: 1 / -1; justify-self: center; min-height: 1rem; font-size: 0.68rem; line-height: 1rem; color: var(--color-texto-secundario); white-space: nowrap; }
 .semana__dia-bloqueo { display: inline-flex; align-items: center; gap: 0.2rem; font-weight: 600; }
 
@@ -98,7 +98,7 @@
     repeating-linear-gradient(to bottom, transparent 0 calc(var(--alto-hora) / 2), var(--linea-media) calc(var(--alto-hora) / 2) calc(var(--alto-hora) / 2 + 1px), transparent calc(var(--alto-hora) / 2 + 1px) var(--alto-hora));
   background-position: 0 var(--margen-rejilla);
 }
-.semana__columna--pasada { background-color: #fafbfc; cursor: default; }
+.semana__columna--pasada { background-color: light-dark(#fafbfc, var(--color-superficie)); cursor: default; }
 .semana__columna--hoy { background-color: rgb(11 79 128 / 3.5%); }
 .semana__columna--elegida { box-shadow: inset 0 0 0 2px rgb(11 79 128 / 14%); }
 .semana__columna--bloqueada {
@@ -150,13 +150,13 @@
 /* Colores de los estados (pedido del PO del 15-11-2026). Lo que viene: celeste si está libre, naranjo si falta
    confirmar y verde claro si está confirmada. Lo que ya pasó: verde oscuro si se realizó y rojo si no se realizó.
    Los días bloqueados van en gris rayado y los horarios pasados sin reservas, apagados. */
-.horario--libre { color: var(--color-primario); background: #f3f8fc; border-color: #c4d9e8; }
-.horario--pendiente { color: #833705; background: #fff4ea; border-color: #f0c39d; }
-.horario--confirmada { color: #145236; background: #e8f6ef; border-color: #a6dac1; }
+.horario--libre { color: var(--color-primario); background: light-dark(#f3f8fc, var(--color-info-fondo)); border-color: light-dark(#c4d9e8, var(--color-borde)); }
+.horario--pendiente { color: light-dark(#833705, var(--color-acento-oscuro)); background: light-dark(#fff4ea, var(--color-aviso-fondo)); border-color: light-dark(#f0c39d, var(--color-borde)); }
+.horario--confirmada { color: light-dark(#145236, var(--color-exito)); background: light-dark(#e8f6ef, var(--color-exito-fondo)); border-color: light-dark(#a6dac1, var(--color-borde)); }
 .horario--realizada { color: #fff; background: #2d7a55; border-color: #22603f; }
-.horario--noRealizada { color: #8f2424; background: #fdecec; border-color: #eeb1b1; }
-.horario--bloqueado { color: #4d5b68; background: #eef1f4 repeating-linear-gradient(135deg, rgb(95 111 128 / 14%) 0 4px, transparent 4px 8px); border-color: #c7d3de; }
-.horario--sinReservas { color: var(--color-texto-secundario); background: #f6f8fa; border-color: #dbe3ea; border-style: dashed; }
+.horario--noRealizada { color: light-dark(#8f2424, var(--color-error)); background: light-dark(#fdecec, var(--color-aviso-fondo)); border-color: light-dark(#eeb1b1, var(--color-borde)); }
+.horario--bloqueado { color: light-dark(#4d5b68, var(--color-texto-secundario)); background: light-dark(#eef1f4, var(--color-info-fondo)) repeating-linear-gradient(135deg, rgb(95 111 128 / 14%) 0 4px, transparent 4px 8px); border-color: light-dark(#c7d3de, var(--color-borde)); }
+.horario--sinReservas { color: var(--color-texto-secundario); background: light-dark(#f6f8fa, var(--color-info-fondo)); border-color: light-dark(#dbe3ea, var(--color-borde)); border-style: dashed; }
 /* El horario elegido y la casilla que se está por publicar se marcan con el color principal (15-11-2026). */
 .horario--elegido {
   z-index: 2;
@@ -223,13 +223,13 @@
 .semana-dia__opcion span { font-size: 0.66rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-texto-secundario); }
 .semana-dia__opcion strong { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 .semana-dia__opcion--hoy { border-color: var(--color-primario); }
-.semana-dia__opcion[aria-pressed='true'] { color: #fff; background: var(--color-primario); border-color: var(--color-primario); }
+.semana-dia__opcion[aria-pressed='true'] { color: #fff; background: var(--color-boton, var(--color-primario)); border-color: var(--color-primario); }
 .semana-dia__opcion[aria-pressed='true'] span { color: rgb(255 255 255 / 85%); }
 .semana-dia__opcion:active { transform: scale(var(--escala-presion)); }
 .semana-dia__punto { width: 6px; height: 6px; border-radius: 50%; background: #9fc0d8; }
 .semana-dia__punto--citas { background: var(--color-acento); }
 .semana-dia__punto--vacio { background: transparent; }
-.semana-dia__opcion[aria-pressed='true'] .semana-dia__punto:not(.semana-dia__punto--vacio) { background: #fff; }
+.semana-dia__opcion[aria-pressed='true'] .semana-dia__punto:not(.semana-dia__punto--vacio) { background: light-dark(#fff, var(--color-superficie)); }
 
 .semana-dia__titulo { margin: 0.25rem 0 0; font-size: 1rem; color: var(--color-primario-oscuro); }
 .semana-dia__titulo::first-letter { text-transform: uppercase; }
@@ -242,7 +242,7 @@
   border-radius: 12px;
   font-size: 0.85rem;
   color: var(--color-texto-secundario);
-  background: #eef2f6;
+  background: light-dark(#eef2f6, var(--color-info-fondo));
 }
 .semana-dia__bloqueo .icono { margin-top: 0.15rem; }
 .semana-dia__lista { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
@@ -271,7 +271,7 @@
 .semana-dia__vacio {
   margin: 0;
   padding: 1.25rem 1rem;
-  border: 1px dashed #b6d3e4;
+  border: 1px dashed light-dark(#b6d3e4, var(--color-borde));
   border-radius: 12px;
   font-size: 0.9rem;
   text-align: center;

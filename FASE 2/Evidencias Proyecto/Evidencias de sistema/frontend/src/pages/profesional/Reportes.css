@@ -6,7 +6,7 @@
 .reportes__cabecera p { margin: 0.35rem 0 0; }
 .reportes__periodos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; width: 100%; }
 .reportes__periodos .boton--compacto { min-width: 0; padding-inline: 0.4rem; font-size: 0.85rem; white-space: nowrap; }
-.reportes__periodos [aria-pressed='true'] { color: #fff; background: var(--color-primario); border-color: var(--color-primario); }
+.reportes__periodos [aria-pressed='true'] { color: #fff; background: var(--color-boton, var(--color-primario)); border-color: var(--color-primario); }
 .reportes__contenido { display: grid; gap: 1rem; }
 .reportes__contenido[aria-busy='true'] { opacity: 0.6; transition: opacity 0.2s; }
 .reportes__nota { margin: 0.75rem 0 0; font-size: 0.85rem; }

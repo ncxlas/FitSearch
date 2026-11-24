@@ -22,14 +22,14 @@
 .ficha-establecimiento > .volver { margin-bottom: 0; }
 .ficha-establecimiento__cabecera {
   display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; align-items: center;
-  padding: 1.5rem 1.25rem; border-radius: 20px; border: 1px solid #d9e6ef; background: linear-gradient(115deg, #e6f0f8, #f7fafc 70%);
+  padding: 1.5rem 1.25rem; border-radius: 20px; border: 1px solid light-dark(#d9e6ef, var(--color-borde)); background: linear-gradient(115deg, light-dark(#e6f0f8, var(--color-info-fondo)), light-dark(#f7fafc, var(--color-info-fondo)) 70%);
 }
 .ficha-establecimiento__icono {
   display: grid; place-items: center; width: 4rem; height: 4rem; border-radius: 18px;
-  color: #fff; background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario-oscuro));
+  color: #fff; background: linear-gradient(135deg, var(--color-boton-claro, var(--color-primario-claro)), var(--color-boton-oscuro, var(--color-primario-oscuro)));
 }
 .ficha-establecimiento__categoria {
-  display: inline-block; margin-bottom: 0.35rem; padding: 0.15rem 0.65rem; border: 1px solid #cfe0ec; border-radius: 999px;
+  display: inline-block; margin-bottom: 0.35rem; padding: 0.15rem 0.65rem; border: 1px solid light-dark(#cfe0ec, var(--color-borde)); border-radius: 999px;
   font-size: 0.8rem; font-weight: 600; color: var(--color-primario); background: var(--color-superficie);
 }
 .ficha-establecimiento h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; letter-spacing: -0.02em; text-wrap: balance; }
@@ -57,7 +57,7 @@
 }
 .asociado__avatar {
   display: grid; place-items: center; flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: 50%;
-  font-size: 0.9rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario-oscuro));
+  font-size: 0.9rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--color-boton-claro, var(--color-primario-claro)), var(--color-boton-oscuro, var(--color-primario-oscuro)));
 }
 .asociado__texto { display: grid; flex: 1; min-width: 0; }
 .asociado__nombre { font-weight: 600; }

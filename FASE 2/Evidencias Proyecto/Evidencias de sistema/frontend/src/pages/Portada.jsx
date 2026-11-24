@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
 import VitrinaObjetivos from '../components/inicio/VitrinaObjetivos.jsx';
+import CarruselHerramientas from '../components/inicio/CarruselHerramientas.jsx';
 import HeroBienestar from '../components/inicio/HeroBienestar.jsx';
 import ParaProfesionales from '../components/inicio/ParaProfesionales.jsx';
 import CintaMovimiento from '../components/inicio/CintaMovimiento.jsx';
@@ -134,15 +135,15 @@ export default function Portada() {
 
         <section id="que-ofrecemos" className="portada__seccion portada__ancho" aria-labelledby="titulo-oferta">
           <div data-revelar className="portada__titulo-seccion"><h2 id="titulo-oferta">Más herramientas <span>para tu bienestar.</span></h2><p>Comienza con nuestros profesionales y el asistente. Seguimos construyendo nuevos espacios para ti.</p></div>
-          <div className="portada__herramientas">
-            {OFERTA.map(({ icono, nombre, texto, destino }, indice) => (
-              <article data-revelar data-revelar-retardo={indice * 70} key={nombre} className={`portada__herramienta${destino ? ' portada__herramienta--disponible' : ''}`}>
+          <CarruselHerramientas>
+            {OFERTA.map(({ icono, nombre, texto, destino }) => (
+              <article key={nombre} className={`portada__herramienta${destino ? ' portada__herramienta--disponible' : ''}`}>
                 <div className="portada__herramienta-superior"><span className="portada__icono-herramienta"><Icono nombre={icono} tamano={26} /></span><span className={`portada__estado${destino ? ' portada__estado--disponible' : ''}`}>{destino ? 'Disponible' : 'Próximamente'}</span></div>
                 <h3>{nombre}</h3><p>{texto}</p>
                 {destino && <Link to={destino} className="portada__enlace">Explorar <Icono nombre="flecha" tamano={18} /></Link>}
               </article>
             ))}
-          </div>
+          </CarruselHerramientas>
         </section>
 
         </div>
