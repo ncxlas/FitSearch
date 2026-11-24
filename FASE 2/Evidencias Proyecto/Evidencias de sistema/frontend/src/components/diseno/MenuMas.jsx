@@ -12,7 +12,7 @@ export default function MenuMas({ tema, onTema, onNavegar }) {
   return <nav ref={contenedor} className="menu-sesion" aria-label="Cuenta">
     <button ref={boton} type="button" aria-label="Más opciones" aria-expanded={abierto} aria-controls="menu-mas"
       onClick={() => { setAbierto(!abierto); setAspecto(false); }}>
-      <Icono nombre="menu" tamano={23} /><span className="menu-lateral__texto">Más</span>
+      <Icono nombre="menu" tamano={28} /><span className="menu-lateral__texto">Más</span>
     </button>
     {abierto && <div id="menu-mas" className="menu-mas__panel">
       {aspecto ? <>

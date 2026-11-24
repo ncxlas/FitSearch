@@ -13,7 +13,7 @@ export default function BarraInferior({ espacio = 'usuario' }) {
         <NavLink key={seccion} to={secciones[seccion].ruta} className="barra-inferior__enlace">
           {({ isActive }) => (
             <>
-              {seccion === 'perfil' ? <AvatarNavegacion /> : <Icono nombre={icono} tamano={24} activo={isActive} />}
+              {seccion === 'perfil' ? <AvatarNavegacion /> : <Icono nombre={icono} tamano={28} activo={isActive} />}
               <span className="barra-inferior__texto">{nombre}</span>
             </>
           )}

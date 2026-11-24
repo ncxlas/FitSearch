@@ -65,7 +65,7 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', te
             const { ruta, nombre, icono, proximamente } = secciones[clave];
             return <li key={clave}>
               <NavLink to={ruta} className="menu-lateral__enlace" onClick={onCerrar}>
-                {({ isActive }) => <>{clave === 'perfil' ? <AvatarNavegacion /> : <Icono nombre={icono} tamano={21} activo={isActive} />}
+                {({ isActive }) => <>{clave === 'perfil' ? <AvatarNavegacion /> : <Icono nombre={icono} tamano={26} activo={isActive} />}
                   <span className="menu-lateral__texto">{nombre}</span>
                   {proximamente && <span className="etiqueta-proximamente">Próximamente</span>}
                 </>}

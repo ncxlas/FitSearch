@@ -19,23 +19,23 @@
 .app .menu-lateral__marca .marca > span { font-size: 1.35rem; }
 .app .menu-lateral__lista { display: block; flex: 1; min-height: 0; margin: 0; padding: 2px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; }
 .app .menu-lateral__lista > li { margin: 0 0 .2rem; }
-.app .menu-lateral__enlace { position: relative; display: flex; align-items: center; flex-wrap: nowrap; width: 100%; min-height: 2.9rem; gap: .75rem; padding: .65rem .75rem; border: 0; border-radius: .65rem; background: none; color: var(--color-texto); font: inherit; font-size: .9rem; text-align: left; text-decoration: none; white-space: nowrap; cursor: pointer; overflow: hidden; }
+.app .menu-lateral__enlace { position: relative; display: flex; align-items: center; flex-wrap: nowrap; width: 100%; min-height: 2.9rem; gap: .75rem; padding: .65rem .625rem; border: 0; border-radius: .65rem; background: none; color: var(--color-texto); font: inherit; font-size: .9rem; text-align: left; text-decoration: none; white-space: nowrap; cursor: pointer; overflow: hidden; }
 .app .menu-lateral__enlace > .icono { flex: none; color: var(--color-texto-secundario); }
 .app .menu-lateral__enlace.active { background: var(--color-info-fondo); color: var(--color-primario-oscuro); box-shadow: none; }
 .app .menu-lateral__enlace.active > .icono { color: var(--color-primario-vivo); }
 .app .menu-lateral__texto { opacity: 1; }
 .app .menu-sesion { position: relative; inset: auto; flex: none; width: 100%; margin: 0; padding: .5rem; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
-.app .menu-sesion > button { display: flex; align-items: center; gap: .75rem; width: 100%; min-height: 2.9rem; padding: .65rem .75rem; border: 0; border-radius: .65rem; color: var(--color-texto); background: none; font: inherit; font-size: .9rem; white-space: nowrap; cursor: pointer; }
+.app .menu-sesion > button { display: flex; align-items: center; gap: .75rem; width: 100%; min-height: 2.9rem; padding: .65rem .625rem; border: 0; border-radius: .65rem; color: var(--color-texto); background: none; font: inherit; font-size: .9rem; white-space: nowrap; cursor: pointer; }
 .menu-mas__panel { position: absolute; z-index: 75; bottom: calc(100% + .4rem); left: .5rem; width: min(18rem, calc(100vw - 3rem)); max-height: calc(100dvh - 9rem); overflow-y: auto; padding: .5rem; background: var(--color-superficie); color: var(--color-texto); border: 1px solid var(--color-borde); border-radius: 1rem; box-shadow: 0 8px 30px rgb(0 0 0 / 18%); }
 .menu-mas__panel > button, .menu-mas__panel > a { display: flex; align-items: center; gap: .7rem; width: 100%; min-height: 2.85rem; padding: .6rem .75rem; border: 0; border-radius: .6rem; text-decoration: none; background: none; color: inherit; font: inherit; font-size: .9rem; text-align: left; cursor: pointer; }
 .menu-mas__panel hr { border: 0; border-top: 1px solid var(--color-borde); margin: .4rem 0; }
 .menu-mas__temas { border: 0; padding: .25rem .5rem; margin: 0; }
 .menu-mas__temas label { display: flex; justify-content: space-between; align-items: center; padding: .7rem .5rem; cursor: pointer; font-size: .9rem; }
 .menu-mas__temas input { width: 1.2rem; height: 1.2rem; accent-color: var(--color-accion); }
-.app .notificaciones__panel--lateral { position: fixed; inset: 4.75rem auto auto .75rem; width: min(20rem, calc(100vw - 1.5rem)); max-height: min(24rem, calc(100dvh - 6rem)); padding: 1rem; overflow-y: auto; z-index: 74; background: var(--color-superficie); border: 1px solid var(--color-borde); border-radius: 1rem; box-shadow: 8px 5px 30px rgb(0 0 0 / 18%); transform: none; }
+.app .notificaciones__panel--lateral { position: fixed; inset: auto; width: min(20rem, calc(100vw - 1.5rem)); max-height: min(24rem, calc(100dvh - 1.5rem)); padding: 1rem; overflow-y: auto; z-index: 74; background: var(--color-superficie); border: 1px solid var(--color-borde); border-radius: 1rem; box-shadow: 8px 5px 30px rgb(0 0 0 / 18%); transform: none; }
 .app .notificaciones__boton[aria-expanded="true"] { background: var(--color-info-fondo); color: var(--color-primario-vivo); }
 .app .notificaciones__boton[aria-expanded="true"] > .icono { color: var(--color-primario-vivo); }
-.avatar-navegacion { display: inline-grid; place-items: center; flex: none; width: 1.6rem; height: 1.6rem; border: 1px solid var(--color-borde); border-radius: 50%; overflow: hidden; background: var(--color-info-fondo); color: var(--color-primario-oscuro); font-size: .65rem; font-weight: 700; line-height: 1; }
+.avatar-navegacion { display: inline-grid; place-items: center; flex: none; width: 1.75rem; height: 1.75rem; border: 1px solid var(--color-borde); border-radius: 50%; overflow: hidden; background: var(--color-info-fondo); color: var(--color-primario-oscuro); font-size: .65rem; font-weight: 700; line-height: 1; }
 .app .menu-lateral__enlace.active .avatar-navegacion, .app .barra-inferior__enlace.active .avatar-navegacion { outline: 2px solid var(--color-primario-vivo); outline-offset: 2px; }
 .notificaciones__cerrar { position: absolute; right: .45rem; top: .45rem; }
 .app .notificaciones__panel--lateral .notificaciones__titulo { font-size: 1.1rem; color: var(--color-texto); padding: .45rem 2rem .9rem .3rem; margin-bottom: .7rem; border-bottom: 1px solid var(--color-borde); }
@@ -97,7 +97,7 @@
   .app .navegacion-lateral--desplegada .menu-lateral__marca .marca { gap: .7rem; }
   .app .navegacion-lateral--desplegada .menu-lateral__texto, .app .navegacion-lateral--desplegada .etiqueta-proximamente { width: auto; opacity: 1; }
   .app .menu-lateral__enlace .notificaciones__contador { position: absolute; top: .1rem; right: .1rem; min-width: 1rem; height: 1rem; font-size: .65rem; }
-  .app .notificaciones__panel--lateral { inset: 4.75rem auto auto 5.75rem; width: min(20rem, calc(100vw - 7rem)); }
+
   .app .menu-lateral__fondo, .app .barra-inferior { display: none; }
   .mensajes-flotantes--ampliado .mensajes-flotantes__cuerpo { grid-template-columns: 16rem minmax(0, 1fr); }
   .mensajes-flotantes--ampliado .mensajes-flotantes__lista { display: block; border-right: 1px solid var(--color-borde); }

@@ -34,3 +34,12 @@ El control nativo de Chrome devolvió errores de geometría y lecturas lentas. N
 Recorrer con tema claro y oscuro: Inicio, Profesionales y su ficha/filtros, Centros de salud y su ficha, Gimnasios y su ficha, Asistente, Comidas, Mi perfil (cuatro secciones), Favoritos, Mis citas y Mensajes. Revisar además las cuatro secciones del perfil profesional. A 390px comprobar encabezado, menú lateral, Más, radios de tema, notificaciones y barra inferior; a 1280px comprobar logo contraído/desplegado, foto del perfil y ausencia de desplazamiento del contenido. Incluir pantalla táctil grande y movimiento reducido.
 
 Esta evidencia complementa SC-40 sin asignar nuevos identificadores a las planillas oficiales. El registro de SC-40 y CP-249/250 en sus Excel, preparado antes de integrar #80/#81, debe conciliarse con las versiones vigentes en una tarea documental posterior.
+
+
+## Ajustes posteriores de la misma revisión
+
+El nav y la barra móvil comparten ahora el fondo del cuerpo sin separadores. Las opciones se centran verticalmente en escritorio y Más permanece al pie. El recuadro al pasar el mouse usa un fondo más marcado y un borde interior suave.
+
+El panel de notificaciones se ancla al rectángulo real de la campana: abre a su lado si hay espacio, o debajo/encima en móvil. Se mantiene dentro de la pantalla y recalcula al desplegar el menú, desplazarlo, cambiar el tamaño de ventana o variar el tamaño del panel. Los íconos laterales son de 26px, la barra móvil y Más de 28px, y la foto de acceso al perfil de 28px.
+
+Comprobación de esta ronda: 20 pruebas focalizadas aprobadas (incluyen posición en nav contraído/desplegado, borde inferior y móvil), lint sin errores con la advertencia ya registrada y compilación aprobada. La última suite completa de la ronda anterior fue de 513 aprobadas; no se declara una nueva suite completa por sumar estos tres casos. Se conserva la revisión visual pendiente.

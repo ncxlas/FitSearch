@@ -1,10 +1,11 @@
 import { createPortal } from 'react-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSesion } from '../../context/SesionContext.jsx';
 import { solicitar } from '../../services/api.js';
 import Icono from '../Icono.jsx';
 import useDesplegable from './useDesplegable.js';
+import { posicionNotificaciones } from './posicionNotificaciones.js';
 
 const CADA_SEGUNDOS = 60;
 
@@ -34,7 +35,27 @@ export default function Notificaciones({ ubicacion = 'encabezado' }) {
 
   const lateral = ubicacion === 'lateral';
   const [destino, setDestino] = useState(null);
+  const [posicion, setPosicion] = useState(null);
   useEffect(() => { setDestino(lateral ? contenedor.current?.closest('.navegacion-lateral') || document.body : contenedor.current); }, [contenedor, lateral]);
+  useLayoutEffect(() => {
+    if (!abierto || !lateral || !destino) return undefined;
+    const ubicar = () => {
+      if (!boton.current || !panel.current) return;
+      const nueva = posicionNotificaciones(boton.current.getBoundingClientRect(), panel.current.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight });
+      setPosicion((anterior) => anterior?.left === nueva.left && anterior?.top === nueva.top ? anterior : nueva);
+    };
+    ubicar();
+    const observador = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(ubicar);
+    if (boton.current) observador?.observe(boton.current);
+    if (panel.current) observador?.observe(panel.current);
+    window.addEventListener('resize', ubicar);
+    window.addEventListener('scroll', ubicar, true);
+    return () => {
+      observador?.disconnect();
+      window.removeEventListener('resize', ubicar);
+      window.removeEventListener('scroll', ubicar, true);
+    };
+  }, [abierto, lateral, destino, boton]);
   const rutaMensajes = rol === 'profesional' ? '/profesional/mensajes' : '/mensajes';
   return (
     <div className={`desplegable${lateral ? ' notificaciones--lateral' : ''}`} ref={contenedor}>
@@ -43,12 +64,12 @@ export default function Notificaciones({ ubicacion = 'encabezado' }) {
           ? `Notificaciones: ${noLeidos} ${noLeidos === 1 ? 'verificación pendiente' : 'verificaciones pendientes'}`
           : `Notificaciones: ${noLeidos} ${noLeidos === 1 ? 'mensaje sin leer' : 'mensajes sin leer'}`}
         onClick={() => setAbierto(!abierto)}>
-        <Icono nombre="campana" tamano={22} activo={abierto} />
+        <Icono nombre="campana" tamano={lateral ? 26 : 22} activo={abierto} />
         {lateral && <span className="menu-lateral__texto">Notificaciones</span>}
         {noLeidos > 0 && <span className="notificaciones__contador" aria-hidden="true">{noLeidos > 9 ? '9+' : noLeidos}</span>}
       </button>
       {abierto && destino && createPortal(
-        <section ref={panel} id="panel-notificaciones" className={`desplegable__panel notificaciones__panel${lateral ? ' notificaciones__panel--lateral' : ''}`} aria-label="Panel de notificaciones">
+        <section ref={panel} id="panel-notificaciones" className={`desplegable__panel notificaciones__panel${lateral ? ' notificaciones__panel--lateral' : ''}`} aria-label="Panel de notificaciones" style={lateral ? { ...posicion, visibility: posicion ? 'visible' : 'hidden' } : undefined}>
           <button type="button" className="boton-icono notificaciones__cerrar" aria-label="Cerrar notificaciones" onClick={() => { setAbierto(false); boton.current?.focus(); }}><Icono nombre="cerrar" tamano={20} /></button>
           <p className="notificaciones__titulo">Notificaciones</p>
           {noLeidos > 0 && administrador ? (
