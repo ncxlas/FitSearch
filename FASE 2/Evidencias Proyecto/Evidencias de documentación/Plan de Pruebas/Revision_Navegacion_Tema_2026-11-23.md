@@ -69,3 +69,10 @@ En el hero se retiraron los bordes dorados de ambas hojas, responsables de la l�
 Las animaciones de la portada continúan al pasar el cursor: se retiró la pausa por hover de la cinta decorativa, la vitrina de objetivos y el carrusel de herramientas. Se conservan la pausa manual, la pausa al enfocar controles o enlaces y la preferencia de movimiento reducido. Las opciones del header y el acceso Iniciar sesión muestran un contorno tenue al pasar el mouse, sin subrayado; el foco de teclado mantiene su contorno visible.
 
 Comprobación de esta ronda: 24 pruebas focalizadas de Portada, CarruselHerramientas y VitrinaObjetivos aprobadas. Las regresiones ahora comprueban que entrar o salir con el cursor no detiene la animación y que el foco conserva su pausa. Lint sin errores, con la advertencia heredada de Mensajes.jsx; compilación correcta, con la advertencia de tamaño del paquete ya registrada. La última suite completa registrada sigue siendo de 58 archivos/524 pruebas; no se declara una nueva suite completa. Revisión visual pendiente.
+
+
+### Menú profesional — 24-11-2026
+
+El menú profesional muestra Inicio, Agenda, Clientes, Mensajes, Reportes y Perfil profesional, con la campana junto a Mensajes. Configuración se encuentra únicamente dentro de Más, el botón de hamburguesa al pie del nav, y conserva la ruta /profesional/configuracion. La barra inferior móvil mantiene sus accesos.
+
+Comprobación de esta ronda: 35 pruebas focalizadas de EspacioProfesional, MenuLateral y DisenoAplicacion aprobadas, incluyendo la ausencia de Configuración en el nav, su presencia única dentro de Más y el orden del perfil. Compilación correcta y lint sin errores, con sus advertencias previamente registradas. La última suite completa continúa siendo de 58 archivos/524 pruebas; no se declara una ejecución completa nueva. Revisión visual pendiente.

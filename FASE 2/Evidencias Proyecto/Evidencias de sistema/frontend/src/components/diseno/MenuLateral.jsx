@@ -52,8 +52,9 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', te
     };
   }, [abierto, onCerrar]);
   const menuOrdenado = menu.filter((clave) => clave !== 'perfil');
+  const posicionPerfil = menuOrdenado.indexOf(espacio === 'profesional' ? 'reportes' : 'mensajes');
+  if (menu.includes('perfil')) menuOrdenado.splice(posicionPerfil >= 0 ? posicionPerfil + 1 : menuOrdenado.length, 0, 'perfil');
   const posicionAvisos = menuOrdenado.indexOf('mensajes');
-  if (menu.includes('perfil')) menuOrdenado.splice(posicionAvisos >= 0 ? posicionAvisos + 1 : menuOrdenado.length, 0, 'perfil');
   return <>
     <div className={`menu-lateral__fondo${abierto ? ' menu-lateral__fondo--visible' : ''}`} onClick={onCerrar} aria-hidden="true" />
     <div ref={panel} role={abierto ? 'dialog' : undefined} aria-modal={abierto ? true : undefined} aria-label={abierto ? 'Navegación' : undefined} className={`navegacion-lateral${abierto ? ' navegacion-lateral--abierta' : ''}${desplegado ? ' navegacion-lateral--desplegada' : ''}`} {...propiedades}>
