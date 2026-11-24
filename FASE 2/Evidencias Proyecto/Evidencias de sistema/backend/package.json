@@ -41,6 +41,9 @@
     "testEnvironment": "node",
     "setupFiles": [
       "<rootDir>/tests/setup.js"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setupPorPrueba.js"
     ]
   },
   "dependencies": {

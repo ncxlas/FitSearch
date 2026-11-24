@@ -36,6 +36,8 @@ services:
         condition: service_healthy
     environment:
       PORT: 3000
+      # nginx (servicio frontend) reenvía /api: la API toma la IP real del cliente para el límite de intentos (SC-41).
+      TRUST_PROXY: ${TRUST_PROXY:-1}
       DATABASE_URL: mysql://fitsearch:${MYSQL_PASSWORD}@mysql:3306/fitsearch
       SHADOW_DATABASE_URL: mysql://fitsearch:${MYSQL_PASSWORD}@mysql:3306/fitsearch_shadow
       JWT_SECRET: ${JWT_SECRET:?Falta JWT_SECRET en .env}

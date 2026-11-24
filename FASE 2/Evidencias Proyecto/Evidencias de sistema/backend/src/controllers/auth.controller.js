@@ -10,6 +10,8 @@ async function registrar(req, res) {
 async function iniciarSesion(req, res) {
   const { correo, password, recordar } = req.body;
   const resultado = await authService.iniciarSesion({ correo, password, recordar });
+  // Ingreso correcto: se olvidan los fallos de este correo (límite de intentos, SC-41).
+  req.limite?.exito();
   res.json(resultado);
 }
 
