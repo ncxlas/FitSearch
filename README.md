@@ -122,6 +122,7 @@ Completar `backend/.env`:
 | Variable | Descripción |
 |---|---|
 | `PORT` | Puerto de la API (por defecto 3000) |
+| `TRUST_PROXY` | Vacío en desarrollo. `1` si un proxy (nginx) reenvía las peticiones a la API, para que el límite de intentos use la IP real del cliente (Docker ya lo trae así) |
 | `DATABASE_URL` | Conexión a MySQL con el usuario y la contraseña del paso 2 |
 | `SHADOW_DATABASE_URL` | Base auxiliar que Prisma usa para crear migraciones (solo desarrollo) |
 | `JWT_SECRET` | Cadena larga y aleatoria para firmar los tokens |
@@ -404,6 +405,21 @@ Las contraseñas de `.env` forman parte de la URL de conexión: usar solo letras
 
 Los contenedores se comunican por la red interna de Compose usando el nombre del servicio (`mysql`, `backend`); no se usa `network_mode: host`. Casos de prueba y evidencia: [FS-HU-11 — Docker](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-11_Docker.md).
 
+## Límite de intentos en el acceso (SC-41, 24-11-2026)
+
+La API limita los intentos en las rutas de acceso y responde `429` con la cabecera `Retry-After` y un mensaje que dice cuánto esperar (las pantallas lo muestran como cualquier otro error):
+
+| Ruta | Límite |
+|---|---|
+| `POST /api/auth/login` | 5 fallos seguidos por correo y 20 por dirección IP; después, espera de 1 minuto que se duplica con cada fallo nuevo hasta 15 minutos. Un ingreso correcto borra los fallos del correo |
+| `PUT /api/perfil/cuenta` (confirmar la identidad al cambiar el correo) | 5 fallos por cuenta, con la misma espera progresiva |
+| `POST /api/auth/recuperar` | 3 enlaces por correo y 10 por IP cada hora (exista o no la cuenta) |
+| `POST /api/auth/restablecer` | 10 por IP cada 15 minutos |
+| `POST /api/auth/registro` | 10 cuentas por IP cada hora |
+| `POST /api/auth/google` | 30 por IP cada 15 minutos |
+
+Los contadores viven en la memoria de la API (un solo proceso) y empiezan de cero si se reinicia; las peticiones mal formadas no cuentan. Con Docker, nginx reenvía `/api` y `TRUST_PROXY=1` permite leer la IP real del cliente; en un servidor público conviene publicar solo el puerto web, porque si la API queda expuesta directo un cliente podría inventar su IP en `X-Forwarded-For` (el límite por correo sigue funcionando igual). Diseño en el DAS (QS8 y D41) y evidencia en [Límite de intentos y CI](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Limite_Intentos_y_CI_2026-11-24.md).
+
 ## Pruebas
 
 ```bash
@@ -412,6 +428,10 @@ cd frontend && npm test     # Vitest + Testing Library (validaciones y pantallas
 npm run lint                # en cada carpeta: ESLint sin errores (DoD-05)
 npm audit                   # en cada carpeta: sin vulnerabilidades críticas ni altas (DoD-12)
 ```
+
+### Integración continua (SC-41)
+
+Cada PR hacia `main` y cada push a `main` corren en GitHub Actions ([`.github/workflows/pruebas.yml`](.github/workflows/pruebas.yml)): lint y Jest del backend; lint, Vitest y build del frontend; y, en un MySQL 8.4 vacío, todas las migraciones, la comprobación de que coinciden con `schema.prisma`, los roles y los scripts `test:mysql:*`. El trabajo «Pruebas completas» resume los tres y es el que se marca como obligatorio en la protección de `main`. Al abrir un PR, la descripción parte con la [plantilla](.github/pull_request_template.md) de la Definition of Done.
 
 Las pruebas de integración del backend simulan el acceso a datos, por lo que no requieren MySQL. Para la agenda y las reservas hay además una comprobación contra MySQL real, que crea sus propios datos temporales y los elimina al terminar:
 

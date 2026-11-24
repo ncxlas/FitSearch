@@ -7,8 +7,18 @@ if (faltantes.length > 0) {
   throw new Error(`Faltan variables de entorno obligatorias: ${faltantes.join(', ')}. Revisa backend/.env (ver .env.example).`);
 }
 
+// Valor de «trust proxy» de Express (SC-41): sin proxy delante, la IP es la de la conexión. En Docker, nginx atiende
+// al navegador y reenvía a la API, así que TRUST_PROXY=1 hace que el límite de intentos use la IP real del cliente.
+function confianzaProxy(valor) {
+  const texto = (valor || '').trim();
+  if (!texto || texto === 'false' || texto === '0') return false;
+  if (texto === 'true') return true;
+  return /^\d+$/.test(texto) ? Number(texto) : texto;
+}
+
 module.exports = {
   puerto: Number(process.env.PORT) || 3000,
+  confiarProxy: confianzaProxy(process.env.TRUST_PROXY),
   jwtSecreto: process.env.JWT_SECRET,
   jwtExpiracion: process.env.JWT_EXPIRES_IN || '8h',
   // Duración de la sesión cuando el usuario marca "Recordarme" (DAS, D17).

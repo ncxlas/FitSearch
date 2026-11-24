@@ -1,0 +1,141 @@
+# Integración continua de FitSearch (SC-41; DAS, D42). Corre en cada PR hacia main y en cada push a main:
+#   - Backend: lint y pruebas de Jest (unitarias e integración con datos simulados).
+#   - Frontend: lint, pruebas de Vitest y build de producción.
+#   - MySQL: aplica todas las migraciones en una base vacía, comprueba que coinciden con schema.prisma, carga los
+#     roles y corre las pruebas contra MySQL real (cada script crea sus cuentas temporales y las borra al terminar).
+# El último trabajo, «Pruebas completas», es el que se marca como obligatorio en la protección de main.
+name: Pruebas
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Un push nuevo al mismo PR deja obsoleta la corrida anterior.
+  group: pruebas-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Las imágenes de Docker usan node:22 (backend/Dockerfile y frontend/Dockerfile): la CI usa la misma versión.
+  NODE_VERSION: 22
+
+jobs:
+  backend:
+    name: Backend (lint y Jest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: FASE 2/Evidencias Proyecto/Evidencias de sistema/backend
+    env:
+      # Las pruebas simulan el acceso a datos; Prisma solo necesita una URL con forma válida.
+      DATABASE_URL: mysql://prueba:prueba@localhost:3306/fitsearch_pruebas
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: FASE 2/Evidencias Proyecto/Evidencias de sistema/backend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - run: npm run lint
+      - run: npx jest --ci
+
+  frontend:
+    name: Frontend (lint, Vitest y build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: FASE 2/Evidencias Proyecto/Evidencias de sistema/frontend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: FASE 2/Evidencias Proyecto/Evidencias de sistema/frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  mysql:
+    name: MySQL (migraciones y pruebas con base real)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        # La misma versión que docker-compose.yml.
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: raiz-ci
+          MYSQL_DATABASE: fitsearch
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -praiz-ci --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+    defaults:
+      run:
+        working-directory: FASE 2/Evidencias Proyecto/Evidencias de sistema/backend
+    env:
+      # Base desechable que solo existe durante la corrida.
+      DATABASE_URL: mysql://root:raiz-ci@127.0.0.1:3306/fitsearch
+      JWT_SECRET: secreto-solo-para-la-ci
+      IA_API_KEY: ''
+      # test:mysql:acceso comprueba que el acceso con Google esté configurado y que rechace credenciales falsas;
+      # un ID de cliente de prueba basta, porque ninguna credencial llega a validarse con Google.
+      GOOGLE_CLIENT_ID: ci-pruebas.apps.googleusercontent.com
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: FASE 2/Evidencias Proyecto/Evidencias de sistema/backend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - name: Aplicar todas las migraciones en una base vacía
+        run: npx prisma migrate deploy
+      - name: Comprobar que las migraciones coinciden con schema.prisma
+        run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+      - name: Cargar los roles del sistema
+        run: npm run db:seed
+      - name: Pruebas contra MySQL real
+        run: |
+          for prueba in acceso agua agenda asistente comidas especialidades mejoras plan; do
+            echo "::group::test:mysql:$prueba"
+            npm run "test:mysql:$prueba"
+            echo "::endgroup::"
+          done
+
+  completas:
+    name: Pruebas completas
+    # Un solo resultado para marcar como obligatorio: verde solo si los tres trabajos pasaron.
+    if: always()
+    needs: [backend, frontend, mysql]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Resultado
+        run: |
+          echo "backend=${{ needs.backend.result }} frontend=${{ needs.frontend.result }} mysql=${{ needs.mysql.result }}"
+          test "${{ needs.backend.result }}" = success
+          test "${{ needs.frontend.result }}" = success
+          test "${{ needs.mysql.result }}" = success

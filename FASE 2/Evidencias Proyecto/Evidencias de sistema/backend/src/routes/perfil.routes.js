@@ -11,9 +11,14 @@ router.use(autenticar);
 const cuentaPerfil = require('../services/cuentaPerfil.service');
 const cuentaValidadores = require('../validators/cuentaPerfil.validators');
 const { matchedData } = require('express-validator');
+const { limitarConfirmacionIdentidad } = require('../middlewares/limiteIntentos');
 router.get('/cuenta', async (req, res) => res.json(await cuentaPerfil.obtener(req.usuario.id)));
-router.put('/cuenta', cuentaValidadores.guardar, validar,
-  async (req, res) => res.json(await cuentaPerfil.guardar(req.usuario.id, matchedData(req), req.usuario.vencimiento)));
+// Cambiar el correo pide confirmar la identidad: los intentos fallidos tienen límite por cuenta (SC-41).
+router.put('/cuenta', cuentaValidadores.guardar, validar, limitarConfirmacionIdentidad, async (req, res) => {
+  const resultado = await cuentaPerfil.guardar(req.usuario.id, matchedData(req), req.usuario.vencimiento);
+  req.limite?.exito();
+  res.json(resultado);
+});
 router.get('/', controlador.obtener);
 router.put('/tipo-cuenta', validadores.tipoCuenta, validar, controlador.actualizarTipoCuenta);
 // Datos personales, objetivos y salud son del asistente del usuario: una cuenta profesional no los completa (DAS, D25).
