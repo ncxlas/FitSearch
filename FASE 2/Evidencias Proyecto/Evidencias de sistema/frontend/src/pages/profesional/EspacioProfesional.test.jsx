@@ -43,7 +43,7 @@ describe('Diseño del profesional', () => {
 
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
     const nombres = within(menu).getAllByRole('link').filter((enlace) => enlace.classList.contains('menu-lateral__enlace')).map((enlace) => enlace.querySelector('.menu-lateral__texto').textContent);
-    expect(nombres).toEqual(['Inicio', 'Agenda', 'Clientes', 'Perfil profesional', 'Mensajes', 'Reportes', 'Configuración']);
+    expect(nombres).toEqual(['Inicio', 'Agenda', 'Clientes', 'Mensajes', 'Perfil profesional', 'Reportes', 'Configuración']);
     expect(within(menu).getByRole('button', { name: 'Notificaciones' })).toBeInTheDocument();
     expect(within(menu).queryByText('¿Necesitas una recomendación?')).not.toBeInTheDocument();
     const barra = screen.getByRole('navigation', { name: 'Navegación inferior' });

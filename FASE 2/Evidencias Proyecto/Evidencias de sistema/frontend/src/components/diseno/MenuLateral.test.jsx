@@ -30,6 +30,8 @@ test('la campana se marca mientras su panel está abierto y se desmarca al cerra
   await userEvent.click(screen.getByRole('button', { name: 'Cerrar notificaciones' }));
   expect(campana).toHaveAttribute('aria-expanded', 'false');
   expect(campana.querySelector('.icono--activo')).toBeNull();
+  await userEvent.tab();
+  expect(screen.getByRole('link', { name: 'Mi perfil' })).toHaveFocus();
 });
 
 test('ambos accesos al perfil muestran la foto vigente y las iniciales si la imagen falla', async () => {

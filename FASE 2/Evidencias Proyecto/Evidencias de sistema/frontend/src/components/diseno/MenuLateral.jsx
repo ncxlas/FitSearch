@@ -51,7 +51,9 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', te
       if (anterior?.isConnected) anterior.focus();
     };
   }, [abierto, onCerrar]);
-  const posicionAvisos = menu.indexOf('mensajes');
+  const menuOrdenado = menu.filter((clave) => clave !== 'perfil');
+  const posicionAvisos = menuOrdenado.indexOf('mensajes');
+  if (menu.includes('perfil')) menuOrdenado.splice(posicionAvisos >= 0 ? posicionAvisos + 1 : menuOrdenado.length, 0, 'perfil');
   return <>
     <div className={`menu-lateral__fondo${abierto ? ' menu-lateral__fondo--visible' : ''}`} onClick={onCerrar} aria-hidden="true" />
     <div ref={panel} role={abierto ? 'dialog' : undefined} aria-modal={abierto ? true : undefined} aria-label={abierto ? 'Navegación' : undefined} className={`navegacion-lateral${abierto ? ' navegacion-lateral--abierta' : ''}${desplegado ? ' navegacion-lateral--desplegada' : ''}`} {...propiedades}>
@@ -61,7 +63,7 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', te
           <button ref={cerrar} type="button" className="boton-icono" aria-label="Cerrar menú" onClick={onCerrar}><Icono nombre="cerrar" tamano={22} /></button>
         </div>
         <ul className="menu-lateral__lista">
-          {menu.map((clave, indice) => {
+          {menuOrdenado.map((clave, indice) => {
             const { ruta, nombre, icono, proximamente } = secciones[clave];
             return <li key={clave}>
               <NavLink to={ruta} className="menu-lateral__enlace" onClick={onCerrar}>
