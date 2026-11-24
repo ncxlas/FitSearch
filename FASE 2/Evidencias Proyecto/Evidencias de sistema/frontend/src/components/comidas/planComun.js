@@ -20,3 +20,10 @@ export function pesoDeLaMeta(meta, dia) {
   const avance = (meta.ritmoSemanalKg / 7) * dias;
   return bajar ? Math.max(meta.pesoObjetivoKg, meta.pesoInicialKg - avance) : Math.min(meta.pesoObjetivoKg, meta.pesoInicialKg + avance);
 }
+
+// Días de la semana de un plan de comidas semanal (SC-44): 1 = lunes … 7 = domingo.
+export const DIAS = [
+  { dia: 1, corto: 'Lun', nombre: 'Lunes' }, { dia: 2, corto: 'Mar', nombre: 'Martes' }, { dia: 3, corto: 'Mié', nombre: 'Miércoles' },
+  { dia: 4, corto: 'Jue', nombre: 'Jueves' }, { dia: 5, corto: 'Vie', nombre: 'Viernes' }, { dia: 6, corto: 'Sáb', nombre: 'Sábado' },
+  { dia: 7, corto: 'Dom', nombre: 'Domingo' },
+];

@@ -88,9 +88,9 @@ describe('Resumen', () => {
 
     // Las cuatro secciones están disponibles; la nota dice el reparto del plan y lleva a su pestaña (11-11-2026).
     const pestanas = screen.getByRole('group', { name: 'Secciones de Comidas' });
-    expect(within(pestanas).getAllByRole('button').map((boton) => boton.textContent)).toEqual(['Resumen', 'Comidas', 'Plan de alimentación', 'Estadísticas']);
+    expect(within(pestanas).getAllByRole('button').map((boton) => boton.textContent)).toEqual(['Resumen', 'Comidas', 'Plan de comidas', 'Plan de macronutrientes', 'Estadísticas']);
     expect(within(pestanas).queryByText('Próximamente')).not.toBeInTheDocument();
-    expect(screen.getByText(/repartido según tu plan de alimentación: 30 % proteínas, 45 % carbohidratos y 25 % grasas/)).toBeInTheDocument();
+    expect(screen.getByText(/repartido según tu plan de macronutrientes: 30 % proteínas, 45 % carbohidratos y 25 % grasas/)).toBeInTheDocument();
   });
 
   test('la semana dice cuántos días completos quedaron cerca de la meta y compara el día con el promedio de los otros', async () => {
@@ -386,9 +386,9 @@ describe('Estadísticas (FS-HU-26)', () => {
   });
 });
 
-// Plan de alimentación (11-11-2026): según la meta del perfil (por defecto) o uno de la lista de personalizados, que rige
+// Plan de macronutrientes (11-11-2026, antes «Plan de alimentación»): según la meta del perfil (por defecto) o uno de la lista de personalizados, que rige
 // desde el día en que se elige; y la meta de peso, que ajusta las calorías.
-describe('Plan de alimentación', () => {
+describe('Plan de macronutrientes', () => {
   const porcentajes = (proteinas, carbohidratos, grasas) => ({ proteinas, carbohidratos, grasas });
   const VOLUMEN = { id: 4, nombre: 'Volumen', porcentajes: porcentajes(40, 35, 25), proteinasG: 253, carbohidratosG: 221, grasasG: 70, enUso: false };
   const OPCIONES_BAJAR = { ritmos: [0.25, 0.5, 0.75], ritmoPorDefecto: 0.5, rango: { min: 56.7, max: 67.9, porImc: true } };
@@ -414,11 +414,11 @@ describe('Plan de alimentación', () => {
       '/api/comidas/plan': (url, { method, body }) => (method && method !== 'GET' ? alCambiar(url, method, body ? JSON.parse(body) : null) : [200, inicial]),
     });
     renderizarApp('/comidas');
-    await usuario.click(within(await screen.findByRole('group', { name: 'Secciones de Comidas' })).getByRole('button', { name: 'Plan de alimentación' }));
-    await screen.findByRole('heading', { name: 'Tu plan de alimentación' });
+    await usuario.click(within(await screen.findByRole('group', { name: 'Secciones de Comidas' })).getByRole('button', { name: 'Plan de macronutrientes' }));
+    await screen.findByRole('heading', { name: 'Tu plan de macronutrientes' });
     return fetch;
   }
-  const tarjetaPlan = () => screen.getByRole('heading', { name: 'Tu plan de alimentación' }).closest('section');
+  const tarjetaPlan = () => screen.getByRole('heading', { name: 'Tu plan de macronutrientes' }).closest('section');
   const tarjetaPeso = () => screen.getByRole('heading', { name: 'Tu meta de peso' }).closest('section');
 
   test('muestra el plan de la meta con sus calorías, reparto y gramos, cómo se calcula y el acceso a nutricionistas', async () => {
@@ -643,10 +643,10 @@ describe('Plan de alimentación', () => {
     let falla = true;
     simular({ '/api/comidas/plan': () => (falla ? [500, { error: 'No pudimos cargar tu plan' }] : [200, respuestaPlan()]) });
     renderizarApp('/comidas');
-    await usuario.click(within(await screen.findByRole('group', { name: 'Secciones de Comidas' })).getByRole('button', { name: 'Plan de alimentación' }));
+    await usuario.click(within(await screen.findByRole('group', { name: 'Secciones de Comidas' })).getByRole('button', { name: 'Plan de macronutrientes' }));
     expect(await screen.findByText('No pudimos cargar tu plan')).toBeInTheDocument();
     falla = false;
     await usuario.click(screen.getByRole('button', { name: 'Reintentar' }));
-    expect(await screen.findByRole('heading', { name: 'Tu plan de alimentación' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Tu plan de macronutrientes' })).toBeInTheDocument();
   });
 });

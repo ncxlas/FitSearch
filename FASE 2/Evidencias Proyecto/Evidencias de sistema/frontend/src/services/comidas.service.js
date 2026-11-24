@@ -11,7 +11,7 @@ export const buscarAlimentos = (texto) => solicitar(`/comidas/alimentos?q=${enco
 export const registrarComida = (datos) => solicitar('/comidas', { metodo: 'POST', cuerpo: datos });
 export const actualizarComida = (id, datos) => solicitar(`/comidas/${id}`, { metodo: 'PATCH', cuerpo: datos });
 export const eliminarComida = (id) => solicitar(`/comidas/${id}`, { metodo: 'DELETE' });
-// Plan de alimentación (11-11-2026): el de la meta o uno de la lista de personalizados (rige desde hoy), y la meta de
+// Plan de macronutrientes (11-11-2026, antes «Plan de alimentación»): el de la meta o uno de la lista de personalizados (rige desde hoy), y la meta de
 // peso. Cada llamada responde el plan completo.
 export const obtenerPlan = () => solicitar('/comidas/plan');
 export const elegirPlan = (datos) => solicitar('/comidas/plan', { metodo: 'PUT', cuerpo: datos });
@@ -23,6 +23,15 @@ export const quitarMetaPeso = () => solicitar('/comidas/plan/meta-peso', { metod
 // Historial de peso (SC-43): cada acción responde el plan completo.
 export const anotarPeso = (datos) => solicitar('/comidas/plan/pesos', { metodo: 'POST', cuerpo: datos });
 export const borrarPeso = (id) => solicitar(`/comidas/plan/pesos/${id}`, { metodo: 'DELETE' });
+// Planes de comidas (SC-44): cada cambio responde la lista completa; «Lo comí» registra un momento del plan en el día.
+export const listarPlanesComida = () => solicitar('/comidas/planes-comida');
+export const crearPlanComida = (datos) => solicitar('/comidas/planes-comida', { metodo: 'POST', cuerpo: datos });
+export const actualizarPlanComida = (id, datos) => solicitar(`/comidas/planes-comida/${id}`, { metodo: 'PUT', cuerpo: datos });
+export const eliminarPlanComida = (id) => solicitar(`/comidas/planes-comida/${id}`, { metodo: 'DELETE' });
+export const usarPlanComida = (id, enUso) => solicitar(`/comidas/planes-comida/${id}/uso`, { metodo: 'PUT', cuerpo: { enUso } });
+export const registrarDesdePlan = (id, datos) => solicitar(`/comidas/planes-comida/${id}/registrar`, { metodo: 'POST', cuerpo: datos });
+// Día de la semana de una fecha AAAA-MM-DD: 1 = lunes … 7 = domingo (igual que la API).
+export const diaDeLaSemana = (fecha) => ((new Date(`${fecha}T00:00:00Z`).getUTCDay() + 6) % 7) + 1;
 
 export const MOMENTOS = reglas.comidas.momentos;
 export const { min: GRAMOS_MIN, max: GRAMOS_MAX } = reglas.comidas.gramos;

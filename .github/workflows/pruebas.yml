@@ -119,7 +119,7 @@ jobs:
         run: npm run db:seed
       - name: Pruebas contra MySQL real
         run: |
-          for prueba in acceso agua agenda asistente comidas cuenta especialidades mejoras peso plan; do
+          for prueba in acceso agua agenda asistente comidas cuenta especialidades mejoras peso plan planes-comida; do
             echo "::group::test:mysql:$prueba"
             npm run "test:mysql:$prueba"
             echo "::endgroup::"

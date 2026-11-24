@@ -9,7 +9,15 @@ const router = Router();
 router.use(autenticar, autorizarRoles('usuario'));
 router.get('/alimentos', v.busqueda, validar, controlador.alimentos);
 router.get('/semana', v.fechaConsulta, validar, controlador.semana);
-// Plan de alimentación (11-11-2026): según la meta del perfil o uno de la lista de personalizados, y la meta de peso.
+// Planes de comidas (SC-44): hasta 10 por persona, uno en uso; «Lo comí» registra un momento del plan en el día.
+router.get('/planes-comida', controlador.planesComida);
+router.post('/planes-comida', v.planComida, validar, controlador.crearPlanComida);
+router.put('/planes-comida/:id', v.idPlanComida, v.planComida, validar, controlador.actualizarPlanComida);
+router.delete('/planes-comida/:id', v.idPlanComida, validar, controlador.eliminarPlanComida);
+router.put('/planes-comida/:id/uso', v.idPlanComida, v.usoPlanComida, validar, controlador.usarPlanComida);
+router.post('/planes-comida/:id/registrar', v.idPlanComida, v.registrarPlanComida, validar, controlador.registrarPlanComida);
+// Plan de macronutrientes (antes «Plan de alimentación», 11-11-2026; renombrado en SC-44): según la meta del perfil o uno
+// de la lista de personalizados, y la meta de peso.
 router.get('/plan', controlador.plan);
 router.put('/plan', v.plan, validar, controlador.guardarPlan);
 router.post('/plan/personalizados', v.personalizado, validar, controlador.crearPersonalizado);

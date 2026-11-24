@@ -1,4 +1,4 @@
-// Plan de alimentación de Comidas (11-11-2026; pedido del PO). Hay dos tipos:
+// Plan de macronutrientes de Comidas (11-11-2026, antes «Plan de alimentación»; renombrado en SC-44). Hay dos tipos:
 // - «meta»: calorías y reparto según la meta del perfil (bajar de peso, mantener, ganar masa, rendimiento u otro),
 //   calculados en nutricion.service a partir del peso y del requerimiento calórico. Cambia solo si cambia el perfil.
 // - «personalizado»: uno de la lista de planes propios (nombre y tres porcentajes entre 5 % y 80 % que suman 100); las
