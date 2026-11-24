@@ -4,9 +4,9 @@ Plataforma web responsiva que conecta a personas que buscan mejorar su salud, co
 
 Proyecto Capstone (PTY4614) — Duoc UC, Escuela de Informática y Telecomunicaciones, sección 003D, sede Melipilla.
 
-> **Estado (16-11-2026):** Fase 2 — Sprint 5 en curso (02 al 22-11-2026). Las correcciones de las revisiones de ubicación, fotos, agenda y filtros están integradas en main (PR #67 y #70 a #72); la documentación técnica se consolidó en el PR #73. Verificación: 628 pruebas backend, 489 frontend y 223 comprobaciones MySQL reales aprobadas. Planilla: 248 casos, 247 aprobados y CP-025 pendiente de acceso real con Google; DAS 1.35 y Plan de Pruebas 1.0.3. El cierre formal requiere la aceptación del PO, validación de horas, acuerdos de retrospectiva, revisión QA residual y actualización manual del Drive.
+> **Estado (24-11-2026):** Fase 2. El Sprint 5 (02 al 22-11-2026) terminó su período; su cierre formal sigue sujeto a las condiciones de `Sprint 5/Cierre_Tecnico_Sprint5_2026-11-16.md` (aceptaciones del PO, horas y acuerdos de retrospectiva). Después se integraron en main el menú lateral contraído (SC-40, PR #81), los ajustes de navegación y perfil (PR #82), la navegación, el tema oscuro y la portada (PR #84) y las mejoras aprobadas por el PO el 24-11-2026 (PR #85 a #91): límite de intentos e integración continua (SC-41), descargar mis datos y eliminar la cuenta (SC-42), historial de peso (SC-43), plan de comidas y «Plan de macronutrientes» (SC-44), compartir el progreso con un profesional (SC-45) y planes enviados por el chat (SC-46).
 
-Las cifras anteriores corresponden a la consolidación hasta el PR #75 (`bf3a857`). Los PR #76 y #77 se incorporaron después: bienvenida al iniciar sesión e informe final. El #77 informa 494 pruebas frontend sobre esa versión. La copia local ya se sincronizó con main; las 489 son evidencia histórica del corte anterior, no una nueva ejecución sobre el código de #76. La declaración de Sprint 5 terminado en el informe debe conciliarse con las aceptaciones y registros de cierre pendientes de los documentos oficiales.
+Verificación en la integración continua sobre main: 695 pruebas backend, 553 frontend y los 13 scripts contra MySQL real aprobados. Planilla: 281 casos (CP-001 a CP-281), 280 aprobados y CP-025 pendiente de acceso real con Google. Registro de Defectos: 58, con 55 corregidos, 2 cerrados y 1 abierto (56). DAS 1.41, Plan de Pruebas 1.0.4 y Manual Técnico General 1.2. Pendiente: aceptación del PO de SC-40 a SC-46, revisión de otro integrante (DoD-04) y actualización manual del Drive.
 
 ## Equipo
 
@@ -443,17 +443,14 @@ La API limita los intentos en las rutas de acceso y responde `429` con la cabece
 
 Los contadores viven en la memoria de la API (un solo proceso) y empiezan de cero si se reinicia; las peticiones mal formadas no cuentan. Con Docker, nginx reenvía `/api` y `TRUST_PROXY=1` permite leer la IP real del cliente; en un servidor público conviene publicar solo el puerto web, porque si la API queda expuesta directo un cliente podría inventar su IP en `X-Forwarded-For` (el límite por correo sigue funcionando igual). Diseño en el DAS (QS8 y D41) y evidencia en [Límite de intentos y CI](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Limite_Intentos_y_CI_2026-11-24.md).
 
-## Planes enviados por el chat (SC-46, 24-11-2026)
+## Mi cuenta: descargar mis datos y eliminar la cuenta (SC-42, 24-11-2026)
 
-El profesional (por ejemplo, un nutricionista) envía un plan por el chat y la persona lo guarda en sus planes con un botón.
+«Privacidad y datos» está en **Mi perfil** (usuario) y en **Configuración** (profesional), por la Ley 21.719 de datos personales, vigente desde el 1 de diciembre de 2026.
 
-- **Profesional:** en el chat con un cliente, «Enviar un plan» ofrece dos opciones:
-  - **Plan de comidas** de un día o de una semana, armado con el mismo editor de la persona y el catálogo de alimentos (`GET /api/profesional/alimentos`).
-  - **Plan de macronutrientes:** nombre y reparto de proteínas, carbohidratos y grasas que suma 100 %, con un mensaje opcional.
-- **Persona:** el plan llega como una tarjeta en el chat, con su detalle. «Guardar en mis planes» lo deja en Comidas › Plan de comidas (con origen «profesional») o en Plan de macronutrientes (como plan personalizado; si el nombre ya existe, queda «Nombre (2)»). Se guarda una sola vez, y el enlace «Ver en…» abre esa pestaña (`/comidas?seccion=…`).
-- El profesional ve en la tarjeta si su cliente ya lo guardó.
-- Rutas `POST /api/chats/:id/planes` y `POST /api/chats/:id/mensajes/:mensajeId/guardar`. Columnas `adjunto` (JSON) y `guardado_en` en `mensajes_chat` (migración `20261124160000_planes_por_chat`). La descarga de «Mis datos» incluye los planes recibidos.
-- `npm run test:mysql:planes-chat` lo comprueba con MySQL real (18 comprobaciones). Evidencia: [Planes por el chat](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Planes_Por_Chat_2026-11-24.md).
+- **Descargar mis datos** (`GET /api/perfil/mis-datos`): un archivo `fitsearch-mis-datos-AAAA-MM-DD.json` con la cuenta, el perfil, la salud, las comidas, el agua, los planes y metas, las citas, las reseñas, los chats y las conversaciones con el asistente; en el profesional, también su ficha, su agenda, sus documentos (sin el archivo) y las reseñas recibidas. No incluye la contraseña ni identificadores internos.
+- **Eliminar mi cuenta** (`DELETE /api/perfil/cuenta`): hay que escribir ELIMINAR y confirmar con la contraseña o con la cuenta de Google vinculada (mismo límite de intentos que cambiar el correo). Se borran los datos personales, las citas futuras se cancelan y se avisa por correo a la otra parte, y las citas y reseñas pasadas quedan como «Usuario eliminado» o «Profesional eliminado». La cuenta queda anonimizada e inactiva (`usuarios.eliminado_en`) y el correo puede volver a registrarse. Un administrador no puede eliminarse desde la aplicación.
+
+`npm run test:mysql:cuenta` lo comprueba con MySQL real (30 comprobaciones, con cuentas temporales que se borran al terminar). Diseño en el DAS (QS9 y D43) y evidencia en [Mis datos y eliminar cuenta](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Mis_Datos_y_Eliminar_Cuenta_2026-11-24.md).
 
 ## Compartir el progreso con un profesional (SC-45, 24-11-2026)
 
@@ -465,14 +462,17 @@ La persona decide qué ve cada profesional con el que tiene un chat (es decir, c
 - Rutas `GET/PUT/DELETE /api/compartir/:profesionalId` (persona) y `GET /api/profesional/progreso` y `/api/profesional/progreso/:usuarioId` (profesional). Tablas `permisos_compartir` y `accesos_compartidos` (migración `20261124150000_compartir_progreso`). Eliminar la cuenta borra los permisos y el registro; la descarga de datos los incluye.
 - `npm run test:mysql:compartir` lo comprueba con MySQL real (20 comprobaciones). Evidencia: [Compartir progreso](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Compartir_Progreso_2026-11-24.md).
 
-## Mi cuenta: descargar mis datos y eliminar la cuenta (SC-42, 24-11-2026)
+## Planes enviados por el chat (SC-46, 24-11-2026)
 
-«Privacidad y datos» está en **Mi perfil** (usuario) y en **Configuración** (profesional), por la Ley 21.719 de datos personales, vigente desde el 1 de diciembre de 2026.
+El profesional (por ejemplo, un nutricionista) envía un plan por el chat y la persona lo guarda en sus planes con un botón.
 
-- **Descargar mis datos** (`GET /api/perfil/mis-datos`): un archivo `fitsearch-mis-datos-AAAA-MM-DD.json` con la cuenta, el perfil, la salud, las comidas, el agua, los planes y metas, las citas, las reseñas, los chats y las conversaciones con el asistente; en el profesional, también su ficha, su agenda, sus documentos (sin el archivo) y las reseñas recibidas. No incluye la contraseña ni identificadores internos.
-- **Eliminar mi cuenta** (`DELETE /api/perfil/cuenta`): hay que escribir ELIMINAR y confirmar con la contraseña o con la cuenta de Google vinculada (mismo límite de intentos que cambiar el correo). Se borran los datos personales, las citas futuras se cancelan y se avisa por correo a la otra parte, y las citas y reseñas pasadas quedan como «Usuario eliminado» o «Profesional eliminado». La cuenta queda anonimizada e inactiva (`usuarios.eliminado_en`) y el correo puede volver a registrarse. Un administrador no puede eliminarse desde la aplicación.
-
-`npm run test:mysql:cuenta` lo comprueba con MySQL real (30 comprobaciones, con cuentas temporales que se borran al terminar). Diseño en el DAS (QS9 y D43) y evidencia en [Mis datos y eliminar cuenta](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Mis_Datos_y_Eliminar_Cuenta_2026-11-24.md).
+- **Profesional:** en el chat con un cliente, «Enviar un plan» ofrece dos opciones:
+  - **Plan de comidas** de un día o de una semana, armado con el mismo editor de la persona y el catálogo de alimentos (`GET /api/profesional/alimentos`).
+  - **Plan de macronutrientes:** nombre y reparto de proteínas, carbohidratos y grasas que suma 100 %, con un mensaje opcional.
+- **Persona:** el plan llega como una tarjeta en el chat, con su detalle. «Guardar en mis planes» lo deja en Comidas › Plan de comidas (con origen «profesional») o en Plan de macronutrientes (como plan personalizado; si el nombre ya existe, queda «Nombre (2)»). Se guarda una sola vez, y el enlace «Ver en…» abre esa pestaña (`/comidas?seccion=…`).
+- El profesional ve en la tarjeta si su cliente ya lo guardó.
+- Rutas `POST /api/chats/:id/planes` y `POST /api/chats/:id/mensajes/:mensajeId/guardar`. Columnas `adjunto` (JSON) y `guardado_en` en `mensajes_chat` (migración `20261124160000_planes_por_chat`). La descarga de «Mis datos» incluye los planes recibidos.
+- `npm run test:mysql:planes-chat` lo comprueba con MySQL real (18 comprobaciones). Evidencia: [Planes por el chat](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Planes_Por_Chat_2026-11-24.md).
 
 ## Pruebas
 
