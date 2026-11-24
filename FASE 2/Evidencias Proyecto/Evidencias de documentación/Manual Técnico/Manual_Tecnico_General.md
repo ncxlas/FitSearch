@@ -1,8 +1,8 @@
 # Manual Técnico General — FitSearch
 
-Versión 1.1 · corte 23-11-2026 · Sprint 5 · Duoc UC, sección 003D.
+Versión 1.2 · corte 24-11-2026 · Duoc UC, sección 003D.
 
-Documento de instalación local, arquitectura, configuración, operación y pruebas. Complementa [Manual_Tecnico_Despliegue_Docker.docx](Manual_Tecnico_Despliegue_Docker.docx), versión 1.1, que describe los contenedores. El modelo de datos y las decisiones de arquitectura se mantienen en el DAS 1.35. Estado: preparado para revisión del equipo y del PO; no acredita por sí mismo el cierre del sprint.
+Documento de instalación local, arquitectura, configuración, operación y pruebas. Complementa [Manual_Tecnico_Despliegue_Docker.docx](Manual_Tecnico_Despliegue_Docker.docx), versión 1.1, que describe los contenedores. El modelo de datos y las decisiones de arquitectura se mantienen en el DAS 1.41. Estado: preparado para revisión del equipo y del PO; no acredita por sí mismo el cierre del sprint. La versión 1.2 suma las mejoras del 24-11-2026 (SC-41 a SC-46, sección 12).
 
 ## 1. Arquitectura y límites
 
@@ -74,6 +74,7 @@ Abrir `http://localhost:5173`. La API debe responder a `GET http://localhost:300
 |---|---|
 | `DATABASE_URL`, `SHADOW_DATABASE_URL` | Conexiones de aplicación y desarrollo; coherentes con MySQL |
 | `PORT` | Puerto de Express; valor de ejemplo 3000 |
+| `TRUST_PROXY` | Vacío en desarrollo; `1` cuando un proxy (nginx) reenvía `/api`, para que el límite de intentos lea la IP real. Docker ya lo fija en 1 |
 | `JWT_SECRET`, `JWT_EXPIRES_IN`, `JWT_REMEMBER_EXPIRES_IN` | Firma y vigencia de las sesiones |
 | `BCRYPT_COST` | Costo del hash de contraseña; el ejemplo utiliza 10 |
 | `FRONTEND_URL`, `RECOVERY_TOKEN_MINUTES` | Destino y vigencia de la recuperación de contraseña |
@@ -95,13 +96,15 @@ Todas las rutas siguientes llevan el prefijo `/api`. La sesión se envía median
 
 | Grupo | Operaciones principales |
 |---|---|
-| `/auth` | Registro, login, Google, logout, recuperación y restablecimiento |
-| `/perfil` | Perfil, tipo de cuenta y datos de cuenta; protección de campos por sección |
+| `/auth` | Registro, login, Google, logout, recuperación y restablecimiento, con límite de intentos (429 y `Retry-After`) |
+| `/perfil` | Perfil, tipo de cuenta y datos de cuenta; protección de campos por sección; descargar mis datos (`GET /mis-datos`) y eliminar la cuenta (`DELETE /cuenta`) |
 | `/profesionales` | Búsqueda, ficha, reseñas, ficha propia y verificación por rol |
 | `/establecimientos` | Centros de salud/gimnasios y profesionales asociados |
 | `/agenda`, `/reservas` | Disponibilidad, reservas, confirmación, cancelación e historial |
-| `/chats` | Conversaciones de sus participantes, lectura, envío y eliminación propia |
-| `/comidas` | Alimentos, registros por fecha, estadísticas, plan y meta de peso |
+| `/chats` | Conversaciones de sus participantes, lectura, envío y eliminación propia; planes enviados por el profesional y «Guardar en mis planes» |
+| `/comidas` | Alimentos, registros por fecha, estadísticas, plan de macronutrientes, meta de peso, pesajes y planes de comidas |
+| `/compartir` | Permisos de la persona para que un profesional vea su progreso, por categoría |
+| `/profesional` | Progreso que comparten sus clientes (solo lectura) y búsqueda de alimentos para armar planes |
 | `/agua` | Sumas y eliminación propia por día |
 | `/asistente` | Conversaciones, respuestas y cuota de uso |
 | `/administrador` | Cuentas, verificaciones, contenido e informes del administrador |
@@ -115,6 +118,8 @@ Las migraciones de `backend/prisma/migrations` constituyen el historial de la es
 Conservar respaldo de MySQL y del directorio de documentos privados. El manual de Docker detalla sus volúmenes y comandos. Las cuentas demo son opcionales y se cargan con `db:seed:profesionales` en entornos de desarrollo. Una cuenta administradora requiere la operación explícita `admin:promover`; no se convierte en administradora por editar el rol desde el navegador.
 
 Las contraseñas se almacenan como hashes. La API valida sesión, rol y propiedad; los enlaces de foto no exponen el identificador directo de la cuenta y las reseñas no incorporan la foto de su autor. No publicar archivos privados, credenciales, sesiones ni datos de salud en capturas. Al cambiar esquema o reglas, sincronizar DAS, casos, defectos y documentación relacionada.
+
+Desde el 24-11-2026, eliminar una cuenta la anonimiza en vez de borrar la fila (`usuarios.eliminado_en`): se borran sus datos personales y de salud, comidas, agua, planes, pesajes, permisos para compartir y chats; las citas futuras se cancelan con aviso y las citas y reseñas pasadas quedan como «Usuario eliminado» o «Profesional eliminado». Toda tabla nueva con datos de la persona debe sumarse a la descarga de «Mis datos» y a la eliminación. Los contadores del límite de intentos viven en la memoria de la API: se reinician al reiniciarla y no se comparten entre procesos.
 
 ## 7. Verificación y resultados disponibles
 
@@ -133,9 +138,13 @@ npm run lint
 npm run build
 ```
 
-Los scripts `test:mysql:plan`, `test:mysql:especialidades`, `test:mysql:agenda` y `test:mysql:mejoras` requieren MySQL configurado y crean datos temporales de prueba. Revisar su configuración antes de ejecutarlos; agenda puede intentar enviar avisos. `test:carga` requiere la API en ejecución, genera carga y datos temporales y termina con código 1 si no cumple o no logra limpiar. Ejecutarlos en un entorno de pruebas preparado, sin una demostración en curso.
+Los scripts `test:mysql:*` (acceso, agua, agenda, asistente, comidas, compartir, cuenta, especialidades, mejoras, peso, plan, planes-comida y planes-chat) requieren MySQL configurado y crean datos temporales de prueba que borran al terminar. Revisar su configuración antes de ejecutarlos; agenda puede intentar enviar avisos. `test:carga` requiere la API en ejecución, genera carga y datos temporales y termina con código 1 si no cumple o no logra limpiar. Ejecutarlos en un entorno de pruebas preparado, sin una demostración en curso.
 
-Al corte: backend 628 y frontend 489 pruebas aprobadas; lint/build correctos; 223 comprobaciones MySQL reales aprobadas. Las 33 comprobaciones adicionales de validadores y formatos se registran en `Plan de Pruebas/QA_Comprobaciones_2026-11-16.json`. La Planilla conserva 248 CP, con 247 aprobados y Google real CP-025 pendiente (CP-024 aprobado por reporte del PO). QA estándar: 21 OK, 11 NA y 24 pendientes. Los avisos SMTP y la repetición final de Docker no se acreditaron en este entorno.
+Integración continua (SC-41): cada PR y cada push a `main` corren `.github/workflows/pruebas.yml` en GitHub Actions: lint y Jest del backend; lint, Vitest y build del frontend; y, en un MySQL 8.4 vacío, todas las migraciones, la comparación con `schema.prisma`, los roles y los scripts `test:mysql:*`. El trabajo «Pruebas completas» resume los tres.
+
+Al corte del 24-11-2026 (CI sobre `main` con los PR #84 a #91): backend 695 y frontend 553 pruebas aprobadas (63 archivos), lint y build correctos y los 13 scripts MySQL reales aprobados. La Planilla registra 281 CP (CP-001 a CP-281): 280 aprobados y CP-025 pendiente. El Registro de Defectos tiene 58: 55 corregidos, 2 cerrados (57 y 58) y 1 abierto (56: vulnerabilidad de `effect`, que llega por la CLI de Prisma 6.19; afecta las migraciones y la generación del cliente, no las rutas de la API, y se corrige cuando Prisma 6 publique la versión que la actualiza).
+
+Al corte del 16-11-2026: backend 628 y frontend 489 pruebas aprobadas; lint/build correctos; 223 comprobaciones MySQL reales aprobadas. Las 33 comprobaciones adicionales de validadores y formatos se registran en `Plan de Pruebas/QA_Comprobaciones_2026-11-16.json`. La Planilla conserva 248 CP, con 247 aprobados y Google real CP-025 pendiente (CP-024 aprobado por reporte del PO). QA estándar: 21 OK, 11 NA y 24 pendientes. Los avisos SMTP y la repetición final de Docker no se acreditaron en este entorno.
 
 La evidencia de carga histórica registra 515 profesionales: búsqueda p95 máximo 121 ms con 50 conexiones; login p95 2753 ms a esa carga, sobre el objetivo de 2 s. Se conserva esa limitación y el resultado `NO CUMPLE` de esa ejecución. No afirmar que toda la aplicación está certificada bajo cualquier carga.
 
@@ -154,7 +163,7 @@ La evidencia de carga histórica registra 515 profesionales: búsqueda p95 máxi
 
 ## 9. Documentos relacionados y pendientes
 
-Referencias: DAS 1.35, Plan de Pruebas 1.0.3, Planilla de Casos, Registro de Defectos, manual Docker 1.1 y `Sprint 5/Cierre_Tecnico_Sprint5_2026-11-16.md`. Los valores de versión corresponden al corte indicado; revisar cambios posteriores antes de operar otra entrega.
+Referencias: DAS 1.41, Plan de Pruebas 1.0.4, Planilla de Casos, Registro de Defectos, manual Docker 1.1 y `Sprint 5/Cierre_Tecnico_Sprint5_2026-11-16.md`. Los valores de versión corresponden al corte indicado; revisar cambios posteriores antes de operar otra entrega.
 
 Faltan la revisión del manual por el equipo/PO, aceptación de historias y cambios, validación de horas y acuerdos de retrospectiva (criterios FS-HU-32 y tres aportes ya registrados), QA residual, revisión independiente y reemplazo manual en Drive. Este manual completa el contenido general que no cubría el documento de Docker; no atribuye ese trabajo a una persona por su asignación inicial en el backlog.
 
@@ -198,3 +207,21 @@ Las animaciones de la portada continúan al pasar el cursor: se retiró la pausa
 ### Menú profesional — 24-11-2026
 
 El menú profesional muestra Inicio, Agenda, Clientes, Mensajes, Reportes y Perfil profesional, con la campana junto a Mensajes. Configuración se encuentra únicamente dentro de Más, el botón de hamburguesa al pie del nav, y conserva la ruta /profesional/configuracion. La barra inferior móvil mantiene sus accesos.
+
+
+## 12. Mejoras del 24-11-2026 (SC-41 a SC-46)
+
+Integradas en `main` con los PR #85 a #91. El detalle de rutas y reglas está en el [README](../../../../README.md); el diseño, en el DAS 1.41 (QS8 a QS10 y D41 a D47); la evidencia, en `Plan de Pruebas/` con fecha 24-11-2026.
+
+| Cambio | Qué agrega | Datos y comprobación |
+|---|---|---|
+| SC-41 Límite de intentos e integración continua | Login, recuperar, restablecer, registro, Google y confirmación de contraseña responden 429 con `Retry-After` al superar el límite. CI en GitHub Actions y plantilla de PR con la DoD | Sin tablas nuevas; `test:mysql:acceso` |
+| SC-42 Mis datos y eliminar la cuenta | Descarga en JSON de todos los datos de la cuenta y eliminación confirmada con ELIMINAR y la contraseña o Google | `usuarios.eliminado_en`; `test:mysql:cuenta` |
+| SC-43 Historial de peso | Pesajes por día con gráfico contra la meta; el último pesaje actualiza el peso del perfil | `registros_peso`; `test:mysql:peso` |
+| SC-44 Plan de comidas | Planes de un día o de una semana con alimentos y gramos, «Hoy te toca…» y «Lo comí». La pestaña «Plan de alimentación» pasa a llamarse «Plan de macronutrientes» | `planes_comida`, `plan_comida_items`; `test:mysql:planes-comida` |
+| SC-45 Compartir el progreso | La persona elige, por categoría, qué ve cada profesional con el que tiene chat; registro de cada consulta | `permisos_compartir`, `accesos_compartidos`; `test:mysql:compartir` |
+| SC-46 Planes por el chat | El profesional envía un plan de comidas o de macronutrientes y la persona lo guarda una sola vez | `mensajes_chat.adjunto` y `guardado_en`; `test:mysql:planes-chat` |
+
+Las seis migraciones del 24-11-2026 (`20261124120000` a `20261124160000`) se aplican con `npm run db:migrate`. Después de actualizar una copia local, correr `npm run db:generate` (o `npx prisma generate`) en `backend`. Una base que ya tiene estas migraciones no debe usarse con una rama anterior que no las tenga: `prisma migrate reset` o `migrate dev` en esa rama borrarían los datos.
+
+Pendiente de estas mejoras: aceptación del PO de SC-40 a SC-46, revisión de otro integrante (DoD-04) y el defecto 56.
