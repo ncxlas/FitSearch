@@ -39,6 +39,7 @@
   --elevacion-hover: -2px;
   --desplazamiento-entrada: 8px;
   --escala-entrada: 0.9;
+  font-size: 106.25%;
   font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   color: var(--color-texto);
   background: var(--color-fondo);
@@ -51,7 +52,7 @@ body {
   margin: 0; background: var(--color-fondo); -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility;
 }
-/* Los campos heredan la letra de la página (16 px). Con menos de 16 px, Safari en iPhone acerca la página al tocarlos. */
+/* Los campos heredan la letra de la página (17 px con la configuración normal del navegador). Con menos de 16 px, Safari en iPhone acerca la página al tocarlos. */
 input, select, textarea { font: inherit; caret-color: var(--color-primario); }
 /* Las piezas que dibuja el navegador también llevan la marca: selección, casillas y barras de desplazamiento. */
 ::selection { background: rgb(244 123 32 / 26%); color: inherit; }
