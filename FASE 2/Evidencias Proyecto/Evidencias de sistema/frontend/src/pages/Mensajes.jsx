@@ -20,10 +20,10 @@ const diaDe = (iso) => DIA.format(new Date(iso));
 const cuando = (iso) => `${diaCorto(diaDe(iso))}, ${HORA.format(new Date(iso))}`;
 
 // Pide una ruta y la repite cada cierto tiempo mientras la pantalla está abierta (sin WebSockets: basta para coordinar).
-function useConsultaPeriodica(ruta, revision) {
+export function useConsultaPeriodica(ruta, revision, visible = true) {
   const [estado, setEstado] = useState({ ruta: null });
   useEffect(() => {
-    if (!ruta) return undefined;
+    if (!ruta || !visible) return undefined;
     let activo = true;
     const pedir = () => solicitar(ruta)
       .then((datos) => activo && setEstado({ ruta, datos }))
@@ -31,7 +31,7 @@ function useConsultaPeriodica(ruta, revision) {
     pedir();
     const temporizador = setInterval(() => { if (document.visibilityState !== 'hidden') pedir(); }, intervaloSegundos * 1000);
     return () => { activo = false; clearInterval(temporizador); };
-  }, [ruta, revision]);
+  }, [ruta, revision, visible]);
   return estado.ruta === ruta ? estado : { ruta };
 }
 
@@ -61,7 +61,7 @@ function Texto({ texto, palabras }) {
   return partes(texto, tramos).map((p, i) => (p.marca ? <mark key={i}>{p.texto}</mark> : p.texto));
 }
 
-function Bandeja({ base, chats, activo, profesional, onElegir }) {
+export function Bandeja({ base, chats, activo, profesional, onElegir, onAbrirChat }) {
   if (!chats.length) {
     return (
       <EstadoVacio compacto icono="chat" titulo="Aún no tienes chats">
@@ -73,12 +73,13 @@ function Bandeja({ base, chats, activo, profesional, onElegir }) {
   return (
     <ul className="mensajes__lista">
       {chats.map((c) => {
+        const Control = onAbrirChat ? 'button' : Link;
         const resumen = c.ultimo ? `${c.ultimo.propio ? 'Tú: ' : ''}${c.ultimo.texto}`
           : c.ultimaCita ? `Cita del ${diaCorto(c.ultimaCita.fecha)}, ${c.ultimaCita.horaInicio} · ${ESTADO[c.ultimaCita.estado]}`
             : 'Sin mensajes';
         return (
           <li key={c.id}>
-            <Link to={`${base}/${c.id}`} onClick={onElegir} className={`conversacion${c.id === activo ? ' conversacion--activa' : ''}`}
+            <Control type={onAbrirChat ? 'button' : undefined} to={onAbrirChat ? undefined : `${base}/${c.id}`} onClick={() => { onElegir?.(); onAbrirChat?.(c.id); }} className={`conversacion${c.id === activo ? ' conversacion--activa' : ''}`}
               aria-current={c.id === activo ? 'page' : undefined}>
               <Avatar className="avatar conversacion__avatar" nombre={c.con.nombre} fotoUrl={c.con.fotoUrl} />
               <span className="conversacion__texto">
@@ -98,7 +99,7 @@ function Bandeja({ base, chats, activo, profesional, onElegir }) {
                   {c.noLeidos > 0 && <span className="conversacion__no-leidos" aria-label={`${c.noLeidos} sin leer`}>{c.noLeidos}</span>}
                 </span>
               </span>
-            </Link>
+            </Control>
           </li>
         );
       })}
@@ -297,7 +298,7 @@ function ConfirmarEliminar({ chatId, nombre, onEliminado, onCancelar }) {
   );
 }
 
-function ChatAbierto({ base, datos, profesional, onEnviado, onEliminado }) {
+export function ChatAbierto({ base, datos, profesional, onEnviado, onEliminado, onVolver }) {
   const { chat, mensajes } = datos;
   const { con } = chat;
   const [buscando, setBuscando] = useState(false);
@@ -339,7 +340,8 @@ function ChatAbierto({ base, datos, profesional, onEnviado, onEliminado }) {
   return (
     <>
       <header className="mensajes__cabecera">
-        <Link to={base} className="boton-icono mensajes__volver" aria-label="Volver a los chats"><Icono nombre="flechaIzquierda" tamano={20} /></Link>
+        {onVolver ? <button type="button" className="boton-icono mensajes__volver" aria-label="Volver a los chats" onClick={onVolver}><Icono nombre="flechaIzquierda" tamano={20} /></button>
+          : <Link to={base} className="boton-icono mensajes__volver" aria-label="Volver a los chats"><Icono nombre="flechaIzquierda" tamano={20} /></Link>}
         <Avatar className="avatar mensajes__avatar" nombre={con.nombre} fotoUrl={con.fotoUrl} />
         <div className="mensajes__quien">
           <h2>

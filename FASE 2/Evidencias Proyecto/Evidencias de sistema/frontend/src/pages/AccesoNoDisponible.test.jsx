@@ -16,10 +16,10 @@ test.each(['/', '/inicio', '/profesional/perfil'])('una cuenta administrativa en
     },
   });
   renderizarApp(ruta);
-  // El administrador llega a su dashboard; Cerrar sesión está en el menú de la cuenta, como en los otros espacios.
+  // El administrador llega a su dashboard y conserva la salida de la cuenta.
   expect(await screen.findByRole('heading', { level: 1, name: /^Hola, / })).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: /menú de tu cuenta/ }));
-  await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
   expect(await screen.findByText('Cerraste sesión correctamente.')).toBeInTheDocument();
   expect(sessionStorage.getItem('fitsearch_sesion')).toBeNull();
 });

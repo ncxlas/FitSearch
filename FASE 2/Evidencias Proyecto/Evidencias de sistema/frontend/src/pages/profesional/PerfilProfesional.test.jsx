@@ -77,7 +77,7 @@ describe('Sin ficha', () => {
     expect(await screen.findByText(/Elige aquí tu especialidad y completa tu «Lugar de atención»/)).toBeInTheDocument();
     expect(screen.queryByLabelText('Descripción sobre tu atención')).not.toBeInTheDocument();
     await elegirEspecialidad();
-    expect(await screen.findByText('Elegiste Nutrición. Se guardará en tu ficha cuando completes «Lugar de atención».')).toBeInTheDocument();
+    expect(await screen.findByText('Completa "Lugar de atención" para guardar tu especialidad.')).toBeInTheDocument();
     expect(huboPutFicha(fetch)).toBe(false);
 
     await abrirLugar();
@@ -87,7 +87,7 @@ describe('Sin ficha', () => {
     expect(screen.getByLabelText('Dirección de atención (obligatorio)')).toHaveAttribute('autocomplete', 'street-address');
     await guardarPerfil();
 
-    expect(await screen.findByText('Tu ficha profesional se guardó correctamente.')).toBeInTheDocument();
+    expect(await screen.findByText('Ficha profesional guardada.')).toBeInTheDocument();
     expect(cuerpoPut(fetch)).toEqual(NUEVA);
     expect(screen.getByRole('heading', { level: 1, name: 'Mi perfil profesional' })).toBeInTheDocument();
     // La ficha ya existe: la misma sección queda para editar.
@@ -120,7 +120,7 @@ describe('Sin ficha', () => {
     expect(screen.queryByLabelText(/^Dirección de atención/)).not.toBeInTheDocument();
     await guardarPerfil();
 
-    expect(await screen.findByText('Tu ficha profesional se guardó correctamente.')).toBeInTheDocument();
+    expect(await screen.findByText('Ficha profesional guardada.')).toBeInTheDocument();
     expect(cuerpoPut(fetch)).toMatchObject({ especialidad: 'Nutrición', modalidad: 'online', comuna: null, direccion: null, ubicacionLat: null, ubicacionLng: null });
   });
 
@@ -144,7 +144,8 @@ describe('Perfil profesional editable', () => {
     expect(await screen.findByText('Verificado')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Calificación 4,8 de 5, 5 reseñas' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver mi perfil público/ })).toHaveAttribute('href', '/profesional/perfil/publico');
-    expect(screen.getByRole('link', { name: /Ir a mi agenda/ })).toHaveAttribute('href', '/profesional/agenda');
+    expect(within(screen.getByRole('region', { name: 'Resumen de tu perfil' })).getByRole('button', { name: 'Copiar enlace' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Ir a mi agenda/ })).not.toBeInTheDocument();
   });
   test('online no ofrece la ubicación antigua y conserva la modalidad', async () => {
     simularServidor({ ficha: { ...MI_FICHA, modalidad: 'online', comuna: null, direccion: null } });
@@ -164,8 +165,8 @@ describe('Perfil profesional editable', () => {
       .toEqual(['Información personal', 'Lugar de atención', 'Experiencia y formación', 'Certificaciones']);
     expect(nav.getByRole('button', { name: 'Información personal' })).toHaveAttribute('aria-current', 'page');
     // La sección actual lleva el ícono marcado, igual que el menú lateral (18-11-2026).
-    expect(nav.getByRole('button', { name: 'Información personal' }).querySelector('.icono--activo')).not.toBeNull();
-    expect(nav.getByRole('button', { name: 'Lugar de atención' }).querySelector('.icono--activo')).toBeNull();
+    expect(nav.getByRole('button', { name: 'Información personal' })).toHaveAttribute('aria-controls', 'seccion-perfil-informacion');
+    expect(nav.getByRole('button', { name: 'Lugar de atención' })).toHaveAttribute('aria-controls', 'seccion-perfil-lugar');
     expect(await screen.findByLabelText(/^Tu presentación \(opcional\)/)).toBeInTheDocument();
     expect(await screen.findByLabelText('Especialidad (obligatorio)')).toHaveValue('Entrenamiento personal');
     expect(screen.queryByLabelText('Comuna (obligatorio)')).not.toBeInTheDocument();
@@ -187,7 +188,7 @@ describe('Perfil profesional editable', () => {
     renderizarApp('/profesional/perfil');
     await elegirEspecialidad('Nutrición');
 
-    expect(await screen.findByText('Tu especialidad se guardó correctamente.')).toBeInTheDocument();
+    expect(await screen.findByText('Especialidad guardada.')).toBeInTheDocument();
     expect(cuerpoPut(fetch)).toEqual({
       especialidad: 'Nutrición', descripcion: 'Entrenamiento funcional y de fuerza.', comuna: 'Providencia', direccion: 'Av. Italia 850',
       modalidad: 'ambas', ubicacionLat: -33.4263, ubicacionLng: -70.6116,
@@ -198,9 +199,27 @@ describe('Perfil profesional editable', () => {
     renderizarApp('/profesional/perfil');
     await userEvent.type(await screen.findByLabelText('Teléfono de contacto (opcional)'), '+56 9 1111 2222');
     await elegirEspecialidad('Kinesiología');
-    expect(await screen.findByText('Tus datos personales se guardaron correctamente. Tu especialidad se guardó correctamente.')).toBeInTheDocument();
+    expect(await screen.findByText('Cambios guardados.')).toBeInTheDocument();
     expect(fetch.mock.calls.some(([url, o = {}]) => url === '/api/perfil/cuenta' && o.method === 'PUT')).toBe(true);
     expect(cuerpoPut(fetch)).toMatchObject({ especialidad: 'Kinesiología' });
+  });
+  test('confirma el guardado sin bloquear el formulario ni mover el foco', async () => {
+    simularServidor({ ficha: MI_FICHA });
+    renderizarApp('/profesional/perfil');
+    await screen.findByRole('option', { name: 'Nutrición' });
+    const guardar = screen.getByRole('button', { name: /Guardar datos personales/ });
+    await guardarDatos();
+    expect(await screen.findByText('No hay cambios pendientes.')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await elegirEspecialidad('Nutrición');
+    expect(await screen.findByText('Especialidad guardada.')).toBeInTheDocument();
+    expect(guardar).toHaveFocus();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.querySelector('[inert]')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar notificación' }));
+    expect(screen.queryByText('Especialidad guardada.')).not.toBeInTheDocument();
+    await elegirEspecialidad('Kinesiología');
+    expect(await screen.findByText('Especialidad guardada.')).toBeInTheDocument();
   });
   test('con el perfil verificado, avisa que cambiar la especialidad quita la verificación', async () => {
     simularServidor({ ficha: { ...MI_FICHA, verificado: true } });
@@ -218,6 +237,7 @@ describe('Perfil profesional editable', () => {
     await elegirEspecialidad('Nutrición');
     expect(await screen.findByText(/Tu lugar de atención no tiene una ubicación válida en el mapa/)).toBeInTheDocument();
     expect(huboPutFicha(fetch)).toBe(false);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
   // FS-HU-30: las especialidades vienen del catálogo que administra el administrador.
   test('ofrece la especialidad que ya tenía la ficha aunque el administrador la haya desactivado', async () => {

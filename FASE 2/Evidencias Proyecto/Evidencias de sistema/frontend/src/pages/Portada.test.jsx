@@ -117,12 +117,12 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     expect(await screen.findByRole('heading', { name: 'Tus accesos rápidos' })).toBeInTheDocument();
   });
 
-  test('al cerrar sesión desde el menú de la cuenta vuelve a la portada con el aviso, que desaparece al salir', async () => {
+  test('al cerrar sesión desde el bloque de la cuenta vuelve a la portada con el aviso, que desaparece al salir', async () => {
     localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
     const fetch = simularApi(API_CON_SESION);
     renderizarApp('/perfil');
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
 
     expect(await screen.findByRole('heading', TITULO)).toBeInTheDocument();
@@ -144,7 +144,7 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     simularApi(API_CON_SESION);
     renderizarApp('/perfil');
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
     expect(await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Volver a iniciar sesión' })).toHaveFocus();
@@ -159,7 +159,7 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     simularApi(API_CON_SESION);
     const { container } = renderizarApp('/perfil');
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
     const dialogo = await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
     expect(dialogo.closest('[inert]')).toBeNull();
@@ -181,7 +181,7 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     simularApi(API_CON_SESION);
     renderizarApp('/perfil');
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
     await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
     await userEvent.keyboard('{Escape}');
@@ -194,7 +194,7 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     simularApi(API_CON_SESION);
     renderizarApp('/perfil');
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
     await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
     const volver = screen.getByRole('link', { name: 'Volver a iniciar sesión' });
@@ -217,7 +217,7 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     simularApi(API_CON_SESION);
     renderizarApp('/perfil');
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
     await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
 

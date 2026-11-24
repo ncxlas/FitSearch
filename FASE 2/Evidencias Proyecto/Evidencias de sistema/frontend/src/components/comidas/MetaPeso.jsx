@@ -122,7 +122,7 @@ export default function MetaPeso({ datos, guardando, acciones, mensaje }) {
           <p><strong>{meta.avancePct ?? 0} %</strong> del camino · hoy pesas {decimal(meta.pesoActualKg)} kg</p>
         </div>
         {meta.alcanzada ? (
-          <Alerta tipo="exito">¡Llegaste a tu meta de peso! Si quieres mantenerlo, cambia tu meta a «Mantener peso» en tu perfil.</Alerta>
+          <Alerta flotante={false} tipo="exito">¡Llegaste a tu meta de peso! Si quieres mantenerlo, cambia tu meta a «Mantener peso» en tu perfil.</Alerta>
         ) : (
           <p className="meta-peso__estimacion">
             Te faltan <strong>{decimal(meta.faltanKg)} kg</strong>. A {decimal(meta.ritmoSemanalKg)} kg por semana llegarías cerca del <strong>{conFecha(meta.fechaEstimada)}</strong> ({meta.semanas} {meta.semanas === 1 ? 'semana' : 'semanas'}).

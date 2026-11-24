@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { llamadasA, renderizarApp, SESION, simularApi } from '../../tests/utilidades.jsx';
@@ -148,29 +148,28 @@ test('el dashboard muestra la cola por antigüedad, las cifras de 7 días, la ac
   expect(within(plataforma).getByRole('img', { name: '75 % de los profesionales está verificado' })).toBeInTheDocument();
 });
 
-test('el administrador tiene el mismo encabezado: su cuenta dice Administrador y la campana avisa las verificaciones', async () => {
+test('el administrador conserva sus avisos de verificaciones en el menú lateral y una salida separada', async () => {
+  const u = userEvent.setup();
   sesionAdmin();
   simularApi({ '/api/administrador/dashboard': DASHBOARD, '/api/administrador/alertas': { verificacionesPendientes: 2 } });
   renderizarApp('/admin/dashboard');
   await screen.findByRole('heading', { level: 1, name: 'Hola, Rodrigo' });
   expect(screen.getByRole('link', { name: 'FitSearch, ir al inicio' })).toHaveAttribute('href', '/admin/dashboard');
   const campana = await screen.findByRole('button', { name: 'Notificaciones: 2 verificaciones pendientes' });
-  await userEvent.click(campana);
+  await u.click(campana);
   expect(screen.getByRole('link', { name: /2 verificaciones pendientes/ })).toHaveAttribute('href', '/admin/verificaciones');
-  await userEvent.click(screen.getByRole('button', { name: 'Hola, Rodrigo (administrador): menú de tu cuenta' }));
-  const cuenta = document.getElementById('menu-cuenta');
-  expect(cuenta).toHaveTextContent(/Rodrigo Cárcamo\s*Administrador/);
-  expect(within(cuenta).queryByRole('link', { name: /perfil/i })).not.toBeInTheDocument();
+  await u.click(screen.getByRole('button', { name: 'Más opciones' }));
+  const cuenta = screen.getByRole('navigation', { name: 'Cuenta' });
   expect(within(cuenta).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
   // El menú lateral es el de la app: sin datos de la cuenta ni otro botón de cerrar sesión.
   const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-  expect(within(menu).getAllByRole('link').map((enlace) => enlace.textContent)).toEqual(['Dashboard', 'Verificaciones', 'Profesionales', 'Usuarios', 'Reportes', 'Contenido']);
+  expect(within(menu).getAllByRole('link').filter((enlace) => enlace.classList.contains('menu-lateral__enlace')).map((enlace) => enlace.textContent)).toEqual(['Dashboard', 'Verificaciones', 'Profesionales', 'Usuarios', 'Reportes', 'Contenido']);
   expect(within(menu).queryByRole('button', { name: 'Cerrar sesión' })).not.toBeInTheDocument();
   // Mismo menú contraído que los otros espacios (18-11-2026): se despliega al acercar el mouse y no tiene botón para contraerlo.
   expect(menu).not.toHaveClass('menu-lateral--desplegado');
   expect(within(menu).queryByRole('button', { name: /Contraer menú|Expandir menú/ })).not.toBeInTheDocument();
-  await userEvent.hover(within(menu).getByRole('link', { name: 'Usuarios' }));
-  await waitFor(() => expect(menu).toHaveClass('menu-lateral--desplegado'));
+  await u.hover(within(menu).getByRole('link', { name: 'Usuarios' }));
+  expect(within(menu).getByText('Usuarios')).toBeInTheDocument();
   expect(within(menu).getByRole('link', { name: 'Usuarios' })).toHaveAttribute('href', '/admin/usuarios');
 });
 

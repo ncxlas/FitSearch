@@ -105,7 +105,7 @@ export default function ElegirPerfil() {
           Selecciona el perfil que mejor se adapte a tus necesidades.
           <br />Esta elección define tu espacio en FitSearch; si más adelante necesitas cambiarla, el administrador puede hacerlo.
         </p>
-        {aviso && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
+        {aviso && <Alerta flotante={false} tipo={aviso.tipo}>{aviso.texto}</Alerta>}
         <Alerta>{mensaje}</Alerta>
 
         <div className="elegir__opciones">

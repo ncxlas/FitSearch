@@ -1,3 +1,4 @@
+import Alerta from '../Alerta.jsx';
 import { useEffect, useId, useState } from 'react';
 import reglas from '@shared/reglas.json';
 import Icono from '../Icono.jsx';
@@ -136,7 +137,7 @@ export default function AguaHoy() {
       )}
 
       {error && <p className="agua-hoy__mensaje agua-hoy__mensaje--error" role="alert">{error}</p>}
-      <p className="agua-hoy__mensaje solo-lector" role="status">{aviso}</p>
+      <Alerta tipo="exito">{aviso}</Alerta>
     </div>
   );
 }

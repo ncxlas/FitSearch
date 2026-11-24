@@ -1,3 +1,4 @@
+import Alerta from '../components/Alerta.jsx';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { solicitar } from '../services/api.js';
@@ -20,7 +21,7 @@ function Avisos({ error, aviso, onReintentar }) {
           </button>
         </p>
       )}
-      {aviso && <p role="status">{aviso}</p>}
+      {aviso && <Alerta tipo="exito">{aviso}</Alerta>}
     </>
   );
 }
@@ -178,6 +179,7 @@ export function MisCitas({ compacto = false, onCambio }) {
   async function decidir() {
     setOcupado(true);
     setError('');
+    setAviso('');
     try {
       await solicitar(`/reservas/${confirmacion.id}`, {
         metodo: 'PATCH',
@@ -450,6 +452,7 @@ export function HorariosProfesional() {
   async function borrar() {
     setOcupado(true);
     setError('');
+    setAviso('');
     try {
       const resultado = await solicitar(`/disponibilidades/${borrando}`, { metodo: 'DELETE' });
       if (editando === borrando) {

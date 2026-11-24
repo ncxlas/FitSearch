@@ -1,7 +1,7 @@
 // Navegación con sesión: logo, enlace "Profesionales", menú de la cuenta, menú lateral, barra inferior y secciones próximas.
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import { listado, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi } from '../../tests/utilidades.jsx';
 
 const API = {
@@ -26,24 +26,17 @@ describe('Con sesión', () => {
     expect(await screen.findByRole('heading', { name: 'Tus accesos rápidos' })).toBeInTheDocument();
   });
 
-  test('"Hola, {nombre}" abre el menú de la cuenta con "Mi perfil" y "Cerrar sesión"; Escape lo cierra', async () => {
+  test('la cuenta tiene un bloque separado para salir y el encabezado solo conserva la marca', async () => {
     renderizarApp('/inicio');
-    const boton = screen.getByRole('button', { name: 'Hola, Ana: menú de tu cuenta' });
-    expect(boton).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByRole('button', { name: 'Cerrar sesión' })).not.toBeInTheDocument();
-
-    await userEvent.click(boton);
-    expect(boton).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('ana@correo.cl')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Configuración/ })).not.toBeInTheDocument();
-    await userEvent.keyboard('{Escape}');
-    expect(boton).toHaveAttribute('aria-expanded', 'false');
-
-    await userEvent.click(boton);
-    await userEvent.click(within(document.getElementById('menu-cuenta')).getByRole('link', { name: 'Mi perfil' }));
+    expect(screen.queryByRole('button', { name: /menú de tu cuenta/ })).not.toBeInTheDocument();
+    const principal = screen.getByRole('navigation', { name: 'Menú principal' });
+    await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
+    const cuenta = screen.getByRole('navigation', { name: 'Cuenta' });
+    expect(within(cuenta).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+    expect(within(principal).queryByRole('button', { name: 'Cerrar sesión' })).not.toBeInTheDocument();
+    expect(document.querySelector('.encabezado').querySelector('.notificaciones__boton')).toBeNull();
+    await userEvent.click(within(principal).getByRole('link', { name: 'Mi perfil' }));
     expect(await screen.findByRole('heading', { name: 'Mi perfil' })).toBeInTheDocument();
-    expect(screen.queryByText('ana@correo.cl')).not.toBeInTheDocument();
   });
 
   test('"Mi perfil" del menú lateral y "Perfil" de la barra inferior llevan al perfil', async () => {
@@ -67,89 +60,69 @@ describe('Con sesión', () => {
     expect(within(barra).getByText('Perfil')).toHaveClass('barra-inferior__texto');
   });
 
-  test('el menú lateral tiene las secciones del mockup con "Profesionales" en vez de "Buscar profesionales"', () => {
+  test('el menú conserva todas las secciones del usuario con sus títulos', () => {
     renderizarApp('/inicio');
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    const nombres = within(menu).getAllByRole('link').map((enlace) => enlace.getAttribute('aria-label') ?? enlace.textContent.replace('Próximamente', '').trim());
-    // Sin Farmacias ni Historial de chats (el historial vive dentro del asistente) y con Comidas (decisiones del PO del 05-10-2026).
-    // El chat aparece dos veces: el botón de la tarjeta y el acceso con ícono del menú contraído (el CSS muestra solo uno).
-    expect(nombres).toEqual(['Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mi perfil', 'Favoritos', 'Mis citas', 'Mensajes', 'Abrir chat', 'Abrir chat con el asistente IA']);
-    expect(within(menu).queryByText('Buscar profesionales')).not.toBeInTheDocument();
-    expect(within(menu).getByText('¿Necesitas una recomendación?')).toBeInTheDocument();
+    expect(within(menu).getAllByRole('link').map((enlace) => enlace.textContent.trim())).toEqual([
+      'Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mi perfil', 'Favoritos', 'Mis citas', 'Mensajes', 'Pedir recomendación',
+    ]);
+    expect(within(menu).getByRole('button', { name: 'Notificaciones' })).toBeInTheDocument();
   });
 
-  // Menú lateral en escritorio (18-11-2026, pedido del PO): siempre contraído a solo íconos, se despliega al acercar el
-  // mouse o al recorrerlo con el teclado, y ya no tiene botón para contraerlo (reemplaza el menú compacto del 11-11-2026).
-  test('el menú queda contraído, se despliega al acercar el mouse a los íconos y se contrae al salir', async () => {
+  test('sin avisos pendientes no aparece un contador de notificaciones', async () => {
+    simularApi({ ...API, '/api/chats/no-leidos': { total: 0 } });
     renderizarApp('/inicio');
-    const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    expect(menu).not.toHaveClass('menu-lateral--desplegado');
-    expect(within(menu).queryByRole('button', { name: /Contraer menú|Expandir menú/ })).not.toBeInTheDocument();
-    // Cada opción conserva su nombre para lectores de pantalla y la tarjeta del asistente tiene su acceso con ícono.
-    expect(within(menu).getByRole('link', { name: 'Profesionales' })).toHaveAttribute('href', '/profesionales');
-    expect(within(menu).getByRole('link', { name: 'Abrir chat con el asistente IA' })).toHaveAttribute('href', '/asistente/nuevo?inicio=profesional');
-
-    const profesionales = within(menu).getByRole('link', { name: 'Profesionales' });
-    await userEvent.hover(profesionales);
-    await waitFor(() => expect(menu).toHaveClass('menu-lateral--desplegado'));
-    // Elegir una opción con el mouse deja el foco en ella, pero el menú se contrae igual cuando el mouse se va.
-    await userEvent.click(profesionales);
-    expect(await screen.findByRole('heading', { level: 1, name: 'Profesionales' })).toBeInTheDocument();
-    await userEvent.unhover(menu);
-    await waitFor(() => expect(menu).not.toHaveClass('menu-lateral--desplegado'));
+    const boton = await screen.findByRole('button', { name: 'Notificaciones', exact: true });
+    expect(boton.querySelector('.notificaciones__contador')).toBeNull();
+    await userEvent.click(boton);
+    expect(screen.getByText('No tienes notificaciones')).toBeInTheDocument();
   });
 
-  test('con el teclado el menú se despliega al entrar en él y se contrae al salir', async () => {
+  test('los mensajes sin leer muestran su contador y el enlace a mensajes', async () => {
+    simularApi({ ...API, '/api/chats/no-leidos': { total: 2 } });
     renderizarApp('/inicio');
-    const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    const dentro = () => menu.contains(document.activeElement);
-    // Antes del menú están el enlace para saltar al contenido y el encabezado.
-    for (let paso = 0; paso < 20 && !dentro(); paso += 1) await userEvent.tab();
-    expect(menu).toHaveClass('menu-lateral--desplegado');
-    // Moverse dentro del menú no lo cierra; salir de él, sí.
+    const boton = await screen.findByRole('button', { name: 'Notificaciones: 2 mensajes sin leer' });
+    await userEvent.click(boton);
+    expect(screen.getByRole('link', { name: /2 mensajes nuevos/ })).toHaveAttribute('href', '/mensajes');
+  });
+
+  test('Escape cierra el menú del celular y devuelve el foco al botón que lo abrió', async () => {
+    renderizarApp('/inicio');
+    const abrir = screen.getByRole('button', { name: 'Abrir menú' });
+    await userEvent.click(abrir);
+    expect(within(screen.getByRole('navigation', { name: 'Menú principal' })).getByRole('button', { name: 'Cerrar menú', exact: true })).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    expect(abrir).toHaveAttribute('aria-expanded', 'false');
+    expect(abrir).toHaveFocus();
+  });
+
+  test('el menú móvil mantiene el foco y primero cierra las notificaciones con Escape', async () => {
+    renderizarApp('/inicio');
+    const abrir = screen.getByRole('button', { name: 'Abrir menú' });
+    await userEvent.click(abrir);
+    const salir = within(screen.getByRole('navigation', { name: 'Cuenta' })).getByRole('button', { name: 'Más opciones' });
+    salir.focus();
     await userEvent.tab();
-    expect(dentro()).toBe(true);
-    expect(menu).toHaveClass('menu-lateral--desplegado');
-    for (let paso = 0; paso < 20 && dentro(); paso += 1) await userEvent.tab({ shift: true });
-    expect(menu).not.toHaveClass('menu-lateral--desplegado');
+    expect(within(screen.getByRole('navigation', { name: 'Menú principal' })).getByRole('button', { name: 'Cerrar menú' })).toHaveFocus();
+    await userEvent.click(screen.getByRole('button', { name: 'Notificaciones' }));
+    await userEvent.keyboard('{Escape}');
+    expect(abrir).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Notificaciones' })).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    expect(abrir).toHaveAttribute('aria-expanded', 'false');
+    expect(abrir).toHaveFocus();
   });
 
-  test('Shift+Tab desde el contenido entra al chat y conserva el foco al desplegar el menú', async () => {
-    // JSDOM no aplica las media queries: reproducimos la visibilidad de los dos accesos en escritorio.
-    const estilo = document.createElement('style');
-    estilo.textContent = `
-      .menu-lateral__chat { display: block; }
-      .menu-lateral:not(.menu-lateral--desplegado) .tarjeta-recomendacion { display: none; }
-      .menu-lateral--desplegado .tarjeta-recomendacion { display: grid; }
-      .menu-lateral--desplegado .menu-lateral__chat { display: none; }
-    `;
-    document.head.append(estilo);
-    try {
-      renderizarApp('/inicio');
-      const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-      // JSDOM no reconoce :focus-visible en este enlace al tabular hacia atrás.
-      const compacto = within(menu).getByRole('link', { name: 'Abrir chat con el asistente IA' });
-      const matches = compacto.matches.bind(compacto);
-      vi.spyOn(compacto, 'matches').mockImplementation((selector) => selector === ':focus-visible' || matches(selector));
-      const contenido = document.querySelector('main');
-      for (let paso = 0; paso < 30 && !contenido.contains(document.activeElement); paso += 1) await userEvent.tab();
-      expect(contenido.contains(document.activeElement)).toBe(true);
-      expect(menu).not.toHaveClass('menu-lateral--desplegado');
-      await userEvent.tab({ shift: true });
-      expect(menu.contains(document.activeElement), document.activeElement.outerHTML).toBe(true);
-      expect(menu).toHaveClass('menu-lateral--desplegado');
-      const abrirChat = within(menu).getByRole('link', { name: 'Abrir chat', exact: true });
-      expect(abrirChat).toHaveFocus();
-      // Desde el acceso transferido se puede seguir recorriendo las opciones en ambos sentidos.
-      await userEvent.tab({ shift: true });
-      expect(within(menu).getByRole('link', { name: 'Mensajes', exact: true })).toHaveFocus();
-      await userEvent.tab();
-      expect(abrirChat).toHaveFocus();
-      await userEvent.keyboard('{Enter}');
-      await waitFor(() => expect(within(menu).getByRole('link', { name: 'Asistente IA', exact: true })).toHaveAttribute('aria-current', 'page'));
-    } finally {
-      estilo.remove();
-    }
+  test('el aspecto se cambia desde Más y queda guardado para la próxima visita', async () => {
+    renderizarApp('/inicio');
+    await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cambiar aspecto' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Oscuro' }));
+    expect(document.querySelector('.app')).toHaveClass('app--oscuro');
+    expect(localStorage.getItem('fitsearch_aspecto')).toBe('oscuro');
+    await userEvent.click(screen.getByRole('radio', { name: 'Claro' }));
+    expect(document.querySelector('.app')).not.toHaveClass('app--oscuro');
+    expect(localStorage.getItem('fitsearch_aspecto')).toBe('claro');
   });
 
   // FS-HU-25: Centros de salud y Gimnasios ya no son «Próximamente» (las secciones próximas del profesional se prueban

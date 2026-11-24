@@ -179,7 +179,7 @@ describe('Registrar comida', () => {
     expect(panel).toHaveTextContent('150 g aportan 195 kcal · 4,1 g de proteínas · 42,3 g de carbohidratos · 0,5 g de grasas');
 
     await usuario.click(within(panel).getByRole('button', { name: 'Agregar a mis comidas' }));
-    expect(await within(panel).findByText('Agregaste 150 g de arroz blanco cocido a tu almuerzo.')).toBeInTheDocument();
+    expect(await screen.findByText('Agregaste 150 g de arroz blanco cocido a tu almuerzo.')).toBeInTheDocument();
     const envio = llamadasA(fetch, '/api/comidas').find(([, opciones]) => opciones?.method === 'POST');
     expect(cuerpo(envio)).toEqual({ fecha: HOY, momento: 'almuerzo', alimentoId: 17, gramos: 150 });
     // El resumen se vuelve a pedir para mostrar el alimento nuevo.
@@ -598,7 +598,7 @@ describe('Plan de alimentación', () => {
     expect(within(peso).getByRole('radio', { name: /Suave/ })).toHaveAccessibleName(/−275 kcal al día/);
 
     await usuario.click(guardar);
-    expect(await within(tarjetaPeso()).findByText('Guardaste tu meta de peso; tus calorías ya siguen el ritmo que elegiste.')).toBeInTheDocument();
+    expect(await screen.findByText('Guardaste tu meta de peso; tus calorías ya siguen el ritmo que elegiste.')).toBeInTheDocument();
     expect(cuerpo(llamada(fetch, 'PUT', '/api/comidas/plan/meta-peso'))).toEqual({ pesoObjetivoKg: 63.5, ritmoSemanalKg: 0.25 });
     expect(tarjetaPeso()).toHaveTextContent('De 68 kg a 63,5 kg');
     expect(within(tarjetaPeso()).getByRole('progressbar', { name: 'Avance de tu meta de peso' })).toHaveAttribute('aria-valuenow', '0');
@@ -607,7 +607,7 @@ describe('Plan de alimentación', () => {
 
     await usuario.click(within(tarjetaPeso()).getByRole('button', { name: 'Quitar meta' }));
     await usuario.click(within(tarjetaPeso()).getByRole('button', { name: 'Quitar' }));
-    expect(await within(tarjetaPeso()).findByText('Quitaste tu meta de peso.')).toBeInTheDocument();
+    expect(await screen.findByText('Quitaste tu meta de peso.')).toBeInTheDocument();
     expect(llamada(fetch, 'DELETE', '/api/comidas/plan/meta-peso')).toBeDefined();
   });
 

@@ -1,0 +1,16 @@
+.notificacion-flotante {
+  position: fixed; z-index: 110; left: 50%; bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%); display: flex; align-items: center; gap: .75rem;
+  width: max-content; max-width: min(34rem, calc(100vw - 2rem)); padding: .9rem 1rem;
+  border: 1px solid #b9decf; border-radius: 1rem; background: #f0fbf5; color: #176341;
+  box-shadow: 0 8px 30px rgb(8 58 95 / 18%); font-size: 1rem;
+}
+.notificacion-flotante > .icono { flex-shrink: 0; }
+.notificacion-flotante p { margin: 0; line-height: 1.45; overflow-wrap: anywhere; }
+.notificacion-flotante button {
+  display: grid; place-items: center; flex-shrink: 0; width: 2.75rem; height: 2.75rem;
+  border: 0; border-radius: .6rem; background: transparent; color: inherit; cursor: pointer;
+}
+.notificacion-flotante button:hover { background: rgb(8 58 95 / 8%); }
+.notificacion-flotante--info { color: #154b70; background: #eff7ff; border-color: #bcd8ec; }
+@media (min-width: 64rem) { .notificacion-flotante { bottom: 1.5rem; } }

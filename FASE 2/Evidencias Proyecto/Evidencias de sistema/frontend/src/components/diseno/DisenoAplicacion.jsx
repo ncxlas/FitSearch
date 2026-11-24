@@ -6,7 +6,10 @@ import Bienvenida from '../Bienvenida.jsx';
 import Encabezado from '../Encabezado.jsx';
 import BarraInferior from './BarraInferior.jsx';
 import MenuLateral from './MenuLateral.jsx';
+import MensajesFlotantes from './MensajesFlotantes.jsx';
 import './DisenoAplicacion.css';
+import './EstiloCristal.css';
+import './NavegacionCompacta.css';
 
 // Estructura común de las pantallas con sesión: encabezado, menú lateral, contenido y barra inferior (DAS, D22).
 // "espacio" elige el menú del usuario o el del profesional (DAS, D25).
@@ -14,6 +17,8 @@ export default function DisenoAplicacion({ espacio = 'usuario' }) {
   const { sesion, aviso: avisoSesion, limpiarAviso } = useSesion();
   const { pathname } = useLocation();
   const tipoNavegacion = useNavigationType();
+  const [tema, setTema] = useState(() => { try { return localStorage.getItem('fitsearch_aspecto') === 'oscuro' ? 'oscuro' : 'claro'; } catch { return 'claro'; } });
+  const cambiarTema = (valor) => { setTema(valor); try { localStorage.setItem('fitsearch_aspecto', valor); } catch { /* El tema sigue funcionando sin almacenamiento. */ } };
   const [menuAbierto, setMenuAbierto] = useState(false);
   // El aviso de sesión iniciada o de cuenta creada se muestra una vez, en la primera pantalla.
   const [aviso, setAviso] = useState(avisoSesion);
@@ -33,18 +38,19 @@ export default function DisenoAplicacion({ espacio = 'usuario' }) {
   const esBienvenida = aviso?.origen === 'ingreso' && ['usuario', 'profesional'].includes(sesion?.usuario.rol);
 
   return (
-    <div className={`app app--${espacio}`}>
+    <div className={`app app--${espacio}${tema === 'oscuro' ? ' app--oscuro' : ''}`}>
       <a className="app__saltar" href="#contenido">Saltar al contenido</a>
-      <Encabezado menuAbierto={menuAbierto} onAlternarMenu={() => setMenuAbierto(!menuAbierto)} />
+      <Encabezado soloMarca menuAbierto={menuAbierto} onAlternarMenu={() => setMenuAbierto(!menuAbierto)} />
       <div className="app__cuerpo">
-        <MenuLateral abierto={menuAbierto} onCerrar={cerrarMenu} espacio={espacio} />
+        <MenuLateral abierto={menuAbierto} onCerrar={cerrarMenu} espacio={espacio} tema={tema} onTema={cambiarTema} />
         <main id="contenido" className="app__contenido" tabIndex={-1}>
-          {aviso && !esBienvenida && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
+          {aviso && !esBienvenida && <Alerta flotante={false} tipo={aviso.tipo}>{aviso.texto}</Alerta>}
           {/* Las pantallas pueden descartar el aviso cuando la persona avanza (por ejemplo, en el asistente de perfil). */}
           <Outlet context={{ descartarAviso: () => setAviso(null) }} />
         </main>
       </div>
       <BarraInferior espacio={espacio} />
+      {espacio !== 'administrador' && <MensajesFlotantes />}
       {esBienvenida && <Bienvenida usuario={sesion.usuario} onCerrar={cerrarBienvenida} />}
     </div>
   );

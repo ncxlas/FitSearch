@@ -1,5 +1,5 @@
 // Espacio propio del profesional (DAS, D25 y D26): menú, Inicio con clima y separación de las pantallas del usuario.
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import {
@@ -44,36 +44,22 @@ describe('Diseño del profesional', () => {
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
     const nombres = within(menu).getAllByRole('link').map((enlace) => enlace.textContent.replace('Próximamente', '').trim());
     expect(nombres).toEqual(['Inicio', 'Agenda', 'Clientes', 'Perfil profesional', 'Mensajes', 'Reportes', 'Configuración']);
-    expect(within(menu).getByText('Mejores decisiones, mejores resultados.')).toBeInTheDocument();
+    expect(within(menu).getByRole('button', { name: 'Notificaciones' })).toBeInTheDocument();
     expect(within(menu).queryByText('¿Necesitas una recomendación?')).not.toBeInTheDocument();
     const barra = screen.getByRole('navigation', { name: 'Navegación inferior' });
     expect(within(barra).getAllByRole('link').map((enlace) => enlace.textContent)).toEqual(['Inicio', 'Agenda', 'Clientes', 'Perfil']);
     expect(screen.getByRole('link', { name: 'FitSearch, ir al inicio' })).toHaveAttribute('href', '/profesional/inicio');
   });
 
-  // 18-11-2026 (pedido del PO): el mismo menú contraído del usuario, sin botón para contraerlo.
-  test('el menú del profesional también queda contraído y se despliega al acercar el mouse', async () => {
+  test('el perfil profesional y la salida están disponibles sin abrir un menú de cuenta', async () => {
     simular();
     renderizarApp('/profesional/inicio');
     await screen.findByRole('heading', SALUDO);
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    expect(menu).not.toHaveClass('menu-lateral--desplegado');
-    expect(within(menu).queryByRole('button', { name: /Contraer menú|Expandir menú/ })).not.toBeInTheDocument();
-    // El profesional no tiene la tarjeta del asistente: su menú contraído no agrega el acceso al chat.
-    expect(within(menu).queryByRole('link', { name: 'Abrir chat con el asistente IA' })).not.toBeInTheDocument();
-    await userEvent.hover(within(menu).getByRole('link', { name: 'Agenda' }));
-    await waitFor(() => expect(menu).toHaveClass('menu-lateral--desplegado'));
-    await userEvent.unhover(menu);
-    await waitFor(() => expect(menu).not.toHaveClass('menu-lateral--desplegado'));
-  });
-
-  test('el menú de la cuenta lleva al perfil profesional', async () => {
-    simular();
-    renderizarApp('/profesional/inicio');
-    await userEvent.click(await screen.findByRole('button', { name: /menú de tu cuenta/ }));
-    const panel = screen.getByText('matias@correo.cl').closest('div');
-    expect(within(panel).getByRole('link', { name: 'Perfil profesional' })).toHaveAttribute('href', '/profesional/perfil');
-    expect(within(panel).queryByRole('link', { name: 'Mi perfil' })).not.toBeInTheDocument();
+    expect(within(menu).getByRole('link', { name: 'Perfil profesional' })).toHaveAttribute('href', '/profesional/perfil');
+    await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
+    expect(within(screen.getByRole('navigation', { name: 'Cuenta' })).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /menú de tu cuenta/ })).not.toBeInTheDocument();
   });
 
   // Clientes (PR #50) ya no es «Próximamente»; su lista e historial se prueban en Clientes.test.jsx.

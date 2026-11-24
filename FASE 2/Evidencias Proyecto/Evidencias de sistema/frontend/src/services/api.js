@@ -1,3 +1,5 @@
+import { avisarOperacion } from './avisosGuardado.js';
+
 // Cliente HTTP de la API REST de FitSearch.
 const CLAVE_SESION = 'fitsearch_sesion';
 
@@ -55,7 +57,7 @@ export async function solicitar(ruta, { metodo = 'GET', cuerpo, conSesion = true
     throw new ErrorApi(0, 'No fue posible conectar con el servidor. Revisa tu conexión e intenta nuevamente');
   }
 
-  if (respuesta.status === 204) return null;
+  if (respuesta.status === 204) { avisarOperacion(ruta, metodo); return null; }
   if (respuesta.ok && descargar) return respuesta.blob();
   const datos = await respuesta.json().catch(() => ({}));
 
@@ -63,5 +65,6 @@ export async function solicitar(ruta, { metodo = 'GET', cuerpo, conSesion = true
     if (respuesta.status === 401 && conSesion && token) alExpirarSesion();
     throw new ErrorApi(respuesta.status, datos.error || 'Ocurrió un error inesperado', datos.detalles);
   }
+  avisarOperacion(ruta, metodo);
   return datos;
 }

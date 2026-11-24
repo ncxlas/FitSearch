@@ -7,12 +7,12 @@ const CAMPOS = ['nombre', 'correo', 'telefono', 'biografia', 'instagram', 'linke
 // especialidad (solo el profesional, 16-11-2026): { valor, opciones, guardar(nueva) → texto del aviso }. Se elige aquí
 // y se guarda con el mismo botón, aunque va en su ficha (la descripción de la ficha se dejó de pedir: la presentación
 // ya cumple ese papel).
-export default function InformacionCuenta({ estado, profesional = false, especialidad }) {
+export default function InformacionCuenta({ estado, profesional = false, especialidad, onGuardado }) {
   if (estado.cargando) return <p role="status">Cargando tus datos de contacto…</p>;
   if (estado.error) return <><Alerta>{estado.error}</Alerta><button type="button" className="boton-texto" onClick={estado.reintentar}>Reintentar datos personales</button></>;
-  return <Formulario cuenta={estado.cuenta} guardar={estado.guardar} profesional={profesional} especialidad={especialidad} />;
+  return <Formulario cuenta={estado.cuenta} guardar={estado.guardar} profesional={profesional} especialidad={especialidad} onGuardado={onGuardado} />;
 }
-function Formulario({ cuenta, guardar, profesional, especialidad }) {
+function Formulario({ cuenta, guardar, profesional, especialidad, onGuardado }) {
   const [datos, setDatos] = useState(() => Object.fromEntries(CAMPOS.map((c) => [c, cuenta[c] || ''])));
   const [elegida, setElegida] = useState(especialidad?.valor ?? '');
   // La ficha (y con ella la especialidad guardada) puede llegar después que la cuenta: al cambiar, se toma su valor.
@@ -44,10 +44,12 @@ function Formulario({ cuenta, guardar, profesional, especialidad }) {
         await guardar({ ...cambios, ...(cambios.correo !== undefined && { password, credencial }) });
         cuentaGuardada = true;
         setPassword(''); setCredencial(''); setCorreoEditable(false);
-        textos.push('Tus datos personales se guardaron correctamente.');
+        textos.push('Datos personales guardados.');
       }
       if (cambiaEspecialidad) textos.push(await especialidad.guardar(elegida));
-      setAviso({ tipo: 'exito', texto: textos.join(' ') });
+      const texto = textos.find((t) => t.includes('para guardar tu especialidad')) || (textos.length > 1 ? 'Cambios guardados.' : textos[0]);
+      if (onGuardado) onGuardado(texto);
+      else setAviso({ tipo: 'exito', texto });
     } catch (error) {
       setErrores(error.detalles || {});
       setAviso({ tipo: 'error', texto: cuentaGuardada ? `Tus datos personales se guardaron, pero tu especialidad no: ${error.message}` : error.message });

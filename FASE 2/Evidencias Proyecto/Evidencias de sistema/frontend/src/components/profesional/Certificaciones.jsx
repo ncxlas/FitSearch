@@ -1,3 +1,4 @@
+import NotificacionFlotante from '../NotificacionFlotante.jsx';
 import { useEffect, useState } from 'react';
 import { solicitar } from '../../services/api.js';
 import { descargarDocumento } from '../../services/documentos.js';
@@ -114,7 +115,7 @@ function Historial({ movimientos = [] }) {
 // Certificaciones del profesional (FS-HU-12). Desde el 16-11-2026, compacta para verla sin bajar tanto: el estado en
 // una línea, cada documento en una fila corta (nombre, si es obligatorio, si está adjunto y cómo subirlo), los datos de
 // la solicitud lado a lado y el historial plegado.
-export default function Certificaciones() {
+export default function Certificaciones({ onGuardado } = {}) {
   const [solicitud, setSolicitud] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -172,7 +173,7 @@ export default function Certificaciones() {
         }));
         setArchivos((anteriores) => ({ ...anteriores, [tipo]: null }));
         formulario.reset();
-        setAviso('Documento adjuntado.');
+        (onGuardado || setAviso)('Documento adjuntado.');
       } else {
         const rutFormateado = formatearRut(rut);
         setRut(rutFormateado);
@@ -188,7 +189,7 @@ export default function Certificaciones() {
           metodo: 'POST',
           cuerpo: { rut: rutFormateado, telefono },
         });
-        setAviso('Solicitud enviada para revisión.');
+        (onGuardado || setAviso)('Solicitud enviada para revisión.');
       }
       if (!tipo) setRevision((r) => r + 1);
     } catch (e) {
@@ -214,7 +215,7 @@ export default function Certificaciones() {
           )}
         </div>
       )}
-      {aviso && <p role="status" className="certificaciones__aviso">{aviso}</p>}
+      {aviso && <NotificacionFlotante>{aviso}</NotificacionFlotante>}
       {solicitud && (
         <>
           <div className={`certificaciones__estado certificaciones__estado--${solicitud.estado}`}>

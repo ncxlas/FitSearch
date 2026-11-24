@@ -21,7 +21,7 @@ vi.mock('../../services/mapas.js', () => ({ cargarMapLibre: () => new Promise(()
 const FOTO = 'data:image/jpeg;base64,Rk9UTy1udWV2YQ==';
 const OTRA_FOTO = 'data:image/jpeg;base64,T1RSQS1mb3Rv';
 const PNG = () => new File(['png'], 'foto.png', { type: 'image/png' });
-const botonCuenta = () => screen.getByRole('button', { name: /menú de tu cuenta/ });
+const fotoPerfil = () => document.querySelector('.perfil-editor__foto');
 
 beforeEach(() => localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
 function servidor({ sesion = SESION, foto = null, falla = null, rutas = {} } = {}) {
@@ -42,7 +42,7 @@ test('guarda nombre y teléfono, actualiza la sesión y conserva la edición en 
   await userEvent.clear(nombre); await userEvent.type(nombre, 'Ana Actualizada');
   await userEvent.type(screen.getByLabelText('Teléfono de contacto (opcional)'), '+56 9 1234 5678');
   await userEvent.click(screen.getByRole('button', { name: 'Guardar datos personales' }));
-  expect(await screen.findByText('Tus datos personales se guardaron correctamente.')).toBeInTheDocument();
+  expect(await screen.findByText('Datos personales guardados.')).toBeInTheDocument();
   const put = fetch.mock.calls.find(([u, o]) => u === '/api/perfil/cuenta' && o.method === 'PUT');
   expect(JSON.parse(put[1].body)).toEqual({ nombre: 'Ana Actualizada', telefono: '+56 9 1234 5678' });
   expect(JSON.parse(localStorage.getItem('fitsearch_sesion')).usuario.nombre).toBe('Ana Actualizada');
@@ -80,13 +80,12 @@ test('rechaza un SVG seleccionado como foto sin intentar subirlo', async () => {
   expect(fetch.mock.calls.some(([, o]) => o.method === 'PUT')).toBe(false);
 });
 
-// Pedido del PO del 15-11-2026: la foto elegida se acepta en un cuadro antes de guardarla, ese cuadro reemplaza el
-// mensaje «Foto actualizada» y el botón de la cuenta, junto a la campanita, muestra la foto en vez de las iniciales.
+// La foto elegida se confirma antes de guardarla y se actualiza en el resumen del perfil.
 describe('foto de perfil con confirmación', () => {
-  test('pide aceptar la foto, solo entonces la guarda y el botón de la cuenta cambia las iniciales por la foto', async () => {
+  test('pide aceptar la foto, solo entonces la guarda y el resumen cambia las iniciales por la foto', async () => {
     const fetch = servidor(); renderizarApp('/perfil'); await screen.findByLabelText('Nombre completo');
-    expect(botonCuenta()).toHaveTextContent('AP');
-    expect(botonCuenta().querySelector('img')).toBeNull();
+    expect(fotoPerfil()).toHaveTextContent('AP');
+    expect(fotoPerfil().querySelector('img')).toBeNull();
 
     prepararFoto.mockResolvedValueOnce(FOTO);
     await userEvent.upload(screen.getByLabelText('Seleccionar foto de perfil'), PNG());
@@ -100,9 +99,9 @@ describe('foto de perfil con confirmación', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(JSON.parse(fetch.mock.calls.find(([, o]) => o.method === 'PUT')[1].body)).toEqual({ foto: FOTO });
     expect(screen.getByRole('img', { name: 'Foto de Ana Pérez' })).toHaveAttribute('src', FOTO);
-    expect(botonCuenta().querySelector('img')).toHaveAttribute('src', FOTO);
-    expect(botonCuenta()).not.toHaveTextContent('AP');
-    expect(screen.queryByText('Foto actualizada.')).not.toBeInTheDocument();
+    expect(fotoPerfil().querySelector('img')).toHaveAttribute('src', FOTO);
+    expect(fotoPerfil()).not.toHaveTextContent('AP');
+    expect(screen.getByRole('status')).toHaveTextContent('Foto actualizada.');
     expect(screen.getByRole('button', { name: 'Cambiar foto de perfil' })).toHaveFocus();
   });
 
@@ -120,7 +119,7 @@ describe('foto de perfil con confirmación', () => {
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(huboPut(fetch)).toBe(false);
-    expect(botonCuenta()).toHaveTextContent('AP');
+    expect(fotoPerfil()).toHaveTextContent('AP');
   });
 
   test('si no se puede guardar, el error queda en el cuadro para reintentar', async () => {
@@ -131,20 +130,20 @@ describe('foto de perfil con confirmación', () => {
     await userEvent.click(within(cuadro).getByRole('button', { name: 'Aceptar foto' }));
     expect(await within(cuadro).findByText('La foto supera el tamaño permitido')).toBeInTheDocument();
     expect(within(cuadro).getByRole('button', { name: 'Aceptar foto' })).toHaveFocus();
-    expect(botonCuenta().querySelector('img')).toBeNull();
+    expect(fotoPerfil().querySelector('img')).toBeNull();
   });
 
-  test('para un profesional, el botón de la cuenta muestra su foto al cargar y la nueva al aceptarla', async () => {
+  test('para un profesional, el resumen muestra su foto al cargar y la nueva al aceptarla', async () => {
     localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL));
     servidor({ sesion: SESION_PROFESIONAL, foto: FOTO, rutas: { '/api/profesionales/mi-ficha': { ficha: null } } });
     renderizarApp('/profesional/perfil');
-    await waitFor(() => expect(botonCuenta().querySelector('img')).toHaveAttribute('src', FOTO));
-    expect(botonCuenta()).not.toHaveTextContent('MR');
+    await waitFor(() => expect(fotoPerfil().querySelector('img')).toHaveAttribute('src', FOTO));
+    expect(fotoPerfil()).not.toHaveTextContent('MR');
 
     prepararFoto.mockResolvedValueOnce(OTRA_FOTO);
     await userEvent.upload(await screen.findByLabelText('Seleccionar foto de perfil'), PNG());
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Aceptar foto' }));
-    await waitFor(() => expect(botonCuenta().querySelector('img')).toHaveAttribute('src', OTRA_FOTO));
+    await waitFor(() => expect(fotoPerfil().querySelector('img')).toHaveAttribute('src', OTRA_FOTO));
     expect(screen.getByRole('img', { name: 'Foto de Matías Rojas' })).toHaveAttribute('src', OTRA_FOTO);
   });
 });

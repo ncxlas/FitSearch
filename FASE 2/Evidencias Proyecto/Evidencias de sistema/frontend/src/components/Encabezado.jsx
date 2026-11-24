@@ -8,7 +8,7 @@ import MarcaFitSearch from './diseno/MarcaFitSearch.jsx';
 
 // El logo lleva al Inicio de su rol con sesión y a la portada sin ella; nunca al perfil (DAS, D25).
 // No hay acceso a Profesionales en el encabezado: ya están el menú lateral, la barra inferior y los accesos del Inicio.
-export default function Encabezado({ menuAbierto = false, onAlternarMenu }) {
+export default function Encabezado({ menuAbierto = false, onAlternarMenu, soloMarca = false }) {
   const { sesion } = useSesion();
 
   return (
@@ -16,7 +16,7 @@ export default function Encabezado({ menuAbierto = false, onAlternarMenu }) {
       <Link to={sesion ? inicioDe(sesion.usuario) : '/'} className="encabezado__marca" aria-label={sesion ? 'FitSearch, ir al inicio' : 'FitSearch, ir a la portada'}>
         <MarcaFitSearch />
       </Link>
-      {sesion && (
+      {sesion && !soloMarca && (
         <div className="encabezado__acciones">
           <Notificaciones />
           <MenuUsuario />

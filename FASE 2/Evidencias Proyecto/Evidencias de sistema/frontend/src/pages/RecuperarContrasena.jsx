@@ -42,7 +42,7 @@ export default function RecuperarContrasena() {
           No te preocupes, te ayudaremos a recuperarla. Ingresa tu correo electrónico y te enviaremos un enlace para restablecerla.
         </p>
       </div>
-      <Alerta tipo={mensaje.tipo}>{mensaje.texto}</Alerta>
+      <Alerta flotante={false} tipo={mensaje.tipo}>{mensaje.texto}</Alerta>
       <form onSubmit={enviar} noValidate>
         <CampoFormulario id="correo" etiqueta="Correo electrónico" type="email" autoComplete="email" icono="correo" etiquetaOculta
           value={correo} onChange={(evento) => setCorreo(evento.target.value)} error={errores.correo} />

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSesion } from '../../context/SesionContext.jsx';
 import { solicitar } from '../../services/api.js';
@@ -7,11 +8,12 @@ import useDesplegable from './useDesplegable.js';
 
 const CADA_SEGUNDOS = 60;
 
-// Campana del encabezado. Desde FS-HU-31 avisa los mensajes sin leer de los chats: se consulta al cargar, al cambiar
+// Avisos de mensajes y verificaciones. Desde FS-HU-31 avisa los mensajes sin leer de los chats: se consulta al cargar, al cambiar
 // de pantalla y cada minuto (si la pestaña está a la vista). Al administrador le avisa las verificaciones pendientes
 // (11-11-2026).
-export default function Notificaciones() {
-  const { abierto, setAbierto, contenedor, boton } = useDesplegable();
+export default function Notificaciones({ ubicacion = 'encabezado' }) {
+  const panel = useRef(null);
+  const { abierto, setAbierto, contenedor, boton } = useDesplegable(panel);
   const { sesion } = useSesion();
   const { pathname } = useLocation();
   const rol = sesion?.usuario.rol;
@@ -30,19 +32,24 @@ export default function Notificaciones() {
     return () => { activo = false; clearInterval(temporizador); };
   }, [conMensajes, administrador, pathname]);
 
+  const lateral = ubicacion === 'lateral';
+  const [destino, setDestino] = useState(null);
+  useEffect(() => { setDestino(lateral ? contenedor.current?.closest('.navegacion-lateral') || document.body : contenedor.current); }, [contenedor, lateral]);
   const rutaMensajes = rol === 'profesional' ? '/profesional/mensajes' : '/mensajes';
   return (
-    <div className="desplegable" ref={contenedor}>
-      <button ref={boton} type="button" className="boton-icono notificaciones__boton" aria-expanded={abierto} aria-controls="panel-notificaciones"
+    <div className={`desplegable${lateral ? ' notificaciones--lateral' : ''}`} ref={contenedor}>
+      <button ref={boton} type="button" className={lateral ? 'menu-lateral__enlace notificaciones__boton' : 'boton-icono notificaciones__boton'} aria-expanded={abierto} aria-controls="panel-notificaciones"
         aria-label={!noLeidos ? 'Notificaciones' : administrador
           ? `Notificaciones: ${noLeidos} ${noLeidos === 1 ? 'verificación pendiente' : 'verificaciones pendientes'}`
           : `Notificaciones: ${noLeidos} ${noLeidos === 1 ? 'mensaje sin leer' : 'mensajes sin leer'}`}
         onClick={() => setAbierto(!abierto)}>
         <Icono nombre="campana" tamano={22} />
+        {lateral && <span className="menu-lateral__texto">Notificaciones</span>}
         {noLeidos > 0 && <span className="notificaciones__contador" aria-hidden="true">{noLeidos > 9 ? '9+' : noLeidos}</span>}
       </button>
-      {abierto && (
-        <div id="panel-notificaciones" className="desplegable__panel notificaciones__panel">
+      {abierto && destino && createPortal(
+        <section ref={panel} id="panel-notificaciones" className={`desplegable__panel notificaciones__panel${lateral ? ' notificaciones__panel--lateral' : ''}`} aria-label="Panel de notificaciones">
+          <button type="button" className="boton-icono notificaciones__cerrar" aria-label="Cerrar notificaciones" onClick={() => { setAbierto(false); boton.current?.focus(); }}><Icono nombre="cerrar" tamano={20} /></button>
           <p className="notificaciones__titulo">Notificaciones</p>
           {noLeidos > 0 && administrador ? (
             <Link to="/admin/verificaciones" className="notificaciones__aviso" onClick={() => setAbierto(false)}>
@@ -68,7 +75,7 @@ export default function Notificaciones() {
               <p><strong>No tienes notificaciones</strong>Te avisaremos aquí cuando haya novedades en tu cuenta.</p>
             </div>
           )}
-        </div>
+        </section>, destino,
       )}
     </div>
   );
