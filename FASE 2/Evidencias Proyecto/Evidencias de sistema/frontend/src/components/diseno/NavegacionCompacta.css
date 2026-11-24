@@ -87,6 +87,7 @@
   .app .navegacion-lateral { width: var(--ancho-menu); padding-block: .75rem; transform: none; visibility: visible; transition: width 180ms ease; }
   .app .navegacion-lateral--desplegada { --ancho-menu: 16rem; }
   .app .menu-lateral--desplegado { width: 100%; margin: 0; box-shadow: none; }
+  .app .menu-lateral__lista { flex: 0 1 auto; margin-block: auto; }
   .app .menu-lateral__cabecera { padding-inline: .25rem; }
   .app .menu-lateral__cabecera > button { display: none; }
   .app .menu-lateral__marca .marca > span { max-width: 0; overflow: hidden; opacity: 0; transition: max-width 180ms ease, opacity 120ms ease; }
