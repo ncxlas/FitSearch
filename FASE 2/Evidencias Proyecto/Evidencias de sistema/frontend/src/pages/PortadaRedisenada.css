@@ -41,6 +41,8 @@
 .portada__logotipo > span > span { color: var(--p-acento); font-weight: 400; }
 .portada .portada__navegacion { gap: 1.25rem; font-size: 0.875rem; font-weight: 500; }
 .portada .portada__navegacion a, .portada .portada__enlace-acceso { color: #e6f0f6; }
+.portada .portada__encabezado a,
+.portada .portada__encabezado a:hover { text-decoration: none; }
 .portada .portada__enlace-acceso { font-size: 0.9375rem; }
 .portada .portada__accesos .boton { min-height: 2.75rem; padding-inline: 1.1rem; border-radius: 999px; font-size: 0.9375rem; }
 
