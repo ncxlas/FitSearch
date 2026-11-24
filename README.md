@@ -447,7 +447,7 @@ El profesional (por ejemplo, un nutricionista) envía un plan por el chat y la p
 - **Persona:** el plan llega como una tarjeta en el chat, con su detalle. «Guardar en mis planes» lo deja en Comidas › Plan de comidas (con origen «profesional») o en Plan de macronutrientes (como plan personalizado; si el nombre ya existe, queda «Nombre (2)»). Se guarda una sola vez, y el enlace «Ver en…» abre esa pestaña (`/comidas?seccion=…`).
 - El profesional ve en la tarjeta si su cliente ya lo guardó.
 - Rutas `POST /api/chats/:id/planes` y `POST /api/chats/:id/mensajes/:mensajeId/guardar`. Columnas `adjunto` (JSON) y `guardado_en` en `mensajes_chat` (migración `20261124160000_planes_por_chat`). La descarga de «Mis datos» incluye los planes recibidos.
-- `npm run test:mysql:planes-chat` lo comprueba con MySQL real (17 comprobaciones). Evidencia: [Planes por el chat](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Planes_Por_Chat_2026-11-24.md).
+- `npm run test:mysql:planes-chat` lo comprueba con MySQL real (18 comprobaciones). Evidencia: [Planes por el chat](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Planes_Por_Chat_2026-11-24.md).
 
 ## Compartir el progreso con un profesional (SC-45, 24-11-2026)
 

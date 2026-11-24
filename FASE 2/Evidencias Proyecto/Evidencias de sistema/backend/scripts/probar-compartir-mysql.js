@@ -70,7 +70,7 @@ async function cuenta(nombre, rol) {
     await servicio.guardar(ana.id, ficha.id, { perfil: true, salud: true, comidas: true, peso: true, planes: true });
     vista = await servicio.progreso(pro.id, ana.id, new Date(Date.now() + 31 * 60000));
     igual('Con las cinco categorías ve perfil, salud, comidas, peso y planes', Object.keys(vista.secciones), ['perfil', 'salud', 'comidas', 'peso', 'planes']);
-    igual('El perfil trae el objetivo con su nombre', [vista.secciones.perfil.objetivo, vista.secciones.perfil.pesoKg], ['Bajar de peso', 70]);
+    igual('El perfil trae el objetivo y el sexo con su nombre', [vista.secciones.perfil.objetivo, vista.secciones.perfil.sexo, vista.secciones.perfil.pesoKg], ['Bajar de peso', 'Femenino', 70]);
     igual('Los planes traen el plan de macronutrientes con sus calorías', typeof vista.secciones.planes.macronutrientes.kcal, 'number');
     igual('Pasados 30 minutos, la consulta se registra de nuevo', await db.accesoCompartido.count({ where: { usuarioId: ana.id, accion: 'consulto' } }), 2);
 

@@ -1,5 +1,5 @@
 // Rutas de los planes enviados por el chat (SC-46). Los servicios se simulan; su lógica se prueba con MySQL real
-// (scripts/probar-planes-chat-mysql.js, 17 comprobaciones).
+// (scripts/probar-planes-chat-mysql.js, 18 comprobaciones).
 jest.mock('../../src/services/planesPorChat.service');
 jest.mock('../../src/services/comida.service');
 const request = require('supertest');

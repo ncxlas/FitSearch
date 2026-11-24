@@ -96,4 +96,21 @@ describe('Vista del profesional', () => {
     expect(fila).toHaveTextContent('1.500 kcal 75 %');
     expect(fila).toHaveTextContent('750 ml');
   });
+  test('CP-276: el peso se ve en el gráfico, hablando del cliente, con la lista de pesajes', async () => {
+    const usuario = userEvent.setup();
+    simularApi({
+      '/api/profesional/progreso/7': {
+        cliente: { id: 7, nombre: 'Ana Pérez' }, hoy: '2026-11-24', categorias: [CATEGORIAS[3]],
+        secciones: { peso: {
+          pesos: [{ fecha: '2026-11-10', pesoKg: 72.9 }, { fecha: '2026-11-24', pesoKg: 72.2 }],
+          meta: { objetivo: 'bajar_peso', etiqueta: 'Bajar de peso', pesoInicialKg: 72.4, pesoObjetivoKg: 66, ritmoSemanalKg: 0.5, fechaInicio: '2026-11-24' },
+        } },
+      },
+    });
+    render(<ProgresoCliente usuarioId={7} nombre="Ana Pérez" />);
+    expect(await screen.findByText(/Meta: bajar de peso de 72,4 kg a 66 kg/)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Evolución de su peso: 2 pesajes, el último 72,2 kg/ })).toBeInTheDocument();
+    await usuario.click(screen.getByText('Ver los pesajes (2)'));
+    expect(screen.getByText('72,9 kg')).toBeInTheDocument();
+  });
 });

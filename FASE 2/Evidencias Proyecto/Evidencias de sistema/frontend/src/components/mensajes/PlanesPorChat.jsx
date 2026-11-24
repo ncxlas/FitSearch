@@ -35,9 +35,9 @@ export function PlanAdjunto({ chatId, mensaje, puedeGuardar, nombreCliente, onGu
   }
 
   return (
-    <div className="plan-adjunto">
+    <div className={`plan-adjunto${adjunto.automatico ? ' plan-adjunto--solo' : ''}`}>
       <div className="plan-adjunto__cabecera">
-        <span className="plan-adjunto__icono" aria-hidden="true"><Icono nombre={esComidas ? 'comida' : 'grafico'} tamano={20} /></span>
+        <span className="plan-adjunto__icono" aria-hidden="true"><Icono nombre={esComidas ? 'comida' : 'grafico'} tamano={18} /></span>
         <span className="plan-adjunto__titulo">
           <small>{esComidas ? `Plan de comidas · ${plan.tipo === 'semana' ? 'una semana' : 'un día'}` : 'Plan de macronutrientes'}</small>
           <strong>{plan.nombre}</strong>
@@ -62,13 +62,11 @@ export function PlanAdjunto({ chatId, mensaje, puedeGuardar, nombreCliente, onGu
       <div className="plan-adjunto__pie">
         {adjunto.guardadoEn ? (
           <span className="plan-adjunto__guardado" role="status">
-            <Icono nombre="check" tamano={16} />
-            {puedeGuardar
-              ? <>Guardado en tus planes · <Link to={`/comidas?seccion=${destino.seccion}`}>Ver en {destino.texto}</Link></>
-              : `${nombreCliente} lo guardó en sus planes`}
+            <span><Icono nombre="check" tamano={16} />{puedeGuardar ? 'Guardado en tus planes' : `${nombreCliente} lo guardó en sus planes`}</span>
+            {puedeGuardar && <Link to={`/comidas?seccion=${destino.seccion}`}>Ver en {destino.texto}</Link>}
           </span>
         ) : puedeGuardar ? (
-          <button type="button" className="boton boton--principal boton--compacto" disabled={estado.ocupado} onClick={guardar}>
+          <button type="button" className="boton boton--principal plan-adjunto__guardar" disabled={estado.ocupado} onClick={guardar}>
             {estado.ocupado ? 'Guardando…' : 'Guardar en mis planes'}
           </button>
         ) : <span className="plan-adjunto__pendiente">Aún no lo guarda</span>}
@@ -96,10 +94,10 @@ function FormularioMacros({ ocupado, error, detalles, alEnviar, alVolver }) {
         {detalles.nombre && <span className="campo__mensaje" role="alert">{detalles.nombre}</span>}
       </label>
       <fieldset className="enviar-plan__porcentajes" aria-describedby="suma-macros">
-        <legend className="campo__etiqueta">Reparto de las calorías</legend>
+        <legend className="campo__etiqueta">Reparto de las calorías (%)</legend>
         {MACROS.map(([clave, nombre]) => (
           <label key={clave} className="campo">
-            <span className="campo__etiqueta">{nombre} (%)</span>
+            <span className="campo__etiqueta">{nombre}</span>
             <input className="campo__control" type="number" inputMode="numeric" min={LIMITES.min} max={LIMITES.max} step={1} value={valores[clave]}
               onChange={(e) => setValores((v) => ({ ...v, [clave]: e.target.value === '' ? '' : Number(e.target.value) }))} />
           </label>
@@ -143,7 +141,7 @@ export function EnviarPlan({ chatId, nombreCliente, onEnviado }) {
   return (
     <>
       <button type="button" className="boton-icono" aria-label="Enviar un plan" title="Enviar un plan" onClick={() => setPaso('elegir')}>
-        <Icono nombre="capas" tamano={20} />
+        <Icono nombre="documento" tamano={20} />
       </button>
       {paso && (
         <Dialogo titulo={paso === 'macros' ? 'Enviar un plan de macronutrientes' : paso === 'comidas' ? 'Enviar un plan de comidas' : `Enviar un plan a ${nombreCliente}`}

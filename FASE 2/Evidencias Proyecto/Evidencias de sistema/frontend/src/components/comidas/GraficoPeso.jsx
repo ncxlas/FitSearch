@@ -24,7 +24,9 @@ function escalaLimpia(min, max) {
   return { desde, hasta, marcas };
 }
 
-export default function GraficoPeso({ pesos, meta, hoy }) {
+// `de`: «tu» cuando lo mira la persona; «su» cuando lo mira su profesional (progreso compartido, SC-45).
+export default function GraficoPeso({ pesos, meta, hoy, de = 'tu' }) {
+  const Tu = de === 'su' ? 'Su' : 'Tu';
   const id = useId();
   const svg = useRef(null);
   const [activo, setActivo] = useState(null);
@@ -93,14 +95,14 @@ export default function GraficoPeso({ pesos, meta, hoy }) {
   return (
     <figure className="grafico-peso">
       <ul className="grafico-peso__leyenda" aria-hidden="true">
-        <li><span className="grafico-peso__clave grafico-peso__clave--peso" />Tu peso</li>
-        {lineaMeta && <li><span className="grafico-peso__clave grafico-peso__clave--meta" />Ritmo de tu meta</li>}
+        <li><span className="grafico-peso__clave grafico-peso__clave--peso" />{Tu} peso</li>
+        {lineaMeta && <li><span className="grafico-peso__clave grafico-peso__clave--meta" />Ritmo de {de} meta</li>}
       </ul>
       <div className="grafico-peso__lienzo">
         <svg ref={svg} viewBox={`0 0 ${ANCHO} ${ALTO}`} role="img" aria-labelledby={`${id}-titulo`} tabIndex={0}
           onPointerMove={cercano} onPointerLeave={() => setActivo(null)} onKeyDown={teclado} onBlur={() => setActivo(null)}>
           <title id={`${id}-titulo`}>
-            {`Evolución de tu peso: ${puntos.length} pesajes${ultimo ? `, el último ${decimal(ultimo.pesoKg)} kg` : ''}${lineaMeta ? '; la línea punteada es el ritmo de tu meta' : ''}. Usa las flechas para recorrer los pesajes.`}
+            {`Evolución de ${de} peso: ${puntos.length} pesajes${ultimo ? `, el último ${decimal(ultimo.pesoKg)} kg` : ''}${lineaMeta ? `; la línea punteada es el ritmo de ${de} meta` : ''}. Usa las flechas para recorrer los pesajes.`}
           </title>
           {y.marcas.map((kg) => (
             <g key={kg} className="grafico-peso__eje">

@@ -1,16 +1,17 @@
 /* Privacidad y datos (SC-42): descargar mis datos y eliminar la cuenta. */
-.privacidad { display: grid; gap: .85rem; }
+/* El color sale del tema: el panel del perfil trae un color fijo que en el modo oscuro dejaba los títulos invisibles. */
+.privacidad { display: grid; color: var(--color-texto); }
 
 .privacidad__bloque {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
   gap: 1rem;
-  padding: 1.1rem 1.15rem;
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio);
-  background: var(--color-superficie);
+  padding: 1.2rem 0;
 }
+.privacidad__bloque:first-child { padding-top: .2rem; }
+.privacidad__bloque:last-child { padding-bottom: 0; }
+.privacidad__bloque + .privacidad__bloque { border-top: 1px solid var(--color-borde); }
 
 .privacidad__icono {
   display: grid;
@@ -40,7 +41,7 @@
 .privacidad__accion { width: auto; min-height: 2.5rem; white-space: nowrap; align-self: center; }
 
 /* Botones de peligro: el borde para abrir el diálogo y el relleno para confirmar. */
-.boton--peligro-borde {
+.boton--peligro-borde, .privacidad .boton--peligro-borde {
   font-size: .9rem;
   color: var(--color-error);
   background: transparent;
@@ -69,7 +70,13 @@
 
 .eliminar-cuenta__google { margin-bottom: 1rem; }
 
+/* Modo oscuro: el rojo y el verde del tema claro no alcanzan contraste sobre la superficie oscura. */
+:root[data-tema="oscuro"] .privacidad__bloque--peligro .privacidad__icono, .app.app--oscuro .privacidad__bloque--peligro .privacidad__icono { color: #f2b8b5; background: rgb(242 184 181 / 14%); }
+:root[data-tema="oscuro"] .privacidad .boton--peligro-borde, .app.app--oscuro .privacidad .boton--peligro-borde { color: #f2b8b5; }
+:root[data-tema="oscuro"] .privacidad__listo, .app.app--oscuro .privacidad__listo { color: #7fd1a6 !important; }
+
 @media (max-width: 36rem) {
-  .privacidad__bloque { grid-template-columns: auto minmax(0, 1fr); }
+  .privacidad__bloque { grid-template-columns: auto minmax(0, 1fr); gap: .75rem; }
+  .privacidad__icono { width: 2.1rem; height: 2.1rem; border-radius: 10px; }
   .privacidad__accion { grid-column: 1 / -1; width: 100%; }
 }

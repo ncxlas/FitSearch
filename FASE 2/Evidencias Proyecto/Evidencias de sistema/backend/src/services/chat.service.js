@@ -31,7 +31,7 @@ const con = (chat, lado) => (lado === 'profesional'
 
 // Un plan enviado por el chat (SC-46) llega con su vista y con cuándo lo guardó la persona.
 const adjuntoDe = (a, guardadoEn) => (a ? {
-  tipo: a.tipo, plan: a.tipo === 'plan_comidas' ? a.vista : a.plan, guardadoEn: guardadoEn ? guardadoEn.toISOString() : null,
+  tipo: a.tipo, plan: a.tipo === 'plan_comidas' ? a.vista : a.plan, automatico: Boolean(a.automatico), guardadoEn: guardadoEn ? guardadoEn.toISOString() : null,
 } : null);
 const formatear = (m, lectorId) => ({
   id: m.id, texto: m.texto, fecha: m.fechaCreacion.toISOString(), propio: m.autorId === lectorId, leido: m.leido, adjunto: adjuntoDe(m.adjunto, m.guardadoEn),

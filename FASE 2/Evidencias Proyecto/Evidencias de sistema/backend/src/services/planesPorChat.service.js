@@ -48,7 +48,8 @@ async function enviar(usuario, chatId, { tipo, plan, texto }) {
   }
   const que = tipo === 'comidas' ? 'un plan de comidas' : 'un plan de macronutrientes';
   const mensaje = await prisma.mensajeCita.create({
-    data: { chatId: chat.id, autorId: usuario.id, texto: nota || `Te envié ${que}: «${adjunto.plan.nombre}».`, adjunto },
+    // Sin mensaje del profesional, el texto se arma solo (sirve para la lista de chats) y la tarjeta no lo repite.
+    data: { chatId: chat.id, autorId: usuario.id, texto: nota || `Te envié ${que}: «${adjunto.plan.nombre}».`, adjunto: { ...adjunto, automatico: !nota } },
     select: modelo.seleccionMensaje,
   });
   return { mensaje: formatear(mensaje, usuario.id) };
