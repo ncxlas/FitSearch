@@ -8,6 +8,7 @@ import { diaCorto, diaLargo } from '../components/agenda/semana.js';
 import { coincidencias, extracto, partes, terminos } from '../components/mensajes/buscar.js';
 import { useSesion } from '../context/SesionContext.jsx';
 import { solicitar } from '../services/api.js';
+import { BotonCompartir } from '../components/compartir/CompartirProgreso.jsx';
 
 import './Mensajes.css';
 import Avatar from '../components/Avatar.jsx';
@@ -352,6 +353,8 @@ export function ChatAbierto({ base, datos, profesional, onEnviado, onEliminado, 
           <p>{con.detalle}{proxima ? ` · Próxima cita: ${diaCorto(proxima.cita.fecha)}, ${proxima.cita.horaInicio}` : ''}</p>
         </div>
         <div className="mensajes__herramientas">
+          {/* SC-45: la persona elige qué progreso ve este profesional. */}
+          {con.profesionalId && <BotonCompartir profesionalId={con.profesionalId} />}
           <button type="button" ref={botonBuscar} className="boton-icono" aria-label="Buscar en el chat" title="Buscar en el chat"
             aria-expanded={buscando} aria-controls="buscador-chat" onClick={() => (buscando ? cerrarBusqueda() : setBuscando(true))}>
             <Icono nombre="buscar" tamano={20} />

@@ -9,6 +9,11 @@ const router = Router();
 router.use(autenticar, autorizarRoles('profesional'));
 
 router.get('/clientes', async (req, res) => res.json(await servicio.listarClientes(req.usuario.id)));
+// Progreso que cada cliente decidió compartir (SC-45): la lista y el detalle, solo con las categorías permitidas.
+const compartir = require('../services/compartir.service');
+router.get('/progreso', async (req, res) => res.json(await compartir.listarDelProfesional(req.usuario.id)));
+router.get('/progreso/:usuarioId', param('usuarioId').isInt({ min: 1, max: 2147483647 }).withMessage('El cliente indicado no es válido').toInt(), validar,
+  async (req, res) => res.json(await compartir.progreso(req.usuario.id, matchedData(req).usuarioId)));
 
 router.get(
   '/clientes/:id',
