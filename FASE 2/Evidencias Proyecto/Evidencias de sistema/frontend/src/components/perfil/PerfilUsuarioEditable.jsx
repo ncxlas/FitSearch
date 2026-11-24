@@ -7,6 +7,7 @@ import useCuentaPerfil from './useCuentaPerfil.js';
 import PasoDatosPersonales from './PasoDatosPersonales.jsx';
 import PasoObjetivos from './PasoObjetivos.jsx';
 import PasoSalud from './PasoSalud.jsx';
+import PrivacidadDatos from '../cuenta/PrivacidadDatos.jsx';
 
 const PASOS = [
   { paso: 'datosPersonales', seccion: 'fisicos', titulo: 'Datos físicos' },
@@ -48,6 +49,8 @@ export default function PerfilUsuarioEditable({ datos, onGuardado }) {
     { id: 'fisicos', titulo: 'Datos físicos', icono: 'balanza', ayuda: 'Estos datos nos ayudan a calcular tu estimación nutricional.', contenido: <PasoDatosPersonales perfil={datos.perfil} {...props} /> },
     { id: 'objetivos', titulo: 'Objetivos y estilo de vida', icono: 'objetivoMantener', ayuda: 'Ajusta tus metas y los hábitos de tu día a día.', contenido: <PasoObjetivos objetivos={datos.objetivos} {...props} /> },
     { id: 'salud', titulo: 'Información de salud', icono: 'corazon', ayuda: 'Tus condiciones, medicamentos y alergias son información privada.', contenido: <PasoSalud salud={datos.salud} {...props} /> },
+    // SC-42: descargar una copia de los datos y eliminar la cuenta.
+    { id: 'privacidad', titulo: 'Privacidad y datos', icono: 'escudo', ayuda: 'Descarga una copia de tus datos o elimina tu cuenta.', contenido: <PrivacidadDatos cuenta={cuentaEstado.cuenta} rol="usuario" /> },
   ];
   // Por decisión del PO (15-11-2026), «Mi perfil» ya no muestra el requerimiento calórico: se ve al terminar el
   // asistente y en el plan de alimentación de Comidas.

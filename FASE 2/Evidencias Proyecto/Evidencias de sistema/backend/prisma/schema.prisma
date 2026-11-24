@@ -36,6 +36,9 @@ model Usuario {
   fechaRegistro        DateTime            @default(now()) @map("fecha_registro") @db.DateTime(0)
   activo               Boolean             @default(true)
   versionSesion        Int                 @default(0) @map("version_sesion")
+  // SC-42: cuándo la persona eliminó su cuenta. La fila queda anonimizada (nombre «Usuario eliminado», sin correo real,
+  // contraseña ni Google) y desactivada, para conservar sin datos personales las citas y reseñas pasadas.
+  eliminadoEn          DateTime?           @map("eliminado_en") @db.DateTime(0)
   rol                  Rol                 @relation(fields: [rolId], references: [id], onDelete: Restrict)
   perfil               PerfilUsuario?
   tokensRecuperacion   TokenRecuperacion[]
@@ -55,6 +58,10 @@ model Usuario {
   planesAlimentacion   PlanAlimentacion[]
   planesPersonalizados PlanPersonalizado[]
   metasPeso            MetaPeso[]
+  registrosPeso        RegistroPeso[]
+  planesComida         PlanComida[]
+  permisosCompartir    PermisoCompartir[]
+  accesosCompartidos   AccesoCompartido[]
 
   @@index([rolId])
   @@map("usuarios")
@@ -116,6 +123,9 @@ model Profesional {
   bloqueos              BloqueoAgenda[]
   listaEspera           ListaEspera[]
   chats                 ChatCita[]
+  planesComida          PlanComida[]
+  permisosCompartir     PermisoCompartir[]
+  accesosCompartidos    AccesoCompartido[]
 
   @@index([especialidad])
   @@index([comuna])
@@ -233,6 +243,7 @@ model Alimento {
   // FS-HU-30: un alimento desactivado no aparece al registrar comidas, pero los registros que lo usan se conservan.
   activo         Boolean          @default(true)
   registros      RegistroComida[]
+  itemsPlan      PlanComidaItem[]
 
   @@map("alimentos")
 }
@@ -316,6 +327,102 @@ model MetaPeso {
 
   @@unique([usuarioId, desde])
   @@map("metas_peso")
+}
+
+// Pesajes del usuario (SC-43, 24-11-2026): uno por día. El más reciente actualiza perfiles_usuario.peso_kg, así el plan
+// de macronutrientes y el avance de la meta de peso usan siempre el último peso anotado.
+model RegistroPeso {
+  id            Int      @id @default(autoincrement())
+  usuarioId     Int      @map("usuario_id")
+  fecha         DateTime @db.Date
+  pesoKg        Decimal  @map("peso_kg") @db.Decimal(5, 2)
+  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, fecha])
+  @@map("registros_peso")
+}
+
+// Planes de comidas (SC-44, 24-11-2026): qué comer cada día y en cada momento, con alimentos del catálogo y sus gramos, más
+// notas libres. tipo «dia» (el mismo plan todos los días) o «semana» (de lunes a domingo). Uno puede estar en uso: el
+// Resumen de Comidas muestra «Hoy te toca…» y permite registrarlo con «Lo comí». origen «propio» o «profesional» (SC-46:
+// guardado desde un plan que el profesional envió por el chat); profesional_id queda aunque la cuenta se anonimice.
+model PlanComida {
+  id                 Int              @id @default(autoincrement())
+  usuarioId          Int              @map("usuario_id")
+  nombre             String           @db.VarChar(80)
+  tipo               String           @db.VarChar(10)
+  nota               String?          @db.VarChar(300)
+  origen             String           @default("propio") @db.VarChar(20)
+  profesionalId      Int?             @map("profesional_id")
+  enUso              Boolean          @default(false) @map("en_uso")
+  fechaCreacion      DateTime         @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  fechaActualizacion DateTime         @default(now()) @updatedAt @map("fecha_actualizacion") @db.DateTime(0)
+  usuario            Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  profesional        Profesional?     @relation(fields: [profesionalId], references: [id], onDelete: SetNull)
+  items              PlanComidaItem[]
+
+  @@index([usuarioId])
+  @@index([profesionalId])
+  @@map("planes_comida")
+}
+
+// Cada línea de un plan de comidas: un alimento con sus gramos o una nota. dia = 0 en un plan «dia» y 1 (lunes) a 7
+// (domingo) en uno «semana». nombre_alimento copia el nombre por si el alimento sale del catálogo.
+model PlanComidaItem {
+  id             Int        @id @default(autoincrement())
+  planId         Int        @map("plan_id")
+  dia            Int        @db.TinyInt
+  momento        String     @db.VarChar(20)
+  orden          Int        @default(0) @db.SmallInt
+  alimentoId     Int?       @map("alimento_id")
+  nombreAlimento String?    @map("nombre_alimento") @db.VarChar(80)
+  gramos         Decimal?   @db.Decimal(6, 1)
+  nota           String?    @db.VarChar(200)
+  plan           PlanComida @relation(fields: [planId], references: [id], onDelete: Cascade)
+  alimento       Alimento?  @relation(fields: [alimentoId], references: [id], onDelete: SetNull)
+
+  @@index([planId, dia])
+  @@index([alimentoId])
+  @@map("plan_comida_items")
+}
+
+// Progreso compartido con un profesional (SC-45, 24-11-2026): qué categorías ve cada profesional con el que la persona
+// tiene un chat. El profesional solo mira; la persona lo cambia o lo quita cuando quiere (sin categorías, la fila se borra).
+model PermisoCompartir {
+  id                 Int         @id @default(autoincrement())
+  usuarioId          Int         @map("usuario_id")
+  profesionalId      Int         @map("profesional_id")
+  perfil             Boolean     @default(false)
+  salud              Boolean     @default(false)
+  comidas            Boolean     @default(false)
+  peso               Boolean     @default(false)
+  planes             Boolean     @default(false)
+  fechaOtorgado      DateTime    @default(now()) @map("fecha_otorgado") @db.DateTime(0)
+  fechaActualizacion DateTime    @default(now()) @updatedAt @map("fecha_actualizacion") @db.DateTime(0)
+  usuario            Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  profesional        Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, profesionalId])
+  @@index([profesionalId])
+  @@map("permisos_compartir")
+}
+
+// Registro de accesos (SC-45): cada permiso dado, cambiado o quitado y cada vez que el profesional mira el progreso
+// (como máximo una consulta registrada cada 30 minutos). Solo la persona dueña de los datos lo ve.
+model AccesoCompartido {
+  id            Int         @id @default(autoincrement())
+  usuarioId     Int         @map("usuario_id")
+  profesionalId Int         @map("profesional_id")
+  accion        String      @db.VarChar(20)
+  categorias    String?     @db.VarChar(100)
+  fecha         DateTime    @default(now()) @db.DateTime(0)
+  usuario       Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  profesional   Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, fecha])
+  @@index([profesionalId, usuarioId, fecha])
+  @@map("accesos_compartidos")
 }
 
 // Agua que registra cada usuario por día (FS-HU-33). Cada suma es una fila, para poder deshacer la última; el total del
@@ -498,14 +605,18 @@ model ChatCita {
 
 // Mensajes de un chat (FS-HU-31). leido marca los que ya vio quien los recibe (el aviso de mensaje nuevo).
 model MensajeCita {
-  id            Int      @id @default(autoincrement())
-  chatId        Int      @map("chat_id")
-  autorId       Int      @map("autor_id")
-  texto         String   @db.VarChar(1000)
-  leido         Boolean  @default(false)
-  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.DateTime(0)
-  chat          ChatCita @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  autor         Usuario  @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  id            Int       @id @default(autoincrement())
+  chatId        Int       @map("chat_id")
+  autorId       Int       @map("autor_id")
+  texto         String    @db.VarChar(1000)
+  leido         Boolean   @default(false)
+  // SC-46: un plan de comidas o de macronutrientes que el profesional envía por el chat; guardado_en marca cuándo la
+  // persona lo guardó en sus planes (una sola vez).
+  adjunto       Json?
+  guardadoEn    DateTime? @map("guardado_en") @db.DateTime(0)
+  fechaCreacion DateTime  @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  chat          ChatCita  @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  autor         Usuario   @relation(fields: [autorId], references: [id], onDelete: Cascade)
 
   @@index([chatId, id])
   @@index([autorId])

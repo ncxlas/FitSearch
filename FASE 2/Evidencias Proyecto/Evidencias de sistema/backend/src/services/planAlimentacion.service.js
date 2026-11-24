@@ -1,4 +1,4 @@
-// Plan de alimentación de Comidas (11-11-2026; pedido del PO). Hay dos tipos:
+// Plan de macronutrientes de Comidas (11-11-2026, antes «Plan de alimentación»; renombrado en SC-44). Hay dos tipos:
 // - «meta»: calorías y reparto según la meta del perfil (bajar de peso, mantener, ganar masa, rendimiento u otro),
 //   calculados en nutricion.service a partir del peso y del requerimiento calórico. Cambia solo si cambia el perfil.
 // - «personalizado»: uno de la lista de planes propios (nombre y tres porcentajes entre 5 % y 80 % que suman 100); las
@@ -8,6 +8,7 @@
 const { comidas: { planes }, perfil: reglasPerfil } = require('../../../shared/reglas.json');
 const modelo = require('../models/planAlimentacion.model');
 const usuarioModel = require('../models/usuario.model');
+const pesosModelo = require('../models/registroPeso.model');
 const { requerimientoCalorico, planPorMeta, gramosDe, kcalPorRitmo } = require('./nutricion.service');
 const { fechaEnChile, sumarDias } = require('../utils/fechaChile');
 const ErrorHttp = require('../utils/ErrorHttp');
@@ -84,11 +85,29 @@ function resumenMetaPeso(meta, datos, hoy) {
   };
 }
 
+// Historial de peso (SC-43): los pesajes de los últimos 180 días y el ritmo real de las últimas 8 semanas, calculado con
+// una recta de mínimos cuadrados (kg por semana). Sin al menos dos pesajes separados por una semana, no hay ritmo real.
+const DIAS_HISTORIAL = 180;
+const DIAS_RITMO = 56;
+function ritmoReal(pesos, hoy) {
+  const desde = sumarDias(hoy, -DIAS_RITMO);
+  const base = new Date(`${desde}T00:00:00Z`);
+  const puntos = pesos.filter((p) => p.fecha >= desde).map((p) => ({ x: (new Date(`${p.fecha}T00:00:00Z`) - base) / 86400000, y: p.pesoKg }));
+  if (puntos.length < 2 || puntos.at(-1).x - puntos[0].x < 7) return null;
+  const n = puntos.length;
+  const mx = puntos.reduce((s, p) => s + p.x, 0) / n;
+  const my = puntos.reduce((s, p) => s + p.y, 0) / n;
+  const pendiente = puntos.reduce((s, p) => s + (p.x - mx) * (p.y - my), 0) / puntos.reduce((s, p) => s + (p.x - mx) ** 2, 0);
+  return Math.round(pendiente * 7 * 100) / 100 || 0;
+}
+
 async function obtener(usuarioId, ahora = new Date()) {
   const hoy = fechaEnChile(ahora);
-  const [usuario, guardado, lista, meta] = await Promise.all([
+  const [usuario, guardado, lista, meta, filasPeso] = await Promise.all([
     usuarioModel.buscarPorIdConPerfil(usuarioId), modelo.vigente(usuarioId, hoy), modelo.personalizados(usuarioId), modelo.metaPeso(usuarioId, hoy),
+    pesosModelo.listar(usuarioId, sumarDias(hoy, -DIAS_HISTORIAL)),
   ]);
+  const pesos = filasPeso.map((f) => ({ id: f.id, fecha: fechaIso(f.fecha), pesoKg: numero(f.pesoKg) }));
   const plan = calcular(usuario?.perfil, guardado, meta);
   const { objetivo } = plan.datos;
   const etiqueta = reglasPerfil.objetivoPrincipal.find(({ valor }) => valor === objetivo)?.etiqueta ?? null;
@@ -121,6 +140,7 @@ async function obtener(usuarioId, ahora = new Date()) {
       return { id: fila.id, nombre: fila.nombre, porcentajes: propios, ...gramosDe(plan.kcal, propios), enUso: fila.id === enUso };
     }),
     maxPersonalizados: planes.maxPersonalizados,
+    historialPeso: { pesos, ritmoRealSemanalKg: ritmoReal(pesos, hoy), dias: DIAS_HISTORIAL, hoy },
   };
 }
 
@@ -230,6 +250,22 @@ async function eliminarPersonalizado(usuarioId, id, ahora = new Date()) {
 
 const kg = (valor) => valor.toLocaleString('es-CL', { maximumFractionDigits: 1 });
 
+// Anotar el peso de un día (hoy por defecto, hasta un año atrás). Responde el plan completo, porque el peso nuevo cambia
+// las calorías y el avance de la meta.
+async function registrarPeso(usuarioId, { pesoKg, fecha }, ahora = new Date()) {
+  const hoy = fechaEnChile(ahora);
+  const dia = fecha ?? hoy;
+  if (dia > hoy) throw new ErrorHttp(400, 'No puedes anotar el peso de un día que todavía no llega', { fecha: 'Elige hoy o un día anterior' });
+  if (dia < sumarDias(hoy, -365)) throw new ErrorHttp(400, 'Solo puedes anotar pesos del último año', { fecha: 'Elige una fecha del último año' });
+  await pesosModelo.registrar(usuarioId, dia, unDecimal(pesoKg));
+  return obtener(usuarioId, ahora);
+}
+
+async function eliminarPeso(usuarioId, id, ahora = new Date()) {
+  if (!(await pesosModelo.eliminar(usuarioId, id))) throw new ErrorHttp(404, 'No encontramos ese pesaje');
+  return obtener(usuarioId, ahora);
+}
+
 async function guardarMetaPeso(usuarioId, { pesoObjetivoKg, ritmoSemanalKg }, ahora = new Date()) {
   const datos = datosDelPerfil((await usuarioModel.buscarPorIdConPerfil(usuarioId))?.perfil);
   const { objetivo, pesoKg } = datos;
@@ -280,5 +316,6 @@ async function eliminarMetaPeso(usuarioId, ahora = new Date()) {
 }
 
 module.exports = {
-  calcular, delDia, obtener, guardar, crearPersonalizado, actualizarPersonalizado, eliminarPersonalizado, guardarMetaPeso, eliminarMetaPeso,
+  calcular, delDia, obtener, guardar, datosPersonalizado, crearPersonalizado, actualizarPersonalizado, eliminarPersonalizado, guardarMetaPeso, eliminarMetaPeso,
+  registrarPeso, eliminarPeso, ritmoReal,
 };

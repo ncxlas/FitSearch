@@ -36,4 +36,13 @@ module.exports = {
       && Object.keys(v).length > 0 && Object.keys(v).every((k) => ['nombre', 'correo', 'telefono', 'biografia', 'instagram', 'linkedin', 'sitioWeb', 'foto', 'password', 'credencial'].includes(k)))
       .withMessage('Envía solo los datos de tu perfil'),
   ],
+  // Eliminar la cuenta (SC-42): hay que escribir ELIMINAR y confirmar la identidad con la contraseña o con Google.
+  eliminar: [
+    body('confirmacion').isString().withMessage('Escribe ELIMINAR para confirmar').bail().trim()
+      .custom((v) => v.toUpperCase() === 'ELIMINAR').withMessage('Escribe ELIMINAR para confirmar'),
+    body('password').optional().isString().bail().isLength({ max: 200 }), texto('credencial', 12000),
+    body().custom((v) => v && !Array.isArray(v) && typeof v === 'object'
+      && Object.keys(v).every((k) => ['confirmacion', 'password', 'credencial'].includes(k)))
+      .withMessage('Envía solo la confirmación'),
+  ],
 };

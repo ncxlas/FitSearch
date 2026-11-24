@@ -122,6 +122,7 @@ Completar `backend/.env`:
 | Variable | Descripción |
 |---|---|
 | `PORT` | Puerto de la API (por defecto 3000) |
+| `TRUST_PROXY` | Vacío en desarrollo. `1` si un proxy (nginx) reenvía las peticiones a la API, para que el límite de intentos use la IP real del cliente (Docker ya lo trae así) |
 | `DATABASE_URL` | Conexión a MySQL con el usuario y la contraseña del paso 2 |
 | `SHADOW_DATABASE_URL` | Base auxiliar que Prisma usa para crear migraciones (solo desarrollo) |
 | `JWT_SECRET` | Cadena larga y aleatoria para firmar los tokens |
@@ -339,7 +340,7 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 | PATCH | `/api/comidas/:id` | Bearer JWT (rol usuario) | Cambia los `gramos` (recalcula el aporte) o el `momento` de un registro propio; 404 si no existe o es de otra cuenta |
 | DELETE | `/api/comidas/:id` | Bearer JWT (rol usuario) | Quita un registro propio (204) |
 
-### Plan de alimentación y meta de peso (11-11-2026)
+### Plan de macronutrientes y meta de peso (11-11-2026; antes «Plan de alimentación»)
 
 La pestaña «Plan de alimentación» de Comidas reemplaza el reparto fijo. Hay dos formas de plan:
 
@@ -363,6 +364,23 @@ La migración `20261111120000_plan_alimentacion` crea `planes_personalizados`, `
 | DELETE | `/api/comidas/plan/personalizados/:id` | Bearer JWT (rol usuario) | Borra uno propio; si estaba en uso, desde hoy vuelve el plan de la meta |
 | PUT | `/api/comidas/plan/meta-peso` | Bearer JWT (rol usuario) | Guarda `pesoObjetivoKg` y `ritmoSemanalKg`; 400 con el motivo si no corresponde a la meta o al peso actual |
 | DELETE | `/api/comidas/plan/meta-peso` | Bearer JWT (rol usuario) | Quita la meta de peso |
+
+### Plan de comidas (SC-44, 24-11-2026)
+
+Comidas tiene ahora cinco pestañas: Resumen, Comidas, **Plan de comidas**, **Plan de macronutrientes** (la que antes se llamaba «Plan de alimentación») y Estadísticas.
+
+- **Plan de comidas:** qué comer cada día y en cada momento (desayuno, media mañana, almuerzo, merienda y cena), con alimentos del catálogo y sus gramos, más notas libres. Un plan es para un día (se repite) o para una semana de lunes a domingo; el editor calcula calorías y macros y copia un día a toda la semana. Hasta 10 planes y uno en uso.
+- **Hoy te toca…:** el Resumen muestra las comidas del plan en uso para el día; «Lo comí» abre un diálogo para desmarcar lo que no se comió y ajustar los gramos, y registra solo eso (origen «plan»).
+- Rutas `/api/comidas/planes-comida` (`GET`, `POST`, `PUT /:id`, `DELETE /:id`, `PUT /:id/uso` y `POST /:id/registrar`). Tablas `planes_comida` y `plan_comida_items` (migraciones `20261124140000_planes_comida` y `20261124141000_restricciones_planes`). Los planes se incluyen al descargar los datos y se borran al eliminar la cuenta.
+- `npm run test:mysql:planes-comida` lo comprueba con MySQL real (12 comprobaciones). Evidencia: [Plan de comidas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Plan_de_Comidas_2026-11-24.md).
+
+### Historial de peso (SC-43, 24-11-2026)
+
+En **Comidas › Plan**, la tarjeta «Tu peso» anota el peso del día (o de un día del último año, uno por día) y muestra un gráfico del peso contra el ritmo de la meta de peso, el ritmo real de las últimas 8 semanas y la lista de pesajes, desde donde se pueden borrar. El último pesaje queda como peso del perfil, así que las calorías del plan y el avance de la meta se recalculan solos.
+
+- `POST /api/comidas/plan/pesos` (`{ pesoKg, fecha? }`) y `DELETE /api/comidas/plan/pesos/:id` responden el plan completo; `GET /api/comidas/plan` trae `historialPeso` (180 días).
+- Tabla `registros_peso` (migración `20261124130000_registro_peso`). Los pesajes se incluyen al descargar los datos y se borran al eliminar la cuenta.
+- `npm run test:mysql:peso` lo comprueba con MySQL real (12 comprobaciones). Evidencia: [Historial de peso](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Historial_de_Peso_2026-11-24.md).
 
 ### Agua — FS-HU-33
 
@@ -410,6 +428,52 @@ Las contraseñas de `.env` forman parte de la URL de conexión: usar solo letras
 
 Los contenedores se comunican por la red interna de Compose usando el nombre del servicio (`mysql`, `backend`); no se usa `network_mode: host`. Casos de prueba y evidencia: [FS-HU-11 — Docker](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-11_Docker.md).
 
+## Límite de intentos en el acceso (SC-41, 24-11-2026)
+
+La API limita los intentos en las rutas de acceso y responde `429` con la cabecera `Retry-After` y un mensaje que dice cuánto esperar (las pantallas lo muestran como cualquier otro error):
+
+| Ruta | Límite |
+|---|---|
+| `POST /api/auth/login` | 5 fallos seguidos por correo y 20 por dirección IP; después, espera de 1 minuto que se duplica con cada fallo nuevo hasta 15 minutos. Un ingreso correcto borra los fallos del correo |
+| `PUT /api/perfil/cuenta` (confirmar la identidad al cambiar el correo) | 5 fallos por cuenta, con la misma espera progresiva |
+| `POST /api/auth/recuperar` | 3 enlaces por correo y 10 por IP cada hora (exista o no la cuenta) |
+| `POST /api/auth/restablecer` | 10 por IP cada 15 minutos |
+| `POST /api/auth/registro` | 10 cuentas por IP cada hora |
+| `POST /api/auth/google` | 30 por IP cada 15 minutos |
+
+Los contadores viven en la memoria de la API (un solo proceso) y empiezan de cero si se reinicia; las peticiones mal formadas no cuentan. Con Docker, nginx reenvía `/api` y `TRUST_PROXY=1` permite leer la IP real del cliente; en un servidor público conviene publicar solo el puerto web, porque si la API queda expuesta directo un cliente podría inventar su IP en `X-Forwarded-For` (el límite por correo sigue funcionando igual). Diseño en el DAS (QS8 y D41) y evidencia en [Límite de intentos y CI](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Limite_Intentos_y_CI_2026-11-24.md).
+
+## Planes enviados por el chat (SC-46, 24-11-2026)
+
+El profesional (por ejemplo, un nutricionista) envía un plan por el chat y la persona lo guarda en sus planes con un botón.
+
+- **Profesional:** en el chat con un cliente, «Enviar un plan» ofrece dos opciones:
+  - **Plan de comidas** de un día o de una semana, armado con el mismo editor de la persona y el catálogo de alimentos (`GET /api/profesional/alimentos`).
+  - **Plan de macronutrientes:** nombre y reparto de proteínas, carbohidratos y grasas que suma 100 %, con un mensaje opcional.
+- **Persona:** el plan llega como una tarjeta en el chat, con su detalle. «Guardar en mis planes» lo deja en Comidas › Plan de comidas (con origen «profesional») o en Plan de macronutrientes (como plan personalizado; si el nombre ya existe, queda «Nombre (2)»). Se guarda una sola vez, y el enlace «Ver en…» abre esa pestaña (`/comidas?seccion=…`).
+- El profesional ve en la tarjeta si su cliente ya lo guardó.
+- Rutas `POST /api/chats/:id/planes` y `POST /api/chats/:id/mensajes/:mensajeId/guardar`. Columnas `adjunto` (JSON) y `guardado_en` en `mensajes_chat` (migración `20261124160000_planes_por_chat`). La descarga de «Mis datos» incluye los planes recibidos.
+- `npm run test:mysql:planes-chat` lo comprueba con MySQL real (18 comprobaciones). Evidencia: [Planes por el chat](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Planes_Por_Chat_2026-11-24.md).
+
+## Compartir el progreso con un profesional (SC-45, 24-11-2026)
+
+La persona decide qué ve cada profesional con el que tiene un chat (es decir, con quien tuvo al menos una cita). El profesional solo mira; no cambia nada.
+
+- **Desde el chat:** el botón «Compartir mi progreso» abre un diálogo con cinco categorías: perfil y objetivos, información de salud (dato sensible, con su aviso), comidas y agua de los últimos 7 días, peso (pesajes de 90 días y meta) y planes (plan de macronutrientes y plan de comidas en uso). Se puede cambiar o dejar de compartir cuando se quiera.
+- **Mi perfil › Privacidad y datos:** la lista de profesionales con acceso y el **registro de accesos** (cuándo se dio, cambió o quitó cada permiso y cuándo el profesional miró, como máximo una vez cada 30 minutos).
+- **Espacio del profesional:** «Progreso compartido» en la ficha del cliente, solo con las categorías permitidas; si no comparte, explica cómo hacerlo.
+- Rutas `GET/PUT/DELETE /api/compartir/:profesionalId` (persona) y `GET /api/profesional/progreso` y `/api/profesional/progreso/:usuarioId` (profesional). Tablas `permisos_compartir` y `accesos_compartidos` (migración `20261124150000_compartir_progreso`). Eliminar la cuenta borra los permisos y el registro; la descarga de datos los incluye.
+- `npm run test:mysql:compartir` lo comprueba con MySQL real (20 comprobaciones). Evidencia: [Compartir progreso](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Compartir_Progreso_2026-11-24.md).
+
+## Mi cuenta: descargar mis datos y eliminar la cuenta (SC-42, 24-11-2026)
+
+«Privacidad y datos» está en **Mi perfil** (usuario) y en **Configuración** (profesional), por la Ley 21.719 de datos personales, vigente desde el 1 de diciembre de 2026.
+
+- **Descargar mis datos** (`GET /api/perfil/mis-datos`): un archivo `fitsearch-mis-datos-AAAA-MM-DD.json` con la cuenta, el perfil, la salud, las comidas, el agua, los planes y metas, las citas, las reseñas, los chats y las conversaciones con el asistente; en el profesional, también su ficha, su agenda, sus documentos (sin el archivo) y las reseñas recibidas. No incluye la contraseña ni identificadores internos.
+- **Eliminar mi cuenta** (`DELETE /api/perfil/cuenta`): hay que escribir ELIMINAR y confirmar con la contraseña o con la cuenta de Google vinculada (mismo límite de intentos que cambiar el correo). Se borran los datos personales, las citas futuras se cancelan y se avisa por correo a la otra parte, y las citas y reseñas pasadas quedan como «Usuario eliminado» o «Profesional eliminado». La cuenta queda anonimizada e inactiva (`usuarios.eliminado_en`) y el correo puede volver a registrarse. Un administrador no puede eliminarse desde la aplicación.
+
+`npm run test:mysql:cuenta` lo comprueba con MySQL real (30 comprobaciones, con cuentas temporales que se borran al terminar). Diseño en el DAS (QS9 y D43) y evidencia en [Mis datos y eliminar cuenta](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/Mis_Datos_y_Eliminar_Cuenta_2026-11-24.md).
+
 ## Pruebas
 
 ```bash
@@ -418,6 +482,10 @@ cd frontend && npm test     # Vitest + Testing Library (validaciones y pantallas
 npm run lint                # en cada carpeta: ESLint sin errores (DoD-05)
 npm audit                   # en cada carpeta: sin vulnerabilidades críticas ni altas (DoD-12)
 ```
+
+### Integración continua (SC-41)
+
+Cada PR hacia `main` y cada push a `main` corren en GitHub Actions ([`.github/workflows/pruebas.yml`](.github/workflows/pruebas.yml)): lint y Jest del backend; lint, Vitest y build del frontend; y, en un MySQL 8.4 vacío, todas las migraciones, la comprobación de que coinciden con `schema.prisma`, los roles y los scripts `test:mysql:*`. El trabajo «Pruebas completas» resume los tres y es el que se marca como obligatorio en la protección de `main`. Al abrir un PR, la descripción parte con la [plantilla](.github/pull_request_template.md) de la Definition of Done.
 
 Las pruebas de integración del backend simulan el acceso a datos, por lo que no requieren MySQL. Para la agenda y las reservas hay además una comprobación contra MySQL real, que crea sus propios datos temporales y los elimina al terminar:
 

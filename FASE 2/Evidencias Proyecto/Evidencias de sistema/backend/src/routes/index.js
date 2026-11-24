@@ -25,6 +25,8 @@ router.use('/verificaciones', require('./verificacion.routes'));
 router.use('/profesional', require('./actividadProfesional.routes'));
 // Chat entre usuario y profesional (FS-HU-31).
 router.use('/chats', require('./chats.routes'));
+// Progreso compartido con un profesional (SC-45).
+router.use('/compartir', require('./compartir.routes'));
 router.use('/', require('./agenda.routes'));
 
 module.exports = router;

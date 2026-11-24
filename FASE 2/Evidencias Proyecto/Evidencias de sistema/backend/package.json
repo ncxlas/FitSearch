@@ -14,7 +14,12 @@
     "test:mysql:acceso": "node scripts/probar-acceso-mysql.js",
     "test:mysql:agua": "node scripts/probar-agua-mysql.js",
     "test:mysql:agenda": "node scripts/probar-agenda-mysql.js",
+    "test:mysql:compartir": "node scripts/probar-compartir-mysql.js",
+    "test:mysql:planes-chat": "node scripts/probar-planes-chat-mysql.js",
+    "test:mysql:cuenta": "node scripts/probar-cuenta-mysql.js",
     "test:mysql:asistente": "node scripts/probar-asistente-mysql.js",
+    "test:mysql:planes-comida": "node scripts/probar-planes-comida-mysql.js",
+    "test:mysql:peso": "node scripts/probar-peso-mysql.js",
     "test:mysql:mejoras": "node scripts/probar-mejoras-mysql.js",
     "test:mysql:plan": "node scripts/probar-plan-alimentacion-mysql.js",
     "test:mysql:comidas": "node scripts/probar-comidas-asistente-mysql.js",
@@ -41,6 +46,9 @@
     "testEnvironment": "node",
     "setupFiles": [
       "<rootDir>/tests/setup.js"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setupPorPrueba.js"
     ]
   },
   "dependencies": {

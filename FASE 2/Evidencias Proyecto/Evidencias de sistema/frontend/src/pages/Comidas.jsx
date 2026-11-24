@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
 import Carrusel from '../components/Carrusel.jsx';
 import Icono from '../components/Icono.jsx';
@@ -10,6 +10,8 @@ import { MARGEN_PCT, cercaDeLaMeta, frenteALaMeta, porcentajeDe } from '../compo
 import RegistrarComida from '../components/comidas/RegistrarComida.jsx';
 import AguaDelDia from '../components/comidas/AguaDelDia.jsx';
 import PlanAlimentacion from '../components/comidas/PlanAlimentacion.jsx';
+import PlanesComidas from '../components/comidas/PlanesComidas.jsx';
+import HoyTeToca from '../components/comidas/HoyTeToca.jsx';
 import { formatearNumero } from '../services/formato.js';
 import { nombreDia, obtenerDia, obtenerSemana, sumarDias } from '../services/comidas.service.js';
 import './Comidas.css';
@@ -17,7 +19,9 @@ import './Comidas.css';
 const PESTANAS = [
   { clave: 'resumen', nombre: 'Resumen' },
   { clave: 'comidas', nombre: 'Comidas' },
-  { clave: 'plan', nombre: 'Plan de alimentación' },
+  // SC-44: «Plan de comidas» (qué comer) y «Plan de macronutrientes» (antes «Plan de alimentación»: calorías y reparto).
+  { clave: 'planes-comida', nombre: 'Plan de comidas' },
+  { clave: 'plan', nombre: 'Plan de macronutrientes' },
   { clave: 'estadisticas', nombre: 'Estadísticas' },
 ];
 const NUTRIENTES = [
@@ -64,12 +68,14 @@ function TarjetaObjetivo({ objetivo }) {
 
 // Gestor de alimentación del usuario (FS-HU-09 y FS-HU-10; mockup del PO del 26-10-2026). Resumen del día frente al
 // objetivo, progreso de la semana y las comidas del día; los alimentos se registran con sus gramos o desde el asistente.
-// La pestaña Estadísticas muestra la semana o el mes (FS-HU-26) y la de Plan de alimentación, el plan según la meta o uno
+// La pestaña Estadísticas muestra la semana o el mes (FS-HU-26) y la de Plan de macronutrientes, el plan según la meta o uno
 // personalizado (11-11-2026).
 export default function Comidas() {
   const [fecha, setFecha] = useState(null);
   const [intento, setIntento] = useState(0);
-  const [pestana, setPestana] = useState('resumen');
+  // ?seccion= abre una pestaña concreta (por ejemplo, desde un plan guardado en el chat; SC-46).
+  const [parametros] = useSearchParams();
+  const [pestana, setPestana] = useState(() => (PESTANAS.some((p) => p.clave === parametros.get('seccion') && !p.proximamente) ? parametros.get('seccion') : 'resumen'));
   const [registro, setRegistro] = useState({ abierto: false, momento: null });
   const [datos, setDatos] = useState(null);
   const clave = `${fecha}-${intento}`;
@@ -88,7 +94,9 @@ export default function Comidas() {
   const esHoy = dia && dia.fecha === dia.hoy;
 
   let contenido;
-  if (pestana === 'plan') {
+  if (pestana === 'planes-comida') {
+    contenido = <PlanesComidas alCambiar={recargar} />;
+  } else if (pestana === 'plan') {
     // El plan no depende del día elegido; al guardarlo se recarga el resumen para que use el plan nuevo.
     contenido = <PlanAlimentacion alGuardar={recargar} />;
   } else if (!datos) {
@@ -172,6 +180,8 @@ export default function Comidas() {
           <ComidasDelDia momentos={dia.momentos} compacta alRegistrar={abrirRegistro} />
         </section>
 
+        <HoyTeToca fecha={dia.fecha} esHoy={esHoy} version={intento} alRegistrar={recargar} alVerPlanes={() => setPestana('planes-comida')} />
+
         <section className="panel-tarjeta tarjeta-nutricional" aria-labelledby="titulo-nutricional">
           <h2 id="titulo-nutricional" className="panel-tarjeta__titulo">Resumen nutricional</h2>
           <AyudaPanel>Cuánto llevas de cada nutriente y del agua, qué porcentaje de tu meta es y cuánto te falta.</AyudaPanel>
@@ -192,7 +202,7 @@ export default function Comidas() {
         </div>
 
         <p className="comidas__nota texto-secundario">
-          Objetivo diario estimado con tu perfil (Mifflin-St Jeor y tu actividad física) y repartido según tu plan de alimentación
+          Objetivo diario estimado con tu perfil (Mifflin-St Jeor y tu actividad física) y repartido según tu plan de macronutrientes
           {objetivo.plan && `: ${objetivo.plan.porcentajes.proteinas} % proteínas, ${objetivo.plan.porcentajes.carbohidratos} % carbohidratos y ${objetivo.plan.porcentajes.grasas} % grasas`}.{' '}
           <button type="button" className="boton-texto comidas__ver-plan" onClick={() => setPestana('plan')}>Ver o cambiar tu plan</button>.
           Es una referencia general que no reemplaza la evaluación de un nutricionista.

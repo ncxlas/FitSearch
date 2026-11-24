@@ -8,6 +8,8 @@ import { diaCorto, diaLargo } from '../components/agenda/semana.js';
 import { coincidencias, extracto, partes, terminos } from '../components/mensajes/buscar.js';
 import { useSesion } from '../context/SesionContext.jsx';
 import { solicitar } from '../services/api.js';
+import { BotonCompartir } from '../components/compartir/CompartirProgreso.jsx';
+import { EnviarPlan, PlanAdjunto } from '../components/mensajes/PlanesPorChat.jsx';
 
 import './Mensajes.css';
 import Avatar from '../components/Avatar.jsx';
@@ -134,7 +136,7 @@ function AvisoReserva({ elemento, nombre, profesional, palabras, destacado }) {
 
 // Mensajes agrupados por día (hora de Chile), con los propios a la derecha. Si se eligió un resultado de la búsqueda,
 // el chat se desplaza hasta él y lo destaca; si no, queda abajo, en lo más reciente.
-function Hilo({ elementos, nombre, profesional, palabras, destacado }) {
+function Hilo({ elementos, nombre, profesional, palabras, destacado, chatId, recibePlanes, onCambio }) {
   // Se desplaza solo la lista (no la ventana): scrollIntoView movería también la página en el celular.
   // Mientras la persona esté al final, el chat sigue pegado abajo aunque cambie el alto (fuentes que cargan, la barra de
   // eliminar o buscar que se abre); si subió a leer algo, no se la mueve.
@@ -181,9 +183,14 @@ function Hilo({ elementos, nombre, profesional, palabras, destacado }) {
             ? <AvisoReserva key={e.clave} elemento={e} nombre={nombre} profesional={profesional} palabras={palabras} destacado={e.clave === destacado} />
             : (
               <li key={e.clave} id={`chat-${e.clave}`} tabIndex={-1}
-                className={`mensaje-chat${e.mensaje.propio ? ' mensaje-chat--propio' : ''}${e.clave === destacado ? ' mensaje-chat--destacado' : ''}`}>
+                className={`mensaje-chat${e.mensaje.propio ? ' mensaje-chat--propio' : ''}${e.mensaje.adjunto ? ' mensaje-chat--plan' : ''}${e.clave === destacado ? ' mensaje-chat--destacado' : ''}`}>
                 <span className="solo-lector">{e.mensaje.propio ? 'Tú' : nombre}: </span>
-                <p><Texto texto={e.texto} palabras={palabras} /></p>
+                {/* Un plan enviado sin mensaje no repite su texto automático: la tarjeta ya dice qué es. */}
+                {!e.mensaje.adjunto?.automatico && <p><Texto texto={e.texto} palabras={palabras} /></p>}
+                {/* SC-46: un plan enviado por el profesional, que la persona guarda en sus planes. */}
+                {e.mensaje.adjunto && (
+                  <PlanAdjunto chatId={chatId} mensaje={e.mensaje} puedeGuardar={recibePlanes && !e.mensaje.propio} nombreCliente={nombre} onGuardado={onCambio} />
+                )}
                 <time dateTime={e.fecha}>{HORA.format(new Date(e.fecha))}{e.mensaje.propio && e.mensaje.leido ? ' · Leído' : ''}</time>
               </li>
             ),
@@ -352,6 +359,10 @@ export function ChatAbierto({ base, datos, profesional, onEnviado, onEliminado, 
           <p>{con.detalle}{proxima ? ` · Próxima cita: ${diaCorto(proxima.cita.fecha)}, ${proxima.cita.horaInicio}` : ''}</p>
         </div>
         <div className="mensajes__herramientas">
+          {/* SC-45: la persona elige qué progreso ve este profesional. */}
+          {con.profesionalId && <BotonCompartir profesionalId={con.profesionalId} />}
+          {/* SC-46: el profesional envía un plan de comidas o de macronutrientes. */}
+          {con.clienteId && <EnviarPlan chatId={chat.id} nombreCliente={con.nombre} onEnviado={onEnviado} />}
           <button type="button" ref={botonBuscar} className="boton-icono" aria-label="Buscar en el chat" title="Buscar en el chat"
             aria-expanded={buscando} aria-controls="buscador-chat" onClick={() => (buscando ? cerrarBusqueda() : setBuscando(true))}>
             <Icono nombre="buscar" tamano={20} />
@@ -387,7 +398,8 @@ export function ChatAbierto({ base, datos, profesional, onEnviado, onEliminado, 
       {enResultados
         ? <Resultados resultados={resultados} consulta={consulta} nombre={con.nombre}
           onElegir={(clave) => { setDestacado(clave); setVerResultados(false); }} />
-        : <Hilo elementos={elementos} nombre={con.nombre} profesional={profesional} palabras={palabras} destacado={destacado} />}
+        : <Hilo elementos={elementos} nombre={con.nombre} profesional={profesional} palabras={palabras} destacado={destacado}
+          chatId={chat.id} recibePlanes={Boolean(con.profesionalId)} onCambio={onEnviado} />}
       <Redactar chatId={chat.id} onEnviado={onEnviado} />
     </>
   );

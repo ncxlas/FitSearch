@@ -11,10 +11,12 @@ const seleccionProfesional = {
   estadoVerificacion: true, motivoRechazo: true, revisionVerificacion: true, rut: true, telefono: true,
   usuario: { select: seleccionUsuario },
 };
-const profesionalVigente = { usuario: { rol: { nombre: 'profesional' } } };
+// Las cuentas eliminadas por su dueño (SC-42) quedan anonimizadas: el panel ya no las muestra.
+const profesionalVigente = { usuario: { rol: { nombre: 'profesional' }, eliminadoEn: null } };
 
 async function listarUsuarios({ q, rol, estadoCuenta, pagina, limite }) {
   const where = {
+    eliminadoEn: null,
     ...(rol && { rol: { nombre: rol } }),
     ...(estadoCuenta && { activo: estadoCuenta === 'activos' }),
     ...(q && { OR: [{ nombre: { contains: q } }, { correo: { contains: q } }] }),
@@ -67,8 +69,8 @@ function detalleProfesional(id) {
 
 async function cambiarEstadoUsuario(id, activo) {
   return prisma.$transaction(async (tx) => {
-    const cuenta = await tx.usuario.findUnique({ where: { id }, select: seleccionUsuario });
-    if (!cuenta) throw new ErrorHttp(404, 'No encontramos esta cuenta');
+    const cuenta = await tx.usuario.findUnique({ where: { id }, select: { ...seleccionUsuario, eliminadoEn: true } });
+    if (!cuenta || cuenta.eliminadoEn) throw new ErrorHttp(404, 'No encontramos esta cuenta');
     if (cuenta.rol.nombre === 'administrador') throw new ErrorHttp(409, 'Las cuentas administrativas no se desactivan desde este panel');
     if (cuenta.activo !== activo) await tx.usuario.update({ where: { id }, data: { activo, versionSesion: { increment: 1 } } });
     return { id, activo };

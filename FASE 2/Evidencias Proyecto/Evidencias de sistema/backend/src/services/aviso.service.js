@@ -132,6 +132,46 @@ async function reservaCambiada(reservaId) {
   }
 }
 
+// Una cuenta se eliminó (SC-42) y su cita futura quedó cancelada: se avisa a la otra parte. El nombre llega desde antes
+// de anonimizar la cuenta, porque en la base ya dice «Usuario eliminado» o «Profesional eliminado».
+async function cuentaEliminada(reservaId, { nombre, rol }) {
+  const r = await modelo.datosReserva(reservaId);
+  if (!r) return;
+  const { profesional } = r.disponibilidad;
+  if (rol === 'usuario') {
+    if (!profesional.avisosCorreo || !profesional.usuario.activo) return;
+    await correo.enviarAviso({
+      para: profesional.usuario.correo,
+      nombre: primerNombre(profesional.usuario.nombre),
+      asunto: 'FitSearch | Una reserva fue cancelada',
+      icono: 'cancelada',
+      titulo: 'Una reserva fue cancelada',
+      intro: `**${nombre}** eliminó su cuenta de FitSearch y su reserva quedó cancelada.`,
+      seccion: { titulo: 'Reserva cancelada' },
+      detalles: detalleCita(r, { tipo: true, estado: { clave: 'cancelada', texto: 'Cancelada: la persona eliminó su cuenta' } }),
+      pasos: { titulo: '¿Qué debes hacer?', texto: 'Nada: el horario vuelve a estar disponible para que otra persona lo reserve.' },
+      accion: { texto: 'Ver mi agenda', ruta: '/profesional/agenda', icono: 'calendario' },
+    });
+    return;
+  }
+  if (!r.usuario.activo) return;
+  await correo.enviarAviso({
+    para: r.usuario.correo,
+    nombre: primerNombre(r.usuario.nombre),
+    asunto: 'FitSearch | Tu cita fue cancelada',
+    icono: 'cancelada',
+    titulo: 'Tu cita fue cancelada',
+    intro: `**${nombre}** cerró su cuenta en FitSearch y tu cita quedó cancelada.`,
+    seccion: { titulo: 'Cita cancelada' },
+    detalles: detalleCita(r, {
+      persona: { etiqueta: 'Profesional', valor: profesional.especialidad ? `${nombre} · ${profesional.especialidad}` : nombre },
+      estado: { clave: 'cancelada', texto: 'Cancelada: el profesional cerró su cuenta' },
+    }),
+    pasos: { titulo: '¿Qué puedes hacer?', texto: 'Busca otro profesional en FitSearch y reserva una hora nueva.' },
+    accion: { texto: 'Ver mis citas', ruta: '/citas', icono: 'calendario' },
+  });
+}
+
 // «Avísame si se libera una hora»: cada persona de la lista recibe un solo correo y sale de la lista. La fila se toma
 // antes de escribirle, así dos publicaciones simultáneas no le envían dos avisos; si el correo falla, se suelta y la
 // persona sigue en la lista para el próximo aviso. Devuelve cuántos correos se enviaron.
@@ -196,7 +236,8 @@ const enSegundoPlano = (evento, tarea) => { Promise.resolve().then(tarea).catch(
 
 module.exports = {
   cuando,
-  reservaCreada, reservaCambiada, horaLiberada, recordatorio,
+  reservaCreada, reservaCambiada, horaLiberada, recordatorio, cuentaEliminada,
+  avisarCuentaEliminada: (id, datos) => enSegundoPlano('cuenta eliminada', () => cuentaEliminada(id, datos)),
   avisarReservaCreada: (id) => enSegundoPlano('reserva nueva', () => reservaCreada(id)),
   avisarReservaCambiada: (id) => enSegundoPlano('cambio de reserva', () => reservaCambiada(id)),
   avisarHoraLiberada: (profesionalId) => enSegundoPlano('hora liberada', () => horaLiberada(profesionalId)),

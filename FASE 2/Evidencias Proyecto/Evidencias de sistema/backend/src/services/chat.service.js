@@ -29,7 +29,13 @@ const con = (chat, lado) => (lado === 'profesional'
     detalle: chat.profesional.especialidad, profesionalId: chat.profesional.id,
   });
 
-const formatear = (m, lectorId) => ({ id: m.id, texto: m.texto, fecha: m.fechaCreacion.toISOString(), propio: m.autorId === lectorId, leido: m.leido });
+// Un plan enviado por el chat (SC-46) llega con su vista y con cuándo lo guardó la persona.
+const adjuntoDe = (a, guardadoEn) => (a ? {
+  tipo: a.tipo, plan: a.tipo === 'plan_comidas' ? a.vista : a.plan, automatico: Boolean(a.automatico), guardadoEn: guardadoEn ? guardadoEn.toISOString() : null,
+} : null);
+const formatear = (m, lectorId) => ({
+  id: m.id, texto: m.texto, fecha: m.fechaCreacion.toISOString(), propio: m.autorId === lectorId, leido: m.leido, adjunto: adjuntoDe(m.adjunto, m.guardadoEn),
+});
 const reserva = (r) => ({
   id: r.id, estado: r.estado, mensaje: r.mensaje, fecha: r.fechaCreacion.toISOString(),
   cita: { fecha: dia(r.disponibilidad.fecha), horaInicio: hora(r.disponibilidad.horaInicio), horaFin: hora(r.disponibilidad.horaFin) },
@@ -118,4 +124,4 @@ async function noLeidosPorPareja(usuario) {
   return new Map(chats.map((c) => [`${c.usuarioId}-${c.profesionalId}`, c.noLeidos]));
 }
 
-module.exports = { listar, abrir, deReserva, enviar, eliminar, noLeidos, noLeidosPorPareja };
+module.exports = { listar, abrir, deReserva, enviar, eliminar, noLeidos, noLeidosPorPareja, formatear };

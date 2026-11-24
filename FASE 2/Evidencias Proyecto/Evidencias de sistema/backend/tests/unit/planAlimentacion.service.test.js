@@ -2,6 +2,8 @@
 // elige; y la meta de peso con su ritmo semanal. Datos simulados.
 jest.mock('../../src/models/planAlimentacion.model');
 jest.mock('../../src/models/usuario.model');
+// Historial de peso (SC-43): sin pesajes, salvo en las pruebas que los definen.
+jest.mock('../../src/models/registroPeso.model', () => ({ listar: async () => [], registrar: jest.fn(), eliminar: jest.fn() }));
 const modelo = require('../../src/models/planAlimentacion.model');
 const usuarioModel = require('../../src/models/usuario.model');
 const servicio = require('../../src/services/planAlimentacion.service');

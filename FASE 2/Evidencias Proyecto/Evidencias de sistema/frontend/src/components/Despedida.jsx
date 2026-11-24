@@ -4,7 +4,8 @@ import iconoLogo from '../assets/logo-fitsearch-icono.png';
 import './Despedida.css';
 
 // Se muestra en la portada justo después de cerrar sesión. "Seguir en la portada" o Escape la cierran.
-export default function Despedida({ nombre, texto, onCerrar }) {
+// Con `eliminada` (SC-42) despide a quien eliminó su cuenta: no hay nada que lo espere ni sesión a la que volver.
+export default function Despedida({ nombre, texto, eliminada = false, onCerrar }) {
   const dialogo = useRef(null);
   const principal = useRef(null);
   // Antes de pintar (revisión del PR 61, 16-11-2026): con useEffect el cuadro alcanzaba a verse un instante con el foco
@@ -48,9 +49,9 @@ export default function Despedida({ nombre, texto, onCerrar }) {
           <span className="despedida__logo"><img src={iconoLogo} alt="" /></span>
         </div>
         <div className="despedida__contenido">
-          <h2 id="titulo-despedida">{nombre ? `Hasta pronto, ${nombre}` : 'Hasta pronto'}</h2>
-          <p id="texto-despedida"><span>{texto}</span> Tus favoritos, citas y perfil te esperan cuando vuelvas.</p>
-          <Link ref={principal} to="/iniciar-sesion" className="boton boton--principal">Volver a iniciar sesión</Link>
+          <h2 id="titulo-despedida">{eliminada ? 'Tu cuenta fue eliminada' : nombre ? `Hasta pronto, ${nombre}` : 'Hasta pronto'}</h2>
+          <p id="texto-despedida"><span>{texto}</span>{!eliminada && ' Tus favoritos, citas y perfil te esperan cuando vuelvas.'}</p>
+          <Link ref={principal} to={eliminada ? '/registro' : '/iniciar-sesion'} className="boton boton--principal">{eliminada ? 'Crear una cuenta nueva' : 'Volver a iniciar sesión'}</Link>
           <button type="button" className="boton boton--secundario despedida__seguir" onClick={onCerrar}>Seguir en la portada</button>
           <p className="despedida__nota">Si usas un equipo compartido, cierra también el navegador.</p>
         </div>
