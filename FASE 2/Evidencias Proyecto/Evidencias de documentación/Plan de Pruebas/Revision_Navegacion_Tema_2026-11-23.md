@@ -1,6 +1,6 @@
 # Revisión de navegación, tema y perfiles — 23-11-2026
 
-Base: integración del PR #82, commit `2285469ed6cc8259873ae27f69557790140601db`. Cambios preparados en la rama `fix/tema-navegacion-perfiles`; no se declara aceptación del PO ni cierre de sprint.
+Base: integración del PR #82, commit `2285469ed6cc8259873ae27f69557790140601db`. Cambios publicados en la rama `fix/portada-navegacion-tema`, [PR #84](https://github.com/rodriacr/FitSearch/pull/84), que reemplaza el borrador #83 cerrado sin fusionar. No se declara aceptación del PO ni cierre de sprint.
 
 ## Comportamiento preparado
 
