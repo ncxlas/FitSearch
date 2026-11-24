@@ -21,13 +21,13 @@ export default function CarruselHerramientas({ children }) {
     const originales = [...pista.children];
     const preferencia = window.matchMedia?.(MOVIMIENTO_REDUCIDO);
     let animacion = null, copias = [], longitud = 0, duracion = 1;
-    let mouse = false, foco = false, pausa = false, arrastrando = false;
+    let foco = false, pausa = false, arrastrando = false;
     let visible = !window.IntersectionObserver, puntero = null, bloquearClic = false;
     let inicioX = 0, inicioY = 0, inicioTiempo = 0;
 
     function sincronizar() {
       if (!animacion) return;
-      if (mouse || foco || pausa || arrastrando || !visible || document.hidden || preferencia?.matches) animacion.pause();
+      if (foco || pausa || arrastrando || !visible || document.hidden || preferencia?.matches) animacion.pause();
       else animacion.play();
     }
 
@@ -74,8 +74,6 @@ export default function CarruselHerramientas({ children }) {
       }
     }
     acciones.current = { mover, pausar: (valor) => { pausa = valor; sincronizar(); } };
-    const entrar = (evento) => { if (evento.pointerType === 'mouse') { mouse = true; sincronizar(); } };
-    const salir = (evento) => { if (evento.pointerType === 'mouse') { mouse = false; sincronizar(); } };
     const enfocar = (evento) => {
       foco = true;
       const tarjeta = originales.find((original) => original.contains(evento.target));
@@ -119,7 +117,7 @@ export default function CarruselHerramientas({ children }) {
       originales[Number(copia.dataset.copiaHerramienta)].querySelectorAll('a')[indice]?.click();
     };
     const cambiarPreferencia = () => { setReducido(Boolean(preferencia?.matches)); configurar(); };
-    const eventos = { pointerenter: entrar, pointerleave: salir, focusin: enfocar, focusout: desenfocar,
+    const eventos = { focusin: enfocar, focusout: desenfocar,
       keydown: teclado, pointerdown: empezar, pointermove: arrastrar, pointerup: terminar, pointercancel: terminar, lostpointercapture: terminar, click: pulsar };
     Object.entries(eventos).forEach(([nombre, manejar]) => marco.addEventListener(nombre, manejar));
     const interseccion = window.IntersectionObserver ? new IntersectionObserver(([entrada]) => { visible = entrada.isIntersecting; sincronizar(); }) : null;

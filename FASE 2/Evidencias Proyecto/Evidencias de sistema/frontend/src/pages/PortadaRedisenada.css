@@ -43,6 +43,11 @@
 .portada .portada__navegacion a, .portada .portada__enlace-acceso { color: #e6f0f6; }
 .portada .portada__encabezado a,
 .portada .portada__encabezado a:hover { text-decoration: none; }
+@media (hover: hover) and (pointer: fine) {
+  .portada .portada__encabezado :is(.portada__navegacion a, .portada__enlace-acceso):hover:not(:focus-visible) {
+    outline: 1px solid var(--p-borde-fuerte); outline-offset: .4rem; border-radius: .25rem;
+  }
+}
 .portada .portada__enlace-acceso { font-size: 0.9375rem; }
 .portada .portada__accesos .boton { min-height: 2.75rem; padding-inline: 1.1rem; border-radius: 999px; font-size: 0.9375rem; }
 

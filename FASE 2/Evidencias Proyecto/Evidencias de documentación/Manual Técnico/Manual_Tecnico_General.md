@@ -173,9 +173,9 @@ La evidencia de ejecución y las limitaciones de comprobación visual se registr
 
 ## 11. Carrusel de herramientas y escala de letra
 
-En la portada pública, «Más herramientas para tu bienestar» es una cinta horizontal de movimiento continuo y vuelta sin corte: muestra una tarjeta en móvil, dos desde 40rem, tres desde 64rem y cuatro desde 90rem. Avanza a 45px/s en ventanas del carrusel menores de 900px y a 70px/s en las mayores. Se puede arrastrar o recorrer con las flechas y pausar/reanudar. Se detiene con el mouse o el foco dentro de la cinta, fuera de pantalla y en pestañas ocultas; con movimiento reducido solo se recorre manualmente. Conserva las cinco herramientas y sus destinos. Las copias visuales completan el ciclo sin repetir opciones para lectores de pantalla ni para Tab, y sus enlaces activan la herramienta correspondiente.
+En la portada pública, «Más herramientas para tu bienestar» es una cinta horizontal de movimiento continuo y vuelta sin corte: muestra una tarjeta en móvil, dos desde 40rem, tres desde 64rem y cuatro desde 90rem. Avanza a 45px/s en ventanas del carrusel menores de 900px y a 70px/s en las mayores. Se puede arrastrar o recorrer con las flechas y pausar/reanudar. Se detiene con el foco dentro de la cinta, fuera de pantalla y en pestañas ocultas; con movimiento reducido solo se recorre manualmente. Conserva las cinco herramientas y sus destinos. Las copias visuales completan el ciclo sin repetir opciones para lectores de pantalla ni para Tab, y sus enlaces activan la herramienta correspondiente.
 
-`CarruselHerramientas.jsx/.css` anima únicamente el transform de una pista mediante Web Animations API, con duración calculada por ancho y velocidad. No espera intervalos entre tarjetas. Conserva la fase al redimensionar, muestra la herramienta enfocada y evita abrir un enlace al terminar un arrastre. Usa IntersectionObserver, ResizeObserver y la preferencia de movimiento reducido; libera animación, copias y manejadores al desmontar. Si no está disponible la animación, mantiene el desplazamiento nativo y las flechas. Los controles quedan fuera del área de pausa por hover/foco, por lo que Reanudar puede activarse con teclado.
+`CarruselHerramientas.jsx/.css` anima únicamente el transform de una pista mediante Web Animations API, con duración calculada por ancho y velocidad. No espera intervalos entre tarjetas. Conserva la fase al redimensionar, muestra la herramienta enfocada y evita abrir un enlace al terminar un arrastre. Usa IntersectionObserver, ResizeObserver y la preferencia de movimiento reducido; libera animación, copias y manejadores al desmontar. Si no está disponible la animación, mantiene el desplazamiento nativo y las flechas. Los controles quedan fuera del área de pausa por foco, por lo que Reanudar puede activarse con teclado.
 
 La base de letra de la página es 106,25% (17px con el tamaño predeterminado del navegador); las etiquetas del nav y Más son .95rem para conservar su proporción con los íconos. El ajuste sigue las preferencias de tamaño del navegador.
 
@@ -188,3 +188,8 @@ Después del hero, las secciones y el pie aprovechan el ancho de la ventana con 
 
 
 En el hero se retiraron los bordes dorados de ambas hojas, responsables de la línea central al entrar. Las hojas se solapan ligeramente para evitar una rendija de redondeo entre píxeles. La apertura conserva su comportamiento. Se recompiló después de este ajuste CSS; la revisión visual continúa pendiente.
+
+
+### Movimiento y contorno del header — 24-11-2026
+
+Las animaciones de la portada continúan al pasar el cursor: se retiró la pausa por hover de la cinta decorativa, la vitrina de objetivos y el carrusel de herramientas. Se conservan la pausa manual, la pausa al enfocar controles o enlaces y la preferencia de movimiento reducido. Las opciones del header y el acceso Iniciar sesión muestran un contorno tenue al pasar el mouse, sin subrayado; el foco de teclado mantiene su contorno visible.

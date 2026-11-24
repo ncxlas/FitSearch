@@ -47,7 +47,7 @@ Comprobación de esta ronda: 20 pruebas focalizadas aprobadas (incluyen posició
 
 ## Carrusel de herramientas de la portada
 
-En la portada pública, «Más herramientas para tu bienestar» es una cinta horizontal de movimiento continuo y vuelta sin corte: muestra una tarjeta en móvil, dos desde 40rem, tres desde 64rem y cuatro desde 90rem. Avanza a 45px/s en ventanas del carrusel menores de 900px y a 70px/s en las mayores. Se puede arrastrar o recorrer con las flechas y pausar/reanudar. Se detiene con el mouse o el foco dentro de la cinta, fuera de pantalla y en pestañas ocultas; con movimiento reducido solo se recorre manualmente. Conserva las cinco herramientas y sus destinos. Las copias visuales completan el ciclo sin repetir opciones para lectores de pantalla ni para Tab, y sus enlaces activan la herramienta correspondiente.
+En la portada pública, «Más herramientas para tu bienestar» es una cinta horizontal de movimiento continuo y vuelta sin corte: muestra una tarjeta en móvil, dos desde 40rem, tres desde 64rem y cuatro desde 90rem. Avanza a 45px/s en ventanas del carrusel menores de 900px y a 70px/s en las mayores. Se puede arrastrar o recorrer con las flechas y pausar/reanudar. Se detiene con el foco dentro de la cinta, fuera de pantalla y en pestañas ocultas; con movimiento reducido solo se recorre manualmente. Conserva las cinco herramientas y sus destinos. Las copias visuales completan el ciclo sin repetir opciones para lectores de pantalla ni para Tab, y sus enlaces activan la herramienta correspondiente.
 
 Se ejecutó de nuevo la suite completa: 58 archivos/524 pruebas aprobadas. Ocho casos del carrusel comprueban la animación lineal infinita, las pausas independientes de mouse/foco, Pausar/Reanudar y visibilidad, flechas y vuelta del ciclo, arrastre sin navegación accidental y enlaces de las copias, movimiento reducido, conservación de fase al redimensionar y limpieza, y cambio de preferencia durante la reproducción. Portada.test.jsx conserva la comprobación de las cinco herramientas y sus destinos. Compilación aprobada; lint sin errores con la advertencia de Fast Refresh ya indicada. La versión por intervalos queda sustituida por el movimiento continuo. No se acredita una revisión visual nueva.
 
@@ -62,3 +62,10 @@ Ajuste de dos hojas CSS. Comprobación de esta ronda: 22 pruebas de Portada y Ca
 
 
 En el hero se retiraron los bordes dorados de ambas hojas, responsables de la línea central al entrar. Las hojas se solapan ligeramente para evitar una rendija de redondeo entre píxeles. La apertura conserva su comportamiento. Se recompiló después de este ajuste CSS; la revisión visual continúa pendiente.
+
+
+### Movimiento y contorno del header — 24-11-2026
+
+Las animaciones de la portada continúan al pasar el cursor: se retiró la pausa por hover de la cinta decorativa, la vitrina de objetivos y el carrusel de herramientas. Se conservan la pausa manual, la pausa al enfocar controles o enlaces y la preferencia de movimiento reducido. Las opciones del header y el acceso Iniciar sesión muestran un contorno tenue al pasar el mouse, sin subrayado; el foco de teclado mantiene su contorno visible.
+
+Comprobación de esta ronda: 24 pruebas focalizadas de Portada, CarruselHerramientas y VitrinaObjetivos aprobadas. Las regresiones ahora comprueban que entrar o salir con el cursor no detiene la animación y que el foco conserva su pausa. Lint sin errores, con la advertencia heredada de Mensajes.jsx; compilación correcta, con la advertencia de tamaño del paquete ya registrada. La última suite completa registrada sigue siendo de 58 archivos/524 pruebas; no se declara una nueva suite completa. Revisión visual pendiente.

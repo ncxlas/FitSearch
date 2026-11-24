@@ -48,10 +48,13 @@ test('inicia una cinta continua lineal e infinita al entrar en pantalla', () => 
   }
 });
 
-test('retirar el mouse no reanuda mientras el foco siga dentro', () => {
+test('el cursor no detiene el movimiento; el foco sí lo pausa hasta salir', () => {
   const { ventana, animacion } = preparar();
+  animacion.pause.mockClear();
   fireEvent.pointerEnter(ventana, { pointerType: 'mouse' });
+  expect(animacion.pause).not.toHaveBeenCalled();
   fireEvent.focus(screen.getByRole('link', { name: 'Explorar Comidas' }));
+  expect(animacion.pause).toHaveBeenCalled();
   animacion.play.mockClear();
   fireEvent.pointerLeave(ventana, { pointerType: 'mouse' });
   expect(animacion.play).not.toHaveBeenCalled();

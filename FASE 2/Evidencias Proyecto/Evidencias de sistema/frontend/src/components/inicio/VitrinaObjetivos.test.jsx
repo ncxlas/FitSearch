@@ -1,4 +1,4 @@
-// Vitrina de objetivos de la portada: la rotación se pausa mientras el mouse o el foco estén dentro (revisión del PR #46).
+// La vitrina continúa con el cursor encima y pausa cuando recibe el foco.
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -10,24 +10,23 @@ afterEach(() => vi.unstubAllGlobals());
 const vitrina = () => document.querySelector('.vitrina');
 const avanza = () => vitrina().hasAttribute('data-avanza');
 
-test('con el foco dentro sigue pausada aunque se retire el mouse; reanuda cuando salen los dos', () => {
+test('solo el foco pausa; al salir reanuda aunque el cursor siga dentro', () => {
   render(<MemoryRouter><VitrinaObjetivos /><button type="button">Fuera</button></MemoryRouter>);
   expect(avanza()).toBe(true);
 
   fireEvent.mouseEnter(vitrina());
-  expect(avanza()).toBe(false);
+  expect(avanza()).toBe(true);
   act(() => screen.getAllByRole('button', { pressed: false })[0].focus());
-  fireEvent.mouseLeave(vitrina());
   expect(avanza()).toBe(false);
 
   act(() => screen.getByRole('button', { name: 'Fuera' }).focus());
   expect(avanza()).toBe(true);
 });
 
-test('el mouse sin foco pausa y reanuda como antes', () => {
+test('entrar y salir con el cursor no detiene la rotación', () => {
   render(<MemoryRouter><VitrinaObjetivos /></MemoryRouter>);
   fireEvent.mouseEnter(vitrina());
-  expect(avanza()).toBe(false);
+  expect(avanza()).toBe(true);
   fireEvent.mouseLeave(vitrina());
   expect(avanza()).toBe(true);
 });
