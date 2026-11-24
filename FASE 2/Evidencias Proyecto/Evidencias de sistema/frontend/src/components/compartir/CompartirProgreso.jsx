@@ -5,7 +5,7 @@ import Icono from '../Icono.jsx';
 import { dejarDeCompartir, guardarCompartir, listarCompartidos, nombresDe } from '../../services/compartir.js';
 import './Compartir.css';
 
-const fechaHora = new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' });
+const fechaHora = new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/Santiago' });
 const ACCIONES = { otorgo: 'empezaste a compartir', cambio: 'cambiaste lo que compartes', revoco: 'dejaste de compartir', consulto: 'miró tu progreso' };
 
 // Diálogo para elegir qué ve un profesional (SC-45). La salud es un dato sensible: se marca aparte y con su aviso.
@@ -112,7 +112,10 @@ export function AccesosCompartidos() {
           <ul className="compartir__lista">
             {conAcceso.map((p) => (
               <li key={p.id}>
-                <span><strong>{p.nombre}</strong>{p.especialidad ? ` · ${p.especialidad}` : ''}<small>Ve: {nombresDe(p.permisos).join(', ')}</small></span>
+                <span className="compartir__quien">
+                  <span><strong>{p.nombre}</strong>{p.especialidad ? ` · ${p.especialidad}` : ''}</span>
+                  <small>Ve: {nombresDe(p.permisos).join(', ')}</small>
+                </span>
                 <button type="button" className="boton-texto" onClick={() => { setMensaje(''); setEditando(p); }}>Cambiar</button>
               </li>
             ))}

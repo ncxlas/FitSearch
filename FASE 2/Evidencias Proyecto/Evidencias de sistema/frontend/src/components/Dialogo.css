@@ -76,6 +76,7 @@
   gap: .6rem;
   margin-top: 1.25rem;
 }
+.dialogo__acciones > .boton { width: auto; min-width: 8rem; }
 
 @media (hover: hover) {
   .dialogo__cerrar:hover { background: var(--color-superficie-suave); color: var(--color-texto); }

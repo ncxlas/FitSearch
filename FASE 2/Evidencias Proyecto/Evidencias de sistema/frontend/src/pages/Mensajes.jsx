@@ -183,9 +183,10 @@ function Hilo({ elementos, nombre, profesional, palabras, destacado, chatId, rec
             ? <AvisoReserva key={e.clave} elemento={e} nombre={nombre} profesional={profesional} palabras={palabras} destacado={e.clave === destacado} />
             : (
               <li key={e.clave} id={`chat-${e.clave}`} tabIndex={-1}
-                className={`mensaje-chat${e.mensaje.propio ? ' mensaje-chat--propio' : ''}${e.clave === destacado ? ' mensaje-chat--destacado' : ''}`}>
+                className={`mensaje-chat${e.mensaje.propio ? ' mensaje-chat--propio' : ''}${e.mensaje.adjunto ? ' mensaje-chat--plan' : ''}${e.clave === destacado ? ' mensaje-chat--destacado' : ''}`}>
                 <span className="solo-lector">{e.mensaje.propio ? 'Tú' : nombre}: </span>
-                <p><Texto texto={e.texto} palabras={palabras} /></p>
+                {/* Un plan enviado sin mensaje no repite su texto automático: la tarjeta ya dice qué es. */}
+                {!e.mensaje.adjunto?.automatico && <p><Texto texto={e.texto} palabras={palabras} /></p>}
                 {/* SC-46: un plan enviado por el profesional, que la persona guarda en sus planes. */}
                 {e.mensaje.adjunto && (
                   <PlanAdjunto chatId={chatId} mensaje={e.mensaje} puedeGuardar={recibePlanes && !e.mensaje.propio} nombreCliente={nombre} onGuardado={onCambio} />

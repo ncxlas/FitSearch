@@ -2,7 +2,8 @@
 .planes-comidas { display: grid; gap: 1rem; }
 .planes-comidas .panel-tarjeta { border-radius: 20px; }
 
-.planes-comidas__cabecera { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+/* align-self y align-content: si la lista de al lado es más alta, la presentación no se estira ni reparte su contenido. */
+.planes-comidas__cabecera { display: flex; flex-wrap: wrap; align-items: flex-end; align-content: flex-start; align-self: start; justify-content: space-between; gap: 1rem; }
 .planes-comidas__cabecera .panel-tarjeta__titulo { margin: 0 0 .3rem; }
 .planes-comidas__cabecera p { margin: 0; max-width: 38rem; font-size: .92rem; line-height: 1.5; }
 .planes-comidas__crear { display: flex; align-items: center; gap: .75rem; }

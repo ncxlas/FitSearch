@@ -1,27 +1,26 @@
 /* Planes enviados por el chat (SC-46): la tarjeta del mensaje y el diálogo del profesional. Tokens del tema. */
-.plan-adjunto {
-  display: grid;
-  gap: .55rem;
-  margin-top: .45rem;
-  padding: .75rem .85rem;
-  border: 1px solid var(--color-borde);
-  border-radius: 14px;
+/* Un mensaje con un plan es una sola burbuja neutra (también la del profesional): el plan va bajo una línea, sin otra
+   tarjeta adentro. La alineación a la derecha sigue diciendo quién lo envió. */
+.hilo .mensaje-chat.mensaje-chat--plan {
+  width: min(30rem, 92%);
+  max-width: none;
+  border-color: var(--color-borde);
   background: var(--color-superficie);
   color: var(--color-texto);
-  text-align: left;
-  min-width: min(100%, 17rem);
 }
-.plan-adjunto__cabecera { display: flex; align-items: center; gap: .6rem; }
-.plan-adjunto__icono {
+.hilo .mensaje-chat.mensaje-chat--plan time { color: var(--color-texto-secundario); }
+
+.plan-adjunto {
   display: grid;
-  place-items: center;
-  flex: none;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 10px;
-  background: var(--color-info-fondo);
-  color: var(--color-primario-vivo);
+  gap: .5rem;
+  margin-top: .6rem;
+  padding-top: .65rem;
+  border-top: 1px solid var(--color-borde);
+  text-align: left;
 }
+.plan-adjunto--solo { margin-top: .1rem; padding-top: 0; border-top: 0; }
+.plan-adjunto__cabecera { display: flex; align-items: flex-start; gap: .5rem; }
+.plan-adjunto__icono { flex: none; margin-top: .15rem; color: var(--color-primario-vivo); }
 .plan-adjunto__titulo { display: grid; min-width: 0; }
 .plan-adjunto__titulo small { font-size: .78rem; color: var(--color-texto-secundario); }
 .plan-adjunto__titulo strong { font-size: .98rem; overflow-wrap: anywhere; }
@@ -30,11 +29,16 @@
 .plan-adjunto__macros li { padding: .25rem .6rem; border-radius: 999px; background: var(--color-superficie-suave); }
 .plan-adjunto__macros strong { font-variant-numeric: tabular-nums; }
 .plan-adjunto__ver { justify-self: start; font-size: .88rem; }
-.plan-adjunto__detalle { max-height: 22rem; overflow-y: auto; padding-top: .25rem; border-top: 1px solid var(--color-borde); }
+.plan-adjunto__detalle { padding-top: .25rem; }
+.plan-adjunto .plan-adjunto__guardar { width: auto; min-height: 2.5rem; padding: .45rem 1.1rem; font-size: .92rem; }
 .plan-adjunto__pie { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
-.plan-adjunto__guardado { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .3rem; font-size: .86rem; color: var(--color-exito); }
+.plan-adjunto__guardado { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .3rem .75rem; font-size: .86rem; color: var(--color-exito); }
+.plan-adjunto__guardado > span { display: inline-flex; align-items: center; gap: .3rem; }
 .plan-adjunto__guardado a { color: var(--color-primario); font-weight: 600; }
 .plan-adjunto__pendiente { font-size: .84rem; color: var(--color-texto-secundario); }
+/* Modo oscuro: verde y rojo con contraste sobre la superficie oscura. */
+:root[data-tema="oscuro"] .plan-adjunto__guardado, .app.app--oscuro .plan-adjunto__guardado { color: #7fd1a6; }
+:root[data-tema="oscuro"] .enviar-plan__suma:not(.enviar-plan__suma--ok), .app.app--oscuro .enviar-plan__suma:not(.enviar-plan__suma--ok) { color: #f2b8b5; }
 
 .enviar-plan__opciones { display: grid; gap: .6rem; margin: 0; padding: 0; list-style: none; }
 .enviar-plan__opciones button {
@@ -62,8 +66,9 @@
 .enviar-plan__opciones button:focus-visible { outline: 3px solid var(--color-foco); outline-offset: 1px; }
 
 .enviar-plan__macros { display: grid; gap: .8rem; }
-.enviar-plan__porcentajes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin: 0; padding: 0; border: 0; }
-.enviar-plan__porcentajes legend { margin-bottom: .4rem; }
+.enviar-plan__porcentajes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: .6rem; margin: 0; padding: 0; border: 0; }
+.enviar-plan__porcentajes legend { margin-bottom: .4rem; padding: 0; }
+.enviar-plan__porcentajes label .campo__etiqueta { font-weight: 500; }
 .enviar-plan__porcentajes input { font-variant-numeric: tabular-nums; }
 .enviar-plan__suma { grid-column: 1 / -1; margin: 0; font-size: .85rem; color: var(--color-error); }
 .enviar-plan__suma--ok { color: var(--color-texto-secundario); }

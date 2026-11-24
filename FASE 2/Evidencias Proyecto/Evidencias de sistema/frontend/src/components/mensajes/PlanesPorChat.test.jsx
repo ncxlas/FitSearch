@@ -77,15 +77,15 @@ describe('El profesional envía un plan', () => {
     const enviar = screen.getByRole('button', { name: 'Enviar plan' });
     expect(enviar).toBeDisabled();
     await usuario.type(screen.getByLabelText('Nombre del plan'), 'Alto en proteína');
-    const proteinas = screen.getByLabelText('Proteínas (%)');
+    const proteinas = screen.getByLabelText('Proteínas');
     await usuario.clear(proteinas);
     await usuario.type(proteinas, '50');
     expect(screen.getByText(/Suman 120 %: ajústalos para llegar a 100 %/)).toBeInTheDocument();
     expect(enviar).toBeDisabled();
-    const carbohidratos = screen.getByLabelText('Carbohidratos (%)');
+    const carbohidratos = screen.getByLabelText('Carbohidratos');
     await usuario.clear(carbohidratos);
     await usuario.type(carbohidratos, '25');
-    const grasas = screen.getByLabelText('Grasas (%)');
+    const grasas = screen.getByLabelText('Grasas');
     await usuario.clear(grasas);
     await usuario.type(grasas, '25');
     await usuario.type(screen.getByLabelText('Mensaje (opcional)'), 'Pruébalo dos semanas');

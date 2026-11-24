@@ -54,10 +54,11 @@ async function cuenta(nombre, rol) {
     ], ['plan_comidas', 'Semana de inicio', 7, 'Te envié un plan de comidas: «Semana de inicio».', null]);
     const lunes = enviado.mensaje.adjunto.plan.dias.find((d) => d.dia === 1);
     igual('La vista trae el aporte de cada línea', lunes.momentos.find((m) => m.momento === 'desayuno').items[0].calorias > 0, true);
+    igual('Sin mensaje del profesional, el texto se marca como automático', enviado.mensaje.adjunto.automatico, true);
 
     const macros = await servicio.enviar(pro, chatId, { tipo: 'macros', plan: { nombre: 'Alto en proteína', proteinas: 40, carbohidratos: 35, grasas: 25 }, texto: 'Prueba este reparto' });
-    igual('Envía un plan de macronutrientes con su mensaje', [macros.mensaje.adjunto.tipo, macros.mensaje.adjunto.plan, macros.mensaje.texto],
-      ['plan_macros', { nombre: 'Alto en proteína', proteinas: 40, carbohidratos: 35, grasas: 25 }, 'Prueba este reparto']);
+    igual('Envía un plan de macronutrientes con su mensaje', [macros.mensaje.adjunto.tipo, macros.mensaje.adjunto.plan, macros.mensaje.texto, macros.mensaje.adjunto.automatico],
+      ['plan_macros', { nombre: 'Alto en proteína', proteinas: 40, carbohidratos: 35, grasas: 25 }, 'Prueba este reparto', false]);
     igual('Un plan de macronutrientes que no suma 100 % se rechaza', await estado(servicio.enviar(pro, chatId, { tipo: 'macros', plan: { nombre: 'Malo', proteinas: 50, carbohidratos: 30, grasas: 30 } })), 400);
     igual('Un plan de comidas sin líneas se rechaza', await estado(servicio.enviar(pro, chatId, { tipo: 'comidas', plan: { nombre: 'Vacío', tipo: 'dia', items: [] } })), 400);
     igual('La persona no puede enviar planes', await estado(servicio.enviar(ana, chatId, { tipo: 'macros', plan: { nombre: 'X', proteinas: 30, carbohidratos: 40, grasas: 30 } })), 403);

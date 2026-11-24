@@ -111,10 +111,12 @@ async function seccionPerfil(usuarioId) {
   const perfil = await prisma.perfilUsuario.findUnique({ where: { usuarioId } });
   if (!perfil) return null;
   return {
-    edad: perfil.edad, sexo: perfil.sexo, alturaCm: numero(perfil.alturaCm), pesoKg: numero(perfil.pesoKg),
+    // Con las etiquetas de shared/reglas.json, como las ve la persona en Mi perfil (no los códigos guardados).
+    edad: perfil.edad, sexo: perfil.sexo ? etiqueta(reglasPerfil.sexo, perfil.sexo) : null, alturaCm: numero(perfil.alturaCm), pesoKg: numero(perfil.pesoKg),
     actividadFisica: perfil.actividadFisica ? etiqueta(reglasPerfil.actividadFisica, perfil.actividadFisica) : null,
     objetivo: perfil.objetivoPrincipal ? etiqueta(reglasPerfil.objetivoPrincipal, perfil.objetivoPrincipal) : null,
-    comidasDia: perfil.comidasDia ?? null, horasSueno: perfil.horasSueno ?? null,
+    comidasDia: perfil.comidasDia ? etiqueta(reglasPerfil.comidasDia, perfil.comidasDia) : null,
+    horasSueno: perfil.horasSueno ? etiqueta(reglasPerfil.horasSueno, perfil.horasSueno) : null,
   };
 }
 
@@ -158,7 +160,8 @@ async function seccionPeso(usuarioId, hoy) {
   return {
     pesos: pesos.map((p) => ({ fecha: p.fecha.toISOString().slice(0, 10), pesoKg: numero(p.pesoKg) })),
     meta: meta ? {
-      objetivo: etiqueta(reglasPerfil.objetivoPrincipal, meta.objetivo), pesoInicialKg: numero(meta.pesoInicialKg), pesoObjetivoKg: numero(meta.pesoObjetivoKg),
+      // El código del objetivo lo usa el gráfico (si la meta baja o sube); la etiqueta, el texto.
+      objetivo: meta.objetivo, etiqueta: etiqueta(reglasPerfil.objetivoPrincipal, meta.objetivo), pesoInicialKg: numero(meta.pesoInicialKg), pesoObjetivoKg: numero(meta.pesoObjetivoKg),
       ritmoSemanalKg: numero(meta.ritmoSemanalKg), fechaInicio: meta.fechaInicio.toISOString().slice(0, 10),
     } : null,
   };
