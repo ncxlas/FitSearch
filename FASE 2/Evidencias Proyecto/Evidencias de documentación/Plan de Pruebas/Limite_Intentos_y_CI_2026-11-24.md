@@ -46,7 +46,7 @@ Archivos: `backend/src/utils/limitador.js`, `backend/src/middlewares/limiteInten
 | CP-255 | Restablecer (10 cada 15 min), registro (10 cada hora) y Google (30 cada 15 min) por IP | Aprobado |
 | CP-256 | 5 confirmaciones de identidad incorrectas bloquean la cuenta; los cambios sin confirmación se guardan igual | Aprobado |
 | CP-257 | Con `TRUST_PROXY=1` cada cliente cuenta por separado; sin proxy, `X-Forwarded-For` no sirve para eludir el límite | Aprobado |
-| CP-258 | La corrida de GitHub Actions del PR termina en verde | Pendiente: se ejecuta al abrir el PR |
+| CP-258 | La corrida de GitHub Actions del PR termina en verde | Aprobado (PR #85, corrida 45345863399) |
 
 Pruebas automatizadas: `backend/tests/integracion/limiteIntentos.api.test.js` (15 pruebas) y `backend/tests/unit/limitador.test.js` (8 pruebas, con el reloj controlado, sin esperas reales). `backend/tests/setupPorPrueba.js` vacía los contadores antes de cada prueba para que no se afecten entre sí.
 
@@ -66,6 +66,9 @@ Antes de entregar se comprobó en el equipo local que la base de desarrollo, con
 `.github/pull_request_template.md` hace que cada PR nuevo parta con la Definition of Done (DoD-03 a DoD-15) como lista de casillas.
 
 ## Resultados
+
+La primera corrida de la CI en el PR #85 falló en el trabajo de MySQL: `test:mysql:acceso` comprueba que el acceso con Google esté configurado y la CI no tenía `GOOGLE_CLIENT_ID`. Se agregó un ID de cliente de prueba al trabajo (ninguna credencial llega a validarse con Google) y la segunda corrida quedó en verde: Backend 32 s, Frontend 1 min 14 s, MySQL 1 min 1 s (8 scripts) y «Pruebas completas».
+
 
 | Comprobación | Resultado |
 |---|---|
