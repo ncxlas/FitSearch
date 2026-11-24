@@ -46,3 +46,7 @@
   .preferencia { grid-template-columns: minmax(0, 1fr) auto; }
   .preferencia__icono { display: none; }
 }
+
+/* Privacidad y datos (SC-42). */
+.configuracion__seccion { display: grid; gap: .75rem; margin-top: .5rem; }
+.configuracion__seccion h2 { margin: 0; font-size: 1.15rem; }

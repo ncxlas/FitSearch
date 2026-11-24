@@ -33,4 +33,14 @@ async function descargar(id, usuario) {
   try { return { documento, buffer: await fs.readFile(path.join(carpeta, documento.clave)) }; }
   catch (error) { if (error.code === 'ENOENT') throw new ErrorHttp(404, 'El documento no está disponible'); throw error; }
 }
-module.exports = { guardar, descargar, detectarMime };
+// Al eliminar una cuenta profesional (SC-42) se borran sus archivos de verificación. Solo se aceptan claves con el
+// formato que genera guardar(), así nunca se borra fuera de la carpeta; un archivo que ya no existe no es un error.
+async function eliminarArchivos(claves = []) {
+  for (const clave of claves) {
+    if (!/^[a-f0-9-]{36}\.data$/.test(clave)) continue;
+    await fs.unlink(path.join(carpeta, clave)).catch((error) => {
+      if (error.code !== 'ENOENT') console.error(`[documentos] No se pudo borrar ${clave}: ${error.message}`);
+    });
+  }
+}
+module.exports = { guardar, descargar, detectarMime, eliminarArchivos };

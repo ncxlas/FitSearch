@@ -5,7 +5,7 @@ const prisma = require('./prisma');
 const rango = (desde, hasta) => ({ gte: desde, lt: hasta });
 // Columnas de tipo DATE (el día ya viene cortado): se comparan con fechas 'AAAA-MM-DD'.
 const entreDias = (desde, hasta) => ({ gte: new Date(`${desde}T00:00:00Z`), lte: new Date(`${hasta}T00:00:00Z`) });
-const profesionalVigente = { usuario: { rol: { nombre: 'profesional' } } };
+const profesionalVigente = { usuario: { rol: { nombre: 'profesional' }, eliminadoEn: null } };
 
 const cuentas = (desde, hasta) => prisma.usuario.findMany({
   where: { fechaRegistro: rango(desde, hasta) }, select: { fechaRegistro: true, rol: { select: { nombre: true } } },
@@ -13,6 +13,7 @@ const cuentas = (desde, hasta) => prisma.usuario.findMany({
 
 // La foto de cada cuenta se pide aparte, solo su clave (revisión del PR 62; models/foto.model.js).
 const ultimasCuentas = (limite) => prisma.usuario.findMany({
+  where: { eliminadoEn: null },
   select: { id: true, nombre: true, activo: true, fechaRegistro: true, rol: { select: { nombre: true } } },
   orderBy: [{ fechaRegistro: 'desc' }, { id: 'desc' }], take: limite,
 });
@@ -59,7 +60,7 @@ async function personasPorFuncion(desde, hasta, diaDesde, diaHasta) {
 async function plataforma() {
   const [usuariosActivos, usuariosInactivos, profesionalesActivos, establecimientos] = await Promise.all([
     prisma.usuario.count({ where: { rol: { nombre: 'usuario' }, activo: true } }),
-    prisma.usuario.count({ where: { activo: false } }),
+    prisma.usuario.count({ where: { activo: false, eliminadoEn: null } }),
     prisma.usuario.count({ where: { rol: { nombre: 'profesional' }, activo: true } }),
     prisma.establecimiento.groupBy({ by: ['categoria'], where: { activo: true }, _count: { _all: true } }),
   ]);
