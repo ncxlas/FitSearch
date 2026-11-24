@@ -178,7 +178,7 @@ function Formulario({ inicial, onGuardado, onCancelar }) {
 }
 
 // Pestaña «Experiencia» del perfil profesional (FS-HU-29).
-export default function Experiencia() {
+export default function Experiencia({ onGuardado } = {}) {
   const [estado, setEstado] = useState({ cargando: true });
   const [editando, setEditando] = useState(false);
   const [aviso, setAviso] = useState('');
@@ -196,7 +196,7 @@ export default function Experiencia() {
       <Alerta tipo="exito">{aviso}</Alerta>
       {editando
         ? <Formulario inicial={estado.experiencia} onCancelar={() => setEditando(false)}
-          onGuardado={(experiencia) => { setEstado({ experiencia }); setEditando(false); setAviso('Tu experiencia se guardó y ya se ve en tu ficha pública.'); }} />
+          onGuardado={(experiencia) => { setEstado({ experiencia }); setEditando(false); (onGuardado || setAviso)('Experiencia guardada.'); }} />
         : <Resumen experiencia={estado.experiencia} onEditar={() => { setAviso(''); setEditando(true); }} />}
     </>
   );

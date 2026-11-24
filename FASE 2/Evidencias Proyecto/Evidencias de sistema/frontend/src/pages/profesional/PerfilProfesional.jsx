@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Alerta from '../../components/Alerta.jsx';
+import NotificacionFlotante from '../../components/NotificacionFlotante.jsx';
 import { Calificacion } from '../../components/Calificacion.jsx';
 import Icono from '../../components/Icono.jsx';
 import FormularioFicha from '../../components/profesional/FormularioFicha.jsx';
@@ -12,7 +13,7 @@ import useCuentaPerfil from '../../components/perfil/useCuentaPerfil.js';
 import { useSesion } from '../../context/SesionContext.jsx';
 import { enMapa } from '../../components/profesionales/ubicacionMapa.js';
 import { useEspecialidades } from '../../services/especialidades.js';
-import { etiquetaModalidad } from '../../services/formato.js';
+import { etiquetaModalidad, iniciales } from '../../services/formato.js';
 import { guardarMiFicha, obtenerMiFicha, obtenerProfesional } from '../../services/profesional.service.js';
 import './PerfilProfesional.css';
 
@@ -37,14 +38,11 @@ function CompartirPerfil({ id }) {
   }
 
   return (
-    <footer className="perfil-prof__acciones">
+    <div className="perfil-prof__compartir">
       <div className="perfil-prof__botones">
         <button type="button" className="boton boton--secundario boton--compacto" disabled={copiando} onClick={copiar}>
           <Icono nombre={copiado ? 'check' : 'enlace'} tamano={18} /> {copiado ? 'Enlace copiado' : 'Copiar enlace'}
         </button>
-        <Link to="/profesional/perfil/publico" className="boton boton--secundario boton--compacto">
-          <Icono nombre="ojo" tamano={18} /> Ver mi perfil público
-        </Link>
       </div>
       {copiado && <p className="perfil-prof__copia" role="status">Enlace de tu perfil copiado.</p>}
       {manual && (
@@ -53,7 +51,7 @@ function CompartirPerfil({ id }) {
           <input readOnly value={enlace} onFocus={(e) => e.target.select()} />
         </label>
       )}
-    </footer>
+    </div>
   );
 }
 
@@ -65,7 +63,8 @@ export default function PerfilProfesional() {
   const [intento, setIntento] = useState(0);
   const [activa, setActiva] = useState('informacion');
   const [editor, setEditor] = useState(0);
-  const [mensaje, setMensaje] = useState('');
+  const [mensaje, cambiarMensaje] = useState(null);
+  const setMensaje = (texto) => cambiarMensaje(texto ? { texto, id: Date.now() } : null);
   // Sin ficha, la especialidad elegida en «Información personal» espera aquí hasta guardar el lugar de atención, donde
   // se crea la ficha (la API no guarda una ficha sin su lugar de atención).
   const [especialidadElegida, setEspecialidadElegida] = useState('');
@@ -80,7 +79,7 @@ export default function PerfilProfesional() {
   }, [intento]);
   const p = estado.profesional;
   function alGuardarFicha() {
-    setMensaje(!estado.ficha ? 'Tu ficha profesional se guardó correctamente.' : 'Tu lugar de atención se guardó correctamente.');
+    setMensaje(!estado.ficha ? 'Ficha profesional guardada.' : 'Lugar de atención guardado.');
     setEspecialidadElegida('');
     setIntento((v) => v + 1);
   }
@@ -95,7 +94,7 @@ export default function PerfilProfesional() {
     const ficha = estado.ficha;
     if (!ficha) {
       setEspecialidadElegida(nueva);
-      return `Elegiste ${nueva}. Se guardará en tu ficha cuando completes «Lugar de atención».`;
+      return 'Completa "Lugar de atención" para guardar tu especialidad.';
     }
     const online = ficha.modalidad === 'online';
     if (!online && !enMapa(ficha)) {
@@ -106,7 +105,7 @@ export default function PerfilProfesional() {
       modalidad: ficha.modalidad, ubicacionLat: online ? null : Number(ficha.ubicacionLat), ubicacionLng: online ? null : Number(ficha.ubicacionLng),
     });
     setIntento((v) => v + 1);
-    return 'Tu especialidad se guardó correctamente.';
+    return 'Especialidad guardada.';
   }
   const especialidad = {
     valor: especialidadActual,
@@ -126,7 +125,7 @@ export default function PerfilProfesional() {
   const secciones = [
     { id: 'informacion', titulo: 'Información personal', icono: 'usuario', ayuda: 'Tus datos de contacto, tu especialidad y tu presentación.', contenido: <>
       {!estado.cargando && !estado.error && !estado.ficha && completaFicha('Elige aquí tu especialidad y completa tu «Lugar de atención» para aparecer en el buscador de FitSearch.')}
-      <InformacionCuenta estado={cuentaEstado} profesional especialidad={estado.cargando || estado.error ? undefined : especialidad} />
+      <InformacionCuenta estado={cuentaEstado} profesional onGuardado={setMensaje} especialidad={estado.cargando || estado.error ? undefined : especialidad} />
     </> },
     { id: 'lugar', titulo: 'Lugar de atención', icono: 'pin', ayuda: 'Si atiendes presencial u online y dónde: se muestra en el mapa y en tu perfil público.',
       contenido: sinFicha ?? (
@@ -134,22 +133,32 @@ export default function PerfilProfesional() {
           onCancelar={estado.ficha ? () => { setEditor((v) => v + 1); setMensaje(''); } : undefined} />
       ) },
     { id: 'experiencia', titulo: 'Experiencia y formación', icono: 'birrete', ayuda: 'Comparte tu trayectoria y a quiénes atiendes.',
-      contenido: sinFicha ?? (estado.ficha ? <Experiencia /> : completaFicha('Completa tu ficha profesional para agregar tu experiencia y formación.')) },
+      contenido: sinFicha ?? (estado.ficha ? <Experiencia onGuardado={setMensaje} /> : completaFicha('Completa tu ficha profesional para agregar tu experiencia y formación.')) },
     { id: 'certificaciones', titulo: 'Certificaciones', icono: 'escudo', ayuda: 'Tus documentos y el estado de tu verificación.',
-      contenido: sinFicha ?? (estado.ficha ? <Certificaciones /> : completaFicha('Completa tu ficha profesional antes de solicitar la verificación.')) },
+      contenido: sinFicha ?? (estado.ficha ? <Certificaciones onGuardado={setMensaje} /> : completaFicha('Completa tu ficha profesional antes de solicitar la verificación.')) },
   ];
-  return <PerfilEditable titulo="Mi perfil profesional" subtitulo="Tu información, lista para conectar con más personas."
+  return <>
+    {mensaje && <NotificacionFlotante key={mensaje.id} tipo={mensaje.texto.includes('para guardar tu especialidad') ? 'info' : 'exito'}>{mensaje.texto}</NotificacionFlotante>}
+    <PerfilEditable titulo="Mi perfil profesional" subtitulo="Tu información, lista para conectar con más personas."
     nombre={cuentaEstado.cuenta?.nombre || p?.nombre || sesion.usuario.nombre} rol={p?.especialidad || 'Profesional'} cuentaEstado={cuentaEstado}
     activa={activa} onCambiar={(s) => { setActiva(s); setMensaje(''); }} secciones={secciones}
-    aviso={<Alerta tipo="exito">{mensaje}</Alerta>}
+    cabeceraAcciones={p && <Link to="/profesional/perfil/publico" className="boton boton--secundario boton--compacto"><Icono nombre="ojo" tamano={18} /> Ver mi perfil público</Link>}
+    vistaPrevia={p && <>
+      <h2>Así se ve tu perfil</h2>
+      <div className="perfil-previa__persona">
+        <span className="perfil-previa__avatar" aria-hidden="true">{cuentaEstado.cuenta?.foto ? <img src={cuentaEstado.cuenta.foto} alt="" /> : iniciales(cuentaEstado.cuenta?.nombre || p.nombre)}</span>
+        <div><strong>{cuentaEstado.cuenta?.nombre || p.nombre}</strong><p>{p.especialidad}</p><p>{p.modalidad === 'online' ? 'Atención online' : p.comuna}</p></div>
+      </div>
+      <p className="perfil-previa__presentacion">{cuentaEstado.cuenta?.biografia || 'Tu presentación aparecerá aquí cuando la guardes.'}</p>
+    </>}
     identidad={p && <>
       <span className={p.verificado ? 'perfil-prof__verificado' : 'perfil-prof__sin-verificar'}>
-        {p.verificado && <Icono nombre="escudo" tamano={16} />}{p.verificado ? 'Verificado' : 'Sin verificar'}
+        <Icono nombre="escudo" tamano={16} />{p.verificado ? 'Verificado' : 'Sin verificar'}
       </span>
       <Calificacion promedio={p.calificacion.promedio} total={p.calificacion.total} />
       <p className="perfil-editor__antiguedad"><Icono nombre={p.modalidad === 'online' ? 'video' : 'pin'} tamano={16} />{p.modalidad === 'online' ? 'Atención online' : p.comuna || 'Comuna por confirmar'}</p>
       <p className="perfil-editor__antiguedad">{etiquetaModalidad(p.modalidad)}</p>
     </>}
-    pie={<div className="perfil-editor__mini-resumen"><Link to="/profesional/agenda" className="boton boton--secundario boton--compacto"><Icono nombre="calendario" tamano={18} /> Ir a mi agenda</Link></div>}
-    acciones={p && <CompartirPerfil id={p.id} />} />;
+    identidadAcciones={p && <CompartirPerfil id={p.id} />} />
+  </>;
 }

@@ -38,9 +38,9 @@ function PerfilPendiente({ pasos, onIr }) {
 export default function PerfilUsuarioEditable({ datos, onGuardado }) {
   const cuentaEstado = useCuentaPerfil();
   const [activa, setActiva] = useState('informacion');
-  const [mensaje, setMensaje] = useState('');
+  const [mensaje, setMensaje] = useState(null);
   const nombre = cuentaEstado.cuenta?.nombre || datos.usuario.nombre;
-  function guardar(respuesta) { onGuardado(respuesta); setMensaje('Tus cambios se guardaron correctamente.'); }
+  function guardar(respuesta) { onGuardado(respuesta); setMensaje({ texto: 'Cambios guardados.', id: Date.now() }); }
   const cambiar = (seccion) => { setActiva(seccion); setMensaje(''); };
   const props = { onGuardado: guardar, onVolver: () => { setMensaje(''); setActiva('informacion'); }, textoVolver: 'Cancelar', textoPrincipal: 'Guardar cambios' };
   const secciones = [
@@ -53,6 +53,6 @@ export default function PerfilUsuarioEditable({ datos, onGuardado }) {
   // asistente y en el plan de alimentación de Comidas.
   return <PerfilEditable titulo="Mi perfil" subtitulo="Tus datos y objetivos, siempre a mano." nombre={nombre} rol="Usuario"
     cuentaEstado={cuentaEstado} activa={activa} onCambiar={cambiar} secciones={secciones}
-    aviso={<Alerta tipo="exito">{mensaje}</Alerta>}
+    aviso={<Alerta key={mensaje?.id} tipo="exito">{mensaje?.texto}</Alerta>}
     resumen={<PerfilPendiente pasos={datos.pasos} onIr={cambiar} />} />;
 }

@@ -176,10 +176,10 @@ describe('recomendación de profesional (FS-HU-08)', () => {
     expect(within(mensajes()).getAllByText(/Te recomendamos consultar con/)).toHaveLength(1);
   });
 
-  test('el banner «¿Necesitas una recomendación?» abre un chat nuevo con la pregunta, aunque el asistente ya esté abierto', async () => {
+  test('el acceso para pedir recomendación abre un chat nuevo con la pregunta, aunque el asistente ya esté abierto', async () => {
     simularAsistente();
     renderizarApp('/asistente');
-    const banner = await screen.findByRole('link', { name: 'Abrir chat' });
+    const banner = await screen.findByRole('link', { name: 'Pedir recomendación' });
     expect(banner).toHaveAttribute('href', '/asistente/nuevo?inicio=profesional');
     await userEvent.click(banner);
     await waitFor(() => expect(campo()).toHaveValue('¿Qué tipo de profesional me conviene consultar para '));

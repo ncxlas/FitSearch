@@ -6,8 +6,7 @@ import ConfirmarFoto from './ConfirmarFoto.jsx';
 import { prepararFoto } from './fotoPerfil.js';
 import './PerfilEditable.css';
 
-// Foto de la cuenta (usuario y profesional). Desde el 15-11-2026 la foto elegida no se guarda de inmediato: primero se
-// muestra en un cuadro para aceptarla, y ese cuadro reemplaza al mensaje «Foto actualizada».
+// La foto elegida se muestra primero en un cuadro para aceptarla antes de guardarla.
 function FotoPerfil({ nombre, cuenta, guardar }) {
   const input = useRef(null);
   const camara = useRef(null);
@@ -36,7 +35,7 @@ function FotoPerfil({ nombre, cuenta, guardar }) {
   }
   async function aceptar() {
     setGuardando(true); setErrorCuadro('');
-    try { await guardar({ foto: propuesta }); setPropuesta(null); }
+    try { await guardar({ foto: propuesta }); setPropuesta(null); setMensaje('Foto actualizada.'); }
     catch (e) { setErrorCuadro(e.message); }
     finally { setGuardando(false); }
   }
@@ -60,49 +59,43 @@ function FotoPerfil({ nombre, cuenta, guardar }) {
         {preparando ? 'Preparando foto…' : guardando && !propuesta ? 'Guardando…' : 'JPG, PNG o WebP · Máximo 5 MB'}
       </p>
       {cuenta?.foto && <button type="button" className="boton-texto" disabled={ocupado} onClick={quitar}>Quitar foto</button>}
-      {mensaje && <p role="status" className="perfil-editor__mensaje">{mensaje}</p>}
+      {mensaje && <Alerta tipo="exito">{mensaje}</Alerta>}
       <Alerta>{error}</Alerta>
       {propuesta && <ConfirmarFoto foto={propuesta} guardando={guardando} error={errorCuadro} onAceptar={aceptar} onCancelar={cancelar} />}
     </div>
   );
 }
 
-export default function PerfilEditable({ titulo, subtitulo, nombre, rol, cuentaEstado, identidad, resumen, secciones, activa, onCambiar, pie, aviso, acciones }) {
+export default function PerfilEditable({ titulo, subtitulo, nombre, rol, cuentaEstado, identidad, identidadAcciones, resumen, secciones, activa, onCambiar, pie, aviso, acciones, cabeceraAcciones, vistaPrevia }) {
   const cuenta = cuentaEstado.cuenta;
-  return (
-    <div className="perfil-editor">
-      <header className="perfil-editor__cabecera">
-        <span className="perfil-editor__icono"><Icono nombre="usuario" tamano={30} /></span>
-        <div><h1>{titulo}</h1><p>{subtitulo}</p></div>
-      </header>
-      {aviso}
-      <div className="perfil-editor__grilla">
-        <aside className="perfil-editor__lateral" aria-label="Resumen y secciones de tu perfil">
-          <div className="perfil-editor__identidad">
-            <FotoPerfil nombre={nombre} cuenta={cuenta} guardar={cuentaEstado.guardar} />
-            <h2>{nombre}</h2><p className="perfil-editor__rol">{rol}</p>
-            {identidad}
-            {cuenta?.fechaRegistro && <p className="perfil-editor__antiguedad"><Icono nombre="calendario" tamano={15} /> Miembro desde {new Intl.DateTimeFormat('es-CL', { month: 'short', year: 'numeric' }).format(new Date(cuenta.fechaRegistro))}</p>}
-          </div>
-          {resumen}
-          <nav className="perfil-editor__navegacion" aria-label="Secciones del perfil">
-            {secciones.map((s) => <button key={s.id} type="button" aria-current={activa === s.id ? 'page' : undefined}
-              onClick={() => onCambiar(s.id)}><Icono nombre={s.icono} tamano={21} activo={activa === s.id} />{s.titulo}</button>)}
-          </nav>
-          {pie}
-        </aside>
-        <section className="perfil-editor__contenido" aria-label="Edición del perfil">
-          {secciones.map((s) => (
-            <details key={s.id} className="perfil-editor__seccion" open={activa === s.id}>
-              <summary onClick={(e) => { e.preventDefault(); onCambiar(activa === s.id ? '' : s.id); }}>
-                <Icono nombre={s.icono} tamano={22} activo={activa === s.id} /><span>{s.titulo}</span><span className="perfil-editor__chevron" aria-hidden="true">⌄</span>
-              </summary>
-              {activa === s.id && <div className="perfil-editor__panel"><header><h2><Icono nombre={s.icono} tamano={25} />{s.titulo}</h2>{s.ayuda && <p>{s.ayuda}</p>}</header>{s.contenido}</div>}
-            </details>
-          ))}
-          {acciones}
-        </section>
+  return <div className="perfil-editor">
+    <header className="perfil-editor__cabecera">
+      <div><h1>{titulo}</h1><p>{subtitulo}</p></div>
+      {cabeceraAcciones && <div className="perfil-editor__cabecera-acciones">{cabeceraAcciones}</div>}
+    </header>
+    {aviso}
+    <section className="perfil-editor__identidad" aria-label="Resumen de tu perfil">
+      <FotoPerfil nombre={nombre} cuenta={cuenta} guardar={cuentaEstado.guardar} />
+      <div className="perfil-editor__persona"><h2>{nombre}</h2><p className="perfil-editor__rol">{rol}</p></div>
+      <div className="perfil-editor__meta">{identidad}
+        {cuenta?.fechaRegistro && <p className="perfil-editor__antiguedad"><Icono nombre="calendario" tamano={15} /> Miembro desde {new Intl.DateTimeFormat('es-CL', { month: 'short', year: 'numeric' }).format(new Date(cuenta.fechaRegistro))}</p>}
       </div>
+      {identidadAcciones && <div className="perfil-editor__identidad-acciones">{identidadAcciones}</div>}
+    </section>
+    {resumen}
+    <nav className="perfil-editor__navegacion" aria-label="Secciones del perfil">
+      {secciones.map((s) => <button key={s.id} type="button" aria-current={activa === s.id ? 'page' : undefined}
+        aria-controls={`seccion-perfil-${s.id}`} onClick={() => onCambiar(s.id)}>{s.titulo}</button>)}
+    </nav>
+    <div className={`perfil-editor__grilla${vistaPrevia ? ' perfil-editor__grilla--con-previa' : ''}`}>
+      <section className="perfil-editor__contenido" aria-label="Edición del perfil">
+        {secciones.filter((s) => activa === s.id).map((s) => <div key={s.id} id={`seccion-perfil-${s.id}`} className="perfil-editor__panel">
+          <header><h2>{s.titulo}</h2>{s.ayuda && <p>{s.ayuda}</p>}</header>{s.contenido}
+        </div>)}
+        {acciones}
+      </section>
+      {vistaPrevia && <aside className="perfil-editor__previa" aria-label="Vista previa del perfil">{vistaPrevia}</aside>}
     </div>
-  );
+    {pie && <div className="perfil-editor__pie">{pie}</div>}
+  </div>;
 }

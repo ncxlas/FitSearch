@@ -187,7 +187,7 @@ describe('Asistente de perfil: paso 3, información de salud (FS-HU-19), y resum
     await userEvent.click(screen.getByLabelText('Mejorar rendimiento'));
     await userEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
 
-    expect(await screen.findByText('Tus cambios se guardaron correctamente.')).toBeInTheDocument();
+    expect(await screen.findByText('Cambios guardados.')).toBeInTheDocument();
     expect(screen.getByText('Mejorar rendimiento')).toBeInTheDocument();
     expect(cuerpoDe(fetch, '/api/perfil/objetivos').objetivoPrincipal).toBe('mejorar_rendimiento');
   });

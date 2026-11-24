@@ -1,3 +1,4 @@
+import AvisosGuardado from './components/AvisosGuardado.jsx';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import DisenoAplicacion from './components/diseno/DisenoAplicacion.jsx';
 import { SECCIONES, SECCIONES_PROFESIONAL, SECCIONES_PROXIMAMENTE, SECCIONES_PROXIMAMENTE_PROFESIONAL } from './components/diseno/secciones.js';
@@ -50,6 +51,7 @@ export default function App() {
   return (
     <>
       <VolverArriba />
+      <AvisosGuardado />
       <Routes>
         <Route path="/" element={soloInvitado(<Portada />)} />
         <Route path="/registro" element={soloInvitado(<Registro />)} />

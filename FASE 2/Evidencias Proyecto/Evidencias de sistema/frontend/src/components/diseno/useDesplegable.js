@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 // Hook (React exige el prefijo "use") de un panel desplegable (menú de la cuenta, notificaciones): se cierra con Escape o al hacer clic fuera.
-export default function useDesplegable() {
+export default function useDesplegable(panelExtra = null) {
   const [abierto, setAbierto] = useState(false);
   const contenedor = useRef(null);
   const boton = useRef(null);
@@ -9,7 +9,7 @@ export default function useDesplegable() {
   useEffect(() => {
     if (!abierto) return undefined;
     const alPresionar = (evento) => {
-      if (!contenedor.current?.contains(evento.target)) setAbierto(false);
+      if (!contenedor.current?.contains(evento.target) && !panelExtra?.current?.contains(evento.target)) setAbierto(false);
     };
     const alTeclear = (evento) => {
       if (evento.key !== 'Escape') return;
@@ -22,7 +22,7 @@ export default function useDesplegable() {
       document.removeEventListener('mousedown', alPresionar);
       document.removeEventListener('keydown', alTeclear);
     };
-  }, [abierto]);
+  }, [abierto, panelExtra]);
 
   return { abierto, setAbierto, contenedor, boton };
 }

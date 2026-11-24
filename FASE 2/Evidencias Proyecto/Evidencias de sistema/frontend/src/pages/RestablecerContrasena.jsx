@@ -46,7 +46,7 @@ export default function RestablecerContrasena() {
         <h1>Crea una nueva contraseña</h1>
         <p className="texto-secundario">Elige una contraseña de al menos 8 caracteres que no hayas usado antes.</p>
       </div>
-      <Alerta tipo={mensaje.tipo}>{mensaje.texto}</Alerta>
+      <Alerta flotante={false} tipo={mensaje.tipo}>{mensaje.texto}</Alerta>
       {listo ? (
         <Link to="/iniciar-sesion" className="boton boton--principal">Iniciar sesión <Icono nombre="flecha" /></Link>
       ) : token ? (
